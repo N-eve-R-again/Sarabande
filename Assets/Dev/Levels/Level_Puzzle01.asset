@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c1a542ffd2fa3743a4a7f83a79a553a, type: 3}
+  m_Name: Level_Puzzle01
+  m_EditorClassIdentifier: 
+  width: 8
+  height: 8
+  nonWalkables:
+  - x: 0
+    z: 7
+  - x: 1
+    z: 7
+  - x: 2
+    z: 7
+  - x: 4
+    z: 7
+  - x: 5
+    z: 7
+  - x: 6
+    z: 7
+  - x: 7
+    z: 7
+  - x: 1
+    z: 5
+  - x: 2
+    z: 5
+  - x: 3
+    z: 5
+  - x: 4
+    z: 5
+  - x: 6
+    z: 5
+  - x: 1
+    z: 3
+  - x: 2
+    z: 3
+  - x: 3
+    z: 3
+  - x: 4
+    z: 3
+  - x: 5
+    z: 3
+  - x: 6
+    z: 3
+  - x: 7
+    z: 3
+  thinWalls:
+  - a:
+      x: 3
+      z: 1
+    b:
+      x: 4
+      z: 1
+  - a:
+      x: 5
+      z: 1
+    b:
+      x: 6
+      z: 1
+  - a:
+      x: 5
+      z: 0
+    b:
+      x: 6
+      z: 0
+  heroSpawn:
+    x: 3
+    z: 7
+  nmeSpawn:
+    x: 1
+    z: 6
+  heroEntry: 0
+  exit:
+    fromCell:
+      x: 7
+      z: 0
+    direction: 1
