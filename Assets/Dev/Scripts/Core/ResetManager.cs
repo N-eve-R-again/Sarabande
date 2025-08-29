@@ -36,6 +36,7 @@ namespace Sarabande.Core
         /// <summary>Réinitialise tous les objets enregistrés.</summary>
         public void ResetAll()
         {
+            CollectResettables();
             foreach (var r in _resettables)
                 r.ResetToInitial();
         }
