@@ -1,3 +1,4 @@
+// FILE: Assets/DEV/Scripts/Player/HeroController.cs
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Sarabande.Core;
@@ -5,14 +6,14 @@ using Sarabande.Levels;
 using System.Collections.Generic;
 using UnityEngine.Events;
 
-
 namespace Sarabande.Player
 {
     /// <summary>
     /// Déplacement case par case du héros, en temps réel.
     /// - Lit l'action "Move" (Vector2) du New Input System via PlayerInput (Send Messages).
-    /// - Un pas = lerp vers la case voisine pendant 'stepDuration', puis courte pause 'interStepPause'.
-    /// - Pour l'instant : pas de collisions murs/murs fins (on ajoute plus tard).
+    /// - Un step = lerp vers la case voisine pendant 'stepDuration', puis courte pause 'interStepPause'.
+    /// - Collisions : hors-grille, murs, murs fins -> bump punitif.
+    /// - Sortie : autorisée si on part depuis la case/direction configurée dans LevelData.
     /// </summary>
     [RequireComponent(typeof(PlayerInput))]
     public class HeroController : MonoBehaviour, Sarabande.Core.IResettable
@@ -22,8 +23,8 @@ namespace Sarabande.Player
         [SerializeField, Min(0.001f)] private float cellSize = 1f;
 
         [Header("Movement")]
-        [SerializeField, Min(0.01f)] private float stepDuration = 0.18f;   // à ajuster plus tard
-        [SerializeField, Min(0f)] private float interStepPause = 0.04f;  // “micro arrêt” entre deux pas
+        [SerializeField, Min(0.01f)] private float stepDuration = 0.18f;
+        [SerializeField, Min(0f)] private float interStepPause = 0.04f;
         [SerializeField, Range(0.1f, 0.99f)] private float inputDeadzone = 0.5f;
 
         [Header("Collision & Bump")]
@@ -32,22 +33,21 @@ namespace Sarabande.Player
         [SerializeField, Min(0.01f)] private float bumpReturnDuration = 0.08f;
 
         [Header("Exit")]
-        [SerializeField] private UnityEvent onExit;   // branché dans l’Inspector
-        [SerializeField] private bool disableOnExit = true; // désactive le contrôle après victoire
+        [SerializeField] private UnityEvent onExit;
+        [SerializeField] private bool disableOnExit = true;
 
         [Header("Facing")]
         [SerializeField] private bool faceOnMove = true;
 
         [SerializeField] private Sarabande.Core.ResetManager resetManager;
 
-        // caches pour les collisions
+        // caches collisions
         private HashSet<Vector2Int> _blockedCells; // non-walkables
         private HashSet<(Vector2Int a, Vector2Int b)> _thinBlockers; // murs fins normalisés
 
-
         private Vector2 _held;                 // dernier input maintenu (x,y)
         private bool _isMoving = false;
-        private float _readyAtTime = 0f;       // quand un nouveau pas est autorisé
+        private float _readyAtTime = 0f;       // quand un nouveau step est autorisé
 
         // Position logique sur la grille
         private Vector2Int _gridPos;
@@ -64,8 +64,7 @@ namespace Sarabande.Player
                 return;
             }
 
-            // ? ICI : on prépare les sets de collision
-            BuildCollisionSets(); 
+            BuildCollisionSets();
 
             // Coord grille du spawn (ex. D8)
             _gridPos = new Vector2Int(levelData.heroSpawn.x, levelData.heroSpawn.z);
@@ -77,20 +76,20 @@ namespace Sarabande.Player
             Vector3 outside = spawnCenter + EntryOffset(levelData.heroEntry);
             transform.position = outside;
 
-            // Lancer l'entry step (on bloque toute autre entrée pendant ce step)
-            _isMoving = true;                 // pour éviter toute tentative de step concurrent
-            StartCoroutine(SpawnInFromEdge()); // va appeler StepTo(_gridPos)
+            // Lancer l'entry step
+            _isMoving = true;
+            StartCoroutine(SpawnInFromEdge()); // joue un step jusqu'au spawn
         }
 
         private void Update()
         {
             if (resetManager != null && resetManager.IsResetInProgress) return;
-            if (_isMoving) return;                                      //step en cours, on attend
-            if (Time.time < _readyAtTime) return;                       //micro-pause entre chaque step pas encore finie
+            if (_isMoving) return;
+            if (Time.time < _readyAtTime) return;
 
             // Dir cardinal depuis l'input maintenu
             Vector2Int dir = HeldToCardinal(_held, inputDeadzone);
-            if (dir == Vector2Int.zero) return;                         // si pas d'intention claire (avec un joystick par exemple)
+            if (dir == Vector2Int.zero) return;
 
             // Cible dans les bornes du niveau
             Vector2Int target = _gridPos + dir;
@@ -124,7 +123,6 @@ namespace Sarabande.Player
             }
 
             if (faceOnMove) FaceDirection(dir);
-            // Lance le pas
             StartCoroutine(StepTo(target));
         }
 
@@ -154,29 +152,24 @@ namespace Sarabande.Player
             _gridPos = target;
             _isMoving = false;
 
-            // “micro arrêt” entre deux pas (même si la touche reste maintenue)
             _readyAtTime = Time.time + interStepPause;
 
             if (isExitMove)
             {
-                // Déclenche la victoire à la fin du step de sortie
                 onExit?.Invoke();
-                if (disableOnExit) enabled = false; // stoppe ce controller pour figer le contrôle
+                if (disableOnExit) enabled = false;
             }
         }
 
-        /// <summary>Reçoit l'action "Move" (PlayerInput = Send Messages).</summary>
         private void OnMove(InputValue value)
         {
-            _held = value.Get<Vector2>(); // ex: (1,0), (-1,0), (0,1), (0,-1) ou un mix
-            // Pas de lancement immédiat ici : Update() gère l’enchaînement avec interStepPause.
+            _held = value.Get<Vector2>();
         }
 
         // --- Utilitaires ---
 
         private Vector3 GridCenter(Vector2Int c)
         {
-            // Sol à Y=0 ; on centre dans la case (x+0.5, z+0.5)
             return new Vector3((c.x + 0.5f) * cellSize, 0f, (c.y + 0.5f) * cellSize);
         }
 
@@ -185,7 +178,6 @@ namespace Sarabande.Player
             return c.x >= 0 && c.x < levelData.width && c.y >= 0 && c.y < levelData.height;
         }
 
-        /// <summary>Convertit un Vector2 en direction cardinale (priorité à l’axe dominant).</summary>
         private static Vector2Int HeldToCardinal(Vector2 v, float deadzone)
         {
             if (v.sqrMagnitude < deadzone * deadzone) return Vector2Int.zero;
@@ -201,7 +193,6 @@ namespace Sarabande.Player
 
         private Vector3 EntryOffset(EdgeDirection dir)
         {
-            // 1 case en dehors de la grille dans la direction d'entrée
             switch (dir)
             {
                 case EdgeDirection.North: return new Vector3(0f, 0f, cellSize);
@@ -214,7 +205,7 @@ namespace Sarabande.Player
 
         private System.Collections.IEnumerator SpawnInFromEdge()
         {
-            yield return StepTo(_gridPos);  // joue exactement un step jusqu'au spawn
+            yield return StepTo(_gridPos);
         }
 
         private void BuildCollisionSets()
@@ -232,30 +223,28 @@ namespace Sarabande.Player
                 _thinBlockers.Add(key);
             }
         }
+
         private static (Vector2Int, Vector2Int) NormalizeEdge(Vector2Int a, Vector2Int b)
         {
-            // ordre lexicographique pour que (a,b) == (b,a)
             if (a.x < b.x) return (a, b);
             if (a.x > b.x) return (b, a);
-            // a.x == b.x -> compare y (z)
             return (a.y <= b.y) ? (a, b) : (b, a);
         }
 
         private bool HasThinWallBetween(Vector2Int from, Vector2Int to)
         {
-            // nos steps sont toujours cardinaux et adjacents ; on normalise et on teste
             var key = NormalizeEdge(from, to);
             return _thinBlockers.Contains(key);
         }
+
         private System.Collections.IEnumerator Bump(Vector2Int dir)
         {
-            if (_isMoving) yield break; // sécurité
+            if (_isMoving) yield break;
             _isMoving = true;
 
             Vector3 start = transform.position;
             Vector3 push = new Vector3(dir.x, 0f, dir.y).normalized * bumpDistance;
 
-            // aller (rapide)
             float t = 0f;
             while (t < 1f)
             {
@@ -265,7 +254,6 @@ namespace Sarabande.Player
                 yield return null;
             }
 
-            // retour (un peu plus “mou” si tu veux)
             t = 0f;
             while (t < 1f)
             {
@@ -275,10 +263,11 @@ namespace Sarabande.Player
                 yield return null;
             }
 
-            transform.position = start; // verrouille exactement
+            transform.position = start;
             _isMoving = false;
-            _readyAtTime = Time.time + interStepPause; // évite le spam
+            _readyAtTime = Time.time + interStepPause;
         }
+
         private static Vector2Int DirToVec(EdgeDirection dir)
         {
             return dir switch
@@ -290,33 +279,31 @@ namespace Sarabande.Player
                 _ => Vector2Int.zero
             };
         }
+
         private bool IsExitMove(Vector2Int from, Vector2Int dir)
         {
             var exit = levelData.exit;
             var exitCell = new Vector2Int(exit.fromCell.x, exit.fromCell.z);
             return from == exitCell && dir == DirToVec(exit.direction);
         }
+
         public void ResetToInitial()
         {
-            // Stopper tout mouvement en cours
             StopAllCoroutines();
-            enabled = true;                 // au cas où il avait été désactivé (après sortie)
+            enabled = true;
             _held = Vector2.zero;
             _isMoving = false;
             _readyAtTime = 0f;
 
-            // Recréer les caches collision (utile si, plus tard, le niveau évolue dynamiquement)
             BuildCollisionSets();
 
-            // Revenir au spawn + rejouer l'entry step depuis le bord configuré
             _gridPos = new Vector2Int(levelData.heroSpawn.x, levelData.heroSpawn.z);
             var spawnCenter = GridCenter(_gridPos);
             var outside = spawnCenter + EntryOffset(levelData.heroEntry);
             transform.position = outside;
 
             _isMoving = true;
-            StartCoroutine(SpawnInFromEdge()); // joue un step jusqu'au spawn
+            StartCoroutine(SpawnInFromEdge());
         }
-
     }
 }
