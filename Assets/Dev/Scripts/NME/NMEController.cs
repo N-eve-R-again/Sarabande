@@ -46,6 +46,10 @@ namespace Sarabande.NME
         [SerializeField] private bool drawFovGizmos = true;
         [SerializeField, Min(1f)] private float gizmoFovRadius = 20f;
 
+        [Header("Hero Conflict")]
+        [SerializeField, Range(0f, 0.5f)] private float heroYieldThreshold = 0.15f;     // t max pour que l’NME cède
+        [SerializeField, Range(0f, 0.5f)] private float heroVacateBlockThreshold = 0.25f; // case du héros reste bloquée tant qu’il ne l’a pas assez libérée
+
         [SerializeField] private ResetManager resetManager;  // à assigner (LevelRoot)
 
         private NMEState _state = NMEState.HeroUnspotted;
@@ -56,6 +60,13 @@ namespace Sarabande.NME
         private bool _isAttacking = false;
         private float _readyAt = 0f;
         private float _nextRepathAt = 0f;
+
+        private Vector2Int _lastGoal; // dernière case Héros connue pour laquelle on a calculé un chemin (évite d'attendre le recalcul du pathfinding pour bouger)
+
+        public bool IsStepping => _isMoving;
+        public Vector2Int FromCell { get; private set; }
+        public Vector2Int ToCell { get; private set; }
+        public float MoveProgress { get; private set; } // 0..1 pendant un step
 
         // collisions (murs / murs fins)
         private HashSet<Vector2Int> _blockedCells;
@@ -78,11 +89,19 @@ namespace Sarabande.NME
             _gridPos = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
             transform.position = GridCenter(_gridPos);
 
+            // init exposées (si tu les as)
+            FromCell = ToCell = _gridPos;
+            MoveProgress = 0f;
+
+            // cache de la dernière cible (position du héros)
+            _lastGoal = hero.GridPos;
+
             SetFacing(initialFacing);
             _state = NMEState.HeroUnspotted;
 
             _nextRepathAt = Time.time;
         }
+
 
         private void Update()
         {
@@ -109,20 +128,27 @@ namespace Sarabande.NME
                         var heroPos = hero.GridPos;
 
                         // Adjacent -> attaque télégrafiée
-                        if (IsAdjacent(_gridPos, heroPos))
+                        if (IsDirectlyAdjacent(_gridPos, heroPos))
                         {
                             if (!_isAttacking)
                             {
-                                Vector2Int dir = heroPos - _gridPos; // dir cardinale (adjacent => -1/0/1)
+                                Vector2Int dir = heroPos - _gridPos;   // forcément cardinal ici
                                 StartCoroutine(AttackRoutine(heroPos, dir));
                             }
                             return; // pas de déplacement pendant l’attaque
                         }
 
                         // Repath périodique
-                        if (Time.time >= _nextRepathAt)
+                        // Repath "juste-à-temps" : si le chemin est vide OU si la cible a changé,
+                        // on recalcule tout de suite (peu coûteux sur 8x8)
+                        // Sinon, on ne recalculera que périodiquement (suivi fluide d’un chemin déjà trouvé)
+                        bool goalChanged = heroPos != _lastGoal;
+                        bool needRepath = (_path.Count == 0) || goalChanged;
+
+                        if (needRepath || Time.time >= _nextRepathAt)
                         {
                             RecomputePath(heroPos);
+                            _lastGoal = heroPos;
                             _nextRepathAt = Time.time + repathInterval;
                         }
 
@@ -130,12 +156,28 @@ namespace Sarabande.NME
                         if (_path.Count > 0)
                         {
                             var next = _path[0];
+
+                            // petite ceinture : s'assurer que 'next' est adjacent à la position actuelle
+                            int md = Mathf.Abs(next.x - _gridPos.x) + Mathf.Abs(next.y - _gridPos.y);
+                            if (md != 1)
+                            {
+                                // le chemin est obsolète (par ex. après un reset/annulation) : on recalcule
+                                RecomputePath(heroPos);
+                                if (_path.Count == 0)
+                                {
+                                    _readyAt = Time.time + interStepPause;
+                                    return;
+                                }
+                                next = _path[0];
+                            }
+
                             _path.RemoveAt(0);
                             FaceDirection(next - _gridPos);
                             StartCoroutine(StepTo(next));
                         }
                         else
                         {
+                            // Aucun chemin possible (bouché) -> on attend proprement
                             _readyAt = Time.time + interStepPause;
                         }
                         return;
@@ -192,13 +234,36 @@ namespace Sarabande.NME
         {
             _isMoving = true;
 
+            FromCell = _gridPos;
+            ToCell = target;
+            MoveProgress = 0f;
+
             Vector3 start = transform.position;
             Vector3 end = GridCenter(target);
+
+            // Si conflit direct sur la même target au démarrage du step : l'NME cède si sa progression reste <= seuil
+            bool checkYield = false;
+            if (hero != null && hero.IsStepping && target == hero.ToCell)
+            {
+                checkYield = true;
+            }
 
             float t = 0f;
             while (t < 1f)
             {
                 t += Time.deltaTime / stepDuration;
+                MoveProgress = t;
+                // Fenêtre de cession (priorité HÉRO) : uniquement en tout début de step
+                if (checkYield && t <= heroYieldThreshold)
+                {
+                    // le héros vise la même case ; l'NME s'efface
+                    transform.position = start;        // snap back immédiat
+                    _isMoving = false;
+                    _readyAt = Time.time + interStepPause;
+                    _path.Clear();                     // évite un "prochain nœud" obsolète
+                    _nextRepathAt = 0f;                // repath immédiat au prochain Update
+                    yield break;
+                }
                 if (t > 1f) t = 1f;
                 transform.position = Vector3.Lerp(start, end, t);
                 yield return null;
@@ -207,6 +272,9 @@ namespace Sarabande.NME
             _gridPos = target;
             _isMoving = false;
             _readyAt = Time.time + interStepPause;
+
+            MoveProgress = 0f;
+            FromCell = ToCell = _gridPos;
         }
 
         private void RecomputePath(Vector2Int goal)
@@ -273,6 +341,17 @@ namespace Sarabande.NME
                 if (!InsideBounds(n)) continue;
                 if (_blockedCells.Contains(n)) continue;
                 if (HasThinWallBetween(c, n)) continue;
+                // --- Empêche le swap / croisement avec le HÉRO pendant son step ---
+                if (hero != null && hero.IsStepping)
+                {
+                    // 1) Le HÉRO QUITTE FromCell : tant qu'il n'a pas assez libéré (t < seuil), on considère la case encore occupée
+                    if (n == hero.FromCell && hero.MoveProgress < heroVacateBlockThreshold)
+                        continue;
+
+                    // 2) Le HÉRO ENTRE dans ToCell : tant que 0 < t < 1, on évite d'y entrer aussi (empêche croisement sur l'arête)
+                    if (n == hero.ToCell && hero.MoveProgress > 0f && hero.MoveProgress < 1f)
+                        continue;
+                }
                 yield return n;
             }
         }
@@ -305,6 +384,18 @@ namespace Sarabande.NME
         {
             var key = NormalizeEdge(from, to);
             return _thinBlockers.Contains(key);
+        }
+
+        /// <summary>
+        /// Deux cases sont "directement adjacentes" si elles sont cardinales ET
+        /// qu'aucun mur fin ne les sépare.
+        /// </summary>
+        private bool IsDirectlyAdjacent(Vector2Int a, Vector2Int b)
+        {
+            var d = a - b;
+            int md = Mathf.Abs(d.x) + Mathf.Abs(d.y);
+            if (md != 1) return false;                 // pas cardinal / pas adjacent
+            return !HasThinWallBetween(a, b);          // adjacent oui, mais pas à travers un thin wall
         }
 
         private bool InsideBounds(Vector2Int c)
@@ -358,6 +449,8 @@ namespace Sarabande.NME
         public void ResetToInitial()
         {
             StopAllCoroutines();
+            MoveProgress = 0f;
+            FromCell = ToCell = _gridPos;
             _isAttacking = false;
             _path.Clear();
             _isMoving = false;

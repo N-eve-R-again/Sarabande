@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Sarabande.Core;
 using Sarabande.Levels;
+using Sarabande.NME;
 using System.Collections.Generic;
 using UnityEngine.Events;
 
@@ -32,12 +33,24 @@ namespace Sarabande.Player
         [SerializeField, Min(0.01f)] private float bumpOutDuration = 0.06f;
         [SerializeField, Min(0.01f)] private float bumpReturnDuration = 0.08f;
 
+        [Header("NME Conflict")]
+        [SerializeField, Range(0f, 0.5f)] private float nmeYieldThreshold = 0.15f;   // priorité Héro si NME.t ? seuil
+        [SerializeField, Range(0f, 0.5f)] private float nmeVacateThreshold = 0.25f;  // case NME quittée reste “occupée” tant que t < seuil
+        private NMEController[] _nmes;
+
         [Header("Exit")]
         [SerializeField] private UnityEvent onExit;
         [SerializeField] private bool disableOnExit = true;
 
         [Header("Facing")]
         [SerializeField] private bool faceOnMove = true;
+
+        [Header("Anti-overlap Guard")]
+        [SerializeField] private bool enforceNoOverlap = true;
+        [SerializeField, Min(0.01f)] private float overlapReturnDuration = 0.08f;
+        [SerializeField, Range(0f, 0.5f)] private float overlapEarlyCheckFromT = 0.15f;
+        // on commence à vérifier à partir de 15% du step (évite les faux positifs très tôt)
+
 
         [SerializeField] private Sarabande.Core.ResetManager resetManager;
 
@@ -48,6 +61,11 @@ namespace Sarabande.Player
         private Vector2 _held;                 // dernier input maintenu (x,y)
         private bool _isMoving = false;
         private float _readyAtTime = 0f;       // quand un nouveau step est autorisé
+
+        public bool IsStepping => _isMoving;
+        public Vector2Int FromCell { get; private set; }
+        public Vector2Int ToCell { get; private set; }
+        public float MoveProgress { get; private set; } // 0..1 pendant un step
 
         // Position logique sur la grille
         private Vector2Int _gridPos;
@@ -65,6 +83,8 @@ namespace Sarabande.Player
             }
 
             BuildCollisionSets();
+
+            _nmes = FindObjectsOfType<NMEController>(true);
 
             // Coord grille du spawn (ex. D8)
             _gridPos = new Vector2Int(levelData.heroSpawn.x, levelData.heroSpawn.z);
@@ -122,6 +142,12 @@ namespace Sarabande.Player
                 return;
             }
 
+            if (!CanEnterCellConsideringNME(target, dir))
+            {
+                StartCoroutine(Bump(dir));
+                return;
+            }
+
             if (faceOnMove) FaceDirection(dir);
             StartCoroutine(StepTo(target));
         }
@@ -137,20 +163,80 @@ namespace Sarabande.Player
         {
             _isMoving = true;
 
+            FromCell = _gridPos;
+            ToCell = target;
+            MoveProgress = 0f;
+
             Vector3 start = transform.position;
             Vector3 end = GridCenter(target);
 
             float t = 0f;
             while (t < 1f)
             {
+                // progression anim
                 t += Time.deltaTime / stepDuration;
                 if (t > 1f) t = 1f;
-                transform.position = Vector3.Lerp(start, end, t);
+                MoveProgress = t;
+
+                // position prévue à cette frame
+                Vector3 pos = Vector3.Lerp(start, end, t);
+
+                // --- GARDE-FOU INTERMÉDIAIRE ---
+                // Dès que la case devient réellement "occupée" (au sens des seuils),
+                // on annule l’atterrissage et on revient vers la case d’origine.
+                if (enforceNoOverlap && t >= overlapEarlyCheckFromT && IsCellOccupiedNowByNME(target))
+                {
+                    // retour depuis la position courante 'pos' vers 'start'
+                    float rt = 0f;
+                    while (rt < 1f)
+                    {
+                        rt += Time.deltaTime / overlapReturnDuration;
+                        if (rt > 1f) rt = 1f;
+                        transform.position = Vector3.Lerp(pos, start, rt);
+                        yield return null;
+                    }
+
+                    transform.position = start;
+                    _isMoving = false;
+                    MoveProgress = 0f;
+                    FromCell = ToCell = _gridPos;      // on reste logiquement sur la case d’origine
+                    _readyAtTime = Time.time + interStepPause;
+                    yield break;
+                }
+
+                // pas de conflit : on applique la position prévue
+                transform.position = pos;
                 yield return null;
+            }
+
+
+            // Anti-overlap final : si un NME occupe encore la case au moment d'atterrir, on rebondit
+            if (enforceNoOverlap && IsCellOccupiedNowByNME(target))
+            {
+                // On a déjà start = position d'origine et end = centre de la case cible
+                float rt = 0f;
+                while (rt < 1f)
+                {
+                    rt += Time.deltaTime / overlapReturnDuration;
+                    if (rt > 1f) rt = 1f;
+                    // Retour visuel de 'end' (cible) vers 'start' (origine)
+                    transform.position = Vector3.Lerp(end, start, rt);
+                    yield return null;
+                }
+
+                transform.position = start;        // verrouille pile sur la case d'origine
+                _isMoving = false;
+                MoveProgress = 0f;
+                FromCell = ToCell = _gridPos;      // reste sur la case d'origine côté logique
+                _readyAtTime = Time.time + interStepPause;
+                yield break;
             }
 
             _gridPos = target;
             _isMoving = false;
+
+            MoveProgress = 0f;
+            FromCell = ToCell = _gridPos;
 
             _readyAtTime = Time.time + interStepPause;
 
@@ -224,6 +310,77 @@ namespace Sarabande.Player
             }
         }
 
+        private bool CanEnterCellConsideringNME(Vector2Int target, Vector2Int dir)
+        {
+            if (_nmes == null) return true;
+
+            foreach (var n in _nmes)
+            {
+                if (n == null) continue;
+
+                // 1) NME immobile posé sur la cible -> bloque
+                if (!n.IsStepping && n.GridPos == target)
+                    return false;
+
+                if (n.IsStepping)
+                {
+                    var from = n.FromCell;
+                    var to = n.ToCell;
+                    float t = n.MoveProgress;
+
+                    // 2) Swap interdit : H vise 'from_N' et N vise 'ma case'
+                    if (to == _gridPos && from == target)
+                        return false;
+
+                    // 3) NME entre dans 'target'
+                    if (to == target)
+                    {
+                        // Héro prioritaire si NME pas assez engagé (il cédera lui-même)
+                        if (t > nmeYieldThreshold)
+                            return false; // trop avancé => bump
+                        else
+                            continue;     // autorisé
+                    }
+
+                    // 4) NME quitte 'target'
+                    if (from == target)
+                    {
+                        if (t < nmeVacateThreshold)
+                            return false; // n'a pas encore libéré la case
+                        else
+                            continue;     // ok, la case est suffisamment libérée
+                    }
+                }
+            }
+
+            return true; // personne ne bloque
+        }
+        private bool IsCellOccupiedNowByNME(Vector2Int target)
+        {
+            if (_nmes == null) return false;
+
+            foreach (var n in _nmes)
+            {
+                if (n == null) continue;
+
+                // NME immobile déjà sur la cible ? occupée
+                if (!n.IsStepping && n.GridPos == target)
+                    return true;
+
+                if (n.IsStepping)
+                {
+                    // NME entre dans la cible : s'il est suffisamment engagé, on considère la case occupée
+                    if (n.ToCell == target && n.MoveProgress > nmeYieldThreshold)
+                        return true;
+
+                    // NME quitte la cible : tant qu'il n'a pas assez libéré, la case reste occupée
+                    if (n.FromCell == target && n.MoveProgress < nmeVacateThreshold)
+                        return true;
+                }
+            }
+            return false;
+        }
+
         private static (Vector2Int, Vector2Int) NormalizeEdge(Vector2Int a, Vector2Int b)
         {
             if (a.x < b.x) return (a, b);
@@ -290,6 +447,8 @@ namespace Sarabande.Player
         public void ResetToInitial()
         {
             StopAllCoroutines();
+            MoveProgress = 0f;
+            FromCell = ToCell = _gridPos;
             enabled = true;
             _held = Vector2.zero;
             _isMoving = false;
