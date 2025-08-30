@@ -616,5 +616,7 @@ namespace Sarabande.NME
                 }
             }
         }
+        public void AddDynamicBlockCell(Vector2Int c) => _blockedCells.Add(c);
+        public void RemoveDynamicBlockCell(Vector2Int c) => _blockedCells.Remove(c);
     }
 }

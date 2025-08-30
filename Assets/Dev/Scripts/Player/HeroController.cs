@@ -70,8 +70,10 @@ namespace Sarabande.Player
         // Position logique sur la grille
         private Vector2Int _gridPos;
         public Vector2Int GridPos => _gridPos;
-
         public Vector3 WorldPos => transform.position;
+        // pour notifier un seul input lors de l'activation d'un levier par exemple
+        public Vector2Int CurrentIntentDir { get; private set; } = Vector2Int.zero;
+
 
         private void Start()
         {
@@ -104,11 +106,15 @@ namespace Sarabande.Player
         private void Update()
         {
             if (resetManager != null && resetManager.IsResetInProgress) return;
+
+            Vector2Int dir = HeldToCardinal(_held, inputDeadzone);
+            CurrentIntentDir = dir;
+
             if (_isMoving) return;
             if (Time.time < _readyAtTime) return;
 
             // Dir cardinal depuis l'input maintenu
-            Vector2Int dir = HeldToCardinal(_held, inputDeadzone);
+            
             if (dir == Vector2Int.zero) return;
 
             // Cible dans les bornes du niveau
@@ -250,6 +256,7 @@ namespace Sarabande.Player
         private void OnMove(InputValue value)
         {
             _held = value.Get<Vector2>();
+            CurrentIntentDir = HeldToCardinal(_held, inputDeadzone);
         }
 
         // --- Utilitaires ---
@@ -399,9 +406,13 @@ namespace Sarabande.Player
             if (_isMoving) yield break;
             _isMoving = true;
 
+            // NEW: on se tourne vers la direction tentée, même si c'est bloqué
+            if (faceOnMove) FaceDirection(dir);
+
             Vector3 start = transform.position;
             Vector3 push = new Vector3(dir.x, 0f, dir.y).normalized * bumpDistance;
 
+            // Aller (rapide)
             float t = 0f;
             while (t < 1f)
             {
@@ -411,6 +422,7 @@ namespace Sarabande.Player
                 yield return null;
             }
 
+            // Retour (un peu plus “mou” si tu veux)
             t = 0f;
             while (t < 1f)
             {
@@ -424,6 +436,7 @@ namespace Sarabande.Player
             _isMoving = false;
             _readyAtTime = Time.time + interStepPause;
         }
+
 
         private static Vector2Int DirToVec(EdgeDirection dir)
         {
@@ -464,5 +477,8 @@ namespace Sarabande.Player
             _isMoving = true;
             StartCoroutine(SpawnInFromEdge());
         }
+
+        public void AddDynamicBlockCell(Vector2Int c) => _blockedCells.Add(c);
+        public void RemoveDynamicBlockCell(Vector2Int c) => _blockedCells.Remove(c);
     }
 }

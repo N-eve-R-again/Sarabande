@@ -165,3 +165,14 @@ MonoBehaviour:
     arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
+  timedDoors:
+  - cell:
+      x: 1
+      z: 4
+    openSeconds: 4
+  levers:
+  - cell:
+      x: 4
+      z: 6
+    requireFacing: 0
+    linkedDoorIndex: 0

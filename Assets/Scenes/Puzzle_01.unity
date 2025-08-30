@@ -499,6 +499,8 @@ GameObject:
   - component: {fileID: 619786945}
   - component: {fileID: 619786946}
   - component: {fileID: 619786947}
+  - component: {fileID: 619786948}
+  - component: {fileID: 619786949}
   m_Layer: 0
   m_Name: LevelRoot
   m_TagString: Untagged
@@ -622,10 +624,50 @@ MonoBehaviour:
   tileUpLift: 0.01
   tilePressDuration: 0.06
   tileReleaseDuration: 0.15
-  slitMaterial: {fileID: 0}
-  slitWidthScale: 0.6
-  slitHeightScale: 0.35
-  slitThickness: 0.02
+  wallTopMaterial: {fileID: 2100000, guid: 57c00c2267d1a544b80b5cc4b6f2c9f4, type: 2}
+  topWidthScale: 0.2
+  topDepthScale: 0.18
+  topMarkerThickness: 0.01
+  markBorders: 1
+--- !u!114 &619786948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 619786941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c47c60f7771735947aa9fed9f2a5d658, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  cellSize: 1
+  wallHeight: 1
+  doorMaterial: {fileID: 2100000, guid: a5d83b4d705e713448fac4a7efd8d890, type: 2}
+  obstaclesLayerName: Obstacles
+  enterHoldThreshold: 0.25
+--- !u!114 &619786949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 619786941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d153de0717b6644491dd394c302a2ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  timedDoorSystem: {fileID: 619786948}
+  cellSize: 1
+  leverHeight: 0.4
+  leverBaseMaterial: {fileID: 2100000, guid: a5d83b4d705e713448fac4a7efd8d890, type: 2}
+  leverHandleMaterial: {fileID: 2100000, guid: a5d83b4d705e713448fac4a7efd8d890, type: 2}
+  wallInset: 0.08
+  baseRadiusScale: 0.12
+  handleLengthScale: 0.5
 --- !u!1 &653965775
 GameObject:
   m_ObjectHideFlags: 0

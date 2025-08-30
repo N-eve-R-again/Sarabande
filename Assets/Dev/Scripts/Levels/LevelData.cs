@@ -47,5 +47,27 @@ namespace Sarabande.Levels
 
         [Tooltip("Pièges à flèche : quand on marche sur 'triggerCell', une flèche part de 'startCell' dans 'travelDir'.")]
         public List<ArrowTrapSpec> arrowTraps = new();
+
+        // --- Timed Doors & Levers ---
+
+        [System.Serializable]
+        public class TimedDoorSpec
+        {
+            public GridCoord cell;                  // ex: B5
+            [Min(0.1f)] public float openSeconds = 3f;  // durée d'ouverture de base
+        }
+
+        [System.Serializable]
+        public class LeverSpec
+        {
+            public GridCoord cell;                     // ex: E7
+            public EdgeDirection requireFacing = EdgeDirection.North; // direction à pousser
+            [Min(0)] public int linkedDoorIndex = 0;   // index dans la liste 'timedDoors'
+        }
+
+        // Listes
+        public List<TimedDoorSpec> timedDoors = new();
+        public List<LeverSpec> levers = new();
+
     }
 }
