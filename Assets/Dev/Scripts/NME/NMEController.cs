@@ -293,13 +293,14 @@ namespace Sarabande.NME
             while (q.Count > 0)
             {
                 var cur = q.Dequeue();
+
                 if (cur == goal)
                 {
                     found = true;
                     break;
                 }
 
-                foreach (var nb in Neighbors(cur))
+                foreach (var nb in NeighborsTowardGoal(cur, goal))
                 {
                     if (visited.Contains(nb)) continue;
                     visited.Add(nb);
@@ -325,35 +326,38 @@ namespace Sarabande.NME
                 _path.Add(stack.Pop());
         }
 
-        private IEnumerable<Vector2Int> Neighbors(Vector2Int c)
+        private IEnumerable<Vector2Int> NeighborsTowardGoal(Vector2Int c, Vector2Int goal)
         {
             var dirs = new[]
             {
-                new Vector2Int( 1, 0),
-                new Vector2Int(-1, 0),
-                new Vector2Int( 0, 1),
-                new Vector2Int( 0,-1),
-            };
+        Vector2Int.right, // tie-breaker stable: Est d'abord
+        Vector2Int.left,
+        Vector2Int.up,
+        Vector2Int.down
+    };
 
-            foreach (var d in dirs)
+            var cand = new List<(Vector2Int n, int dist, int tie)>(4);
+
+            for (int i = 0; i < dirs.Length; i++)
             {
+                var d = dirs[i];
                 var n = c + d;
                 if (!InsideBounds(n)) continue;
                 if (_blockedCells.Contains(n)) continue;
                 if (HasThinWallBetween(c, n)) continue;
-                // --- Empêche le swap / croisement avec le HÉRO pendant son step ---
-                if (hero != null && hero.IsStepping)
-                {
-                    // 1) Le HÉRO QUITTE FromCell : tant qu'il n'a pas assez libéré (t < seuil), on considère la case encore occupée
-                    if (n == hero.FromCell && hero.MoveProgress < heroVacateBlockThreshold)
-                        continue;
 
-                    // 2) Le HÉRO ENTRE dans ToCell : tant que 0 < t < 1, on évite d'y entrer aussi (empêche croisement sur l'arête)
-                    if (n == hero.ToCell && hero.MoveProgress > 0f && hero.MoveProgress < 1f)
-                        continue;
-                }
-                yield return n;
+                int dist = Mathf.Abs(n.x - goal.x) + Mathf.Abs(n.y - goal.y);
+                cand.Add((n, dist, i));
             }
+
+            cand.Sort((a, b) =>
+            {
+                int cmp = a.dist.CompareTo(b.dist);
+                if (cmp != 0) return cmp;
+                return a.tie.CompareTo(b.tie); // ordre stable Est>Ouest>Nord>Sud
+            });
+
+            foreach (var p in cand) yield return p.n;
         }
 
         // --- Collisions / util ---
@@ -401,13 +405,6 @@ namespace Sarabande.NME
         private bool InsideBounds(Vector2Int c)
         {
             return c.x >= 0 && c.x < levelData.width && c.y >= 0 && c.y < levelData.height;
-        }
-
-        private static bool IsAdjacent(Vector2Int a, Vector2Int b)
-        {
-            var d = a - b;
-            int md = Mathf.Abs(d.x) + Mathf.Abs(d.y);
-            return md == 1;
         }
 
         private Vector3 GridCenter(Vector2Int c)

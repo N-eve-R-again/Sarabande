@@ -23,6 +23,18 @@ namespace Sarabande.Doors
         [Header("Hold rule")]
         [SerializeField, Range(0f, 1f)] private float enterHoldThreshold = 0.25f; // ?25% d'entrée => on maintient ouvert
 
+        [Header("Audio")]
+        [SerializeField] private AudioClip wooshOpenClip;
+        [SerializeField] private AudioClip wooshCloseClip;
+        [SerializeField] private AudioClip tickClip;
+        [SerializeField, Range(0f, 1f)] private float sfxVolume = 0.9f;
+        [SerializeField, Range(0f, 1f)] private float tickVolume = 0.6f;
+        [SerializeField, Range(0f, 1f)] private float spatialBlend = 1f; // 3D
+        [SerializeField] private float minDistance = 2f;
+        [SerializeField] private float maxDistance = 20f;
+        [SerializeField, Min(0f)] private float tickStartDelay = 0.08f; // petit délai pour laisser respirer le woosh d’ouverture
+        [SerializeField] private float tickIntervalSeconds = -1f; // L’intervalle entre deux "tick". <= 0 => on prend automatiquement tickClip.length
+
         // refs acteurs (pour la règle "ne pas écraser")
         private HeroController _hero;
         private NMEController[] _nmes;
@@ -40,6 +52,11 @@ namespace Sarabande.Doors
             public DoorState state;
             public GameObject blockerGO;
             public Coroutine timerCo;
+
+            // AUDIO
+            public AudioSource sfx;      // pour les woosh (OneShot)
+            public AudioSource tick;     // pour le tic-tac (Play/Stop)
+            public Coroutine tickCo;     // pour chronométrer la durée de tick
         }
 
         private readonly List<DoorRuntime> _doors = new();
@@ -87,6 +104,24 @@ namespace Sarabande.Doors
                 int obsLayer = LayerMask.NameToLayer(obstaclesLayerName);
                 if (obsLayer != -1) go.layer = obsLayer;
 
+                // AUDIO par porte : deux sources sur le GO (même position que la porte)
+                var sfx = go.AddComponent<AudioSource>();
+                sfx.playOnAwake = false;
+                sfx.loop = false;
+                sfx.volume = sfxVolume;
+                sfx.spatialBlend = spatialBlend;
+                sfx.minDistance = minDistance;
+                sfx.maxDistance = maxDistance;
+
+                var tick = go.AddComponent<AudioSource>();
+                tick.playOnAwake = false;
+                tick.loop = false;               // eviter la loop continue qui fait buzzer
+                tick.volume = tickVolume;
+                tick.spatialBlend = spatialBlend;
+                tick.minDistance = minDistance;
+                tick.maxDistance = maxDistance;
+                tick.clip = null;                 //on veut jouer en oneshot le tick, pour chaque tick
+
                 // état initial = FERMÉ (B5 est déjà dans nonWalkables)
                 var r = new DoorRuntime
                 {
@@ -95,7 +130,10 @@ namespace Sarabande.Doors
                     baseOpenSeconds = Mathf.Max(0.1f, spec.openSeconds),
                     state = DoorState.Closed,
                     blockerGO = go,
-                    timerCo = null
+                    timerCo = null,
+                    sfx = sfx,
+                    tick = tick,
+                    tickCo = null
                 };
                 _doors.Add(r);
             }
@@ -128,35 +166,47 @@ namespace Sarabande.Doors
             if (doorIndex < 0 || doorIndex >= _doors.Count) return;
             var d = _doors[doorIndex];
 
-            // déjà ouvert => refresh timer
+            // Déjà ouvert ET timer en cours ? refresh (uniquement le tick)
             if (d.state == DoorState.OpeningTimer && d.timerCo != null)
             {
+                // refresh timer "logique"
                 StopCoroutine(d.timerCo);
                 d.timerCo = StartCoroutine(OpenTimerRoutine(d, seconds));
+
+                // refresh fenêtre de tick "configurée"
+                StartTickFor(d, seconds);
                 return;
             }
+            // Déjà ouvert (sans timer actif) ? repasse en OpeningTimer (sans woosh, mais tick)
             if (d.state == DoorState.Open)
             {
                 d.timerCo = StartCoroutine(OpenTimerRoutine(d, seconds));
                 d.state = DoorState.OpeningTimer;
+                StartTickFor(d, seconds);
                 return;
             }
 
-            // passer FERMÉ -> OUVERT
+            // Fermée ? OUVERT
             d.state = DoorState.OpeningTimer;
             SetBlockerVisible(d, false);
             RemoveDynamicBlock(d.cell);  // autorise le passage
-            d.timerCo = StartCoroutine(OpenTimerRoutine(d, seconds));
 
-            // NEW: prévenir qu’on vient d’ouvrir
+            // AUDIO
+            PlayWooshOpen(d);
+            StartTickFor(d, seconds);
+
+            d.timerCo = StartCoroutine(OpenTimerRoutine(d, seconds));
             DoorOpened?.Invoke(d.index);
         }
+
 
         public void ForceClose(int doorIndex)
         {
             if (doorIndex < 0 || doorIndex >= _doors.Count) return;
             var d = _doors[doorIndex];
             if (d.timerCo != null) { StopCoroutine(d.timerCo); d.timerCo = null; }
+            StopTickFor(d); // ? coupe le tic-tac tout de suite
+
             TryCloseOrDefer(d);
         }
 
@@ -189,6 +239,7 @@ namespace Sarabande.Doors
             SetBlockerVisible(d, true);
             AddDynamicBlock(d.cell);   // interdit de passer
             d.state = DoorState.Closed;
+            PlayWooshClose(d); // ? woosh au moment de la fermeture visuelle
             DoorClosed?.Invoke(d.index);
         }
 
@@ -202,6 +253,7 @@ namespace Sarabande.Doors
             AddDynamicBlock(d.cell);
             d.state = DoorState.Closed;
             d.timerCo = null;
+            PlayWooshClose(d); // ? woosh au moment de la fermeture visuelle
             DoorClosed?.Invoke(d.index);
         }
 
@@ -232,10 +284,26 @@ namespace Sarabande.Doors
             return false;
         }
 
-        private void SetBlockerVisible(DoorRuntime d, bool visible)
+        private void SetBlockerVisible(DoorRuntime d, bool visible) //on a les sons sur le go de la porte, donc on le desactive pas mais on le rend invisible et non bloquant
         {
-            if (d.blockerGO) d.blockerGO.SetActive(visible);
+            if (!d.blockerGO) return;
+
+            // Affichage
+            var rend = d.blockerGO.GetComponent<Renderer>();
+            if (rend) rend.enabled = visible;
+
+            // Collision/LOS
+            var col = d.blockerGO.GetComponent<Collider>();
+            if (col) col.enabled = visible;
+
+            // Layer pour la LOS des NME
+            int obs = LayerMask.NameToLayer(obstaclesLayerName);
+            if (visible && obs != -1)
+                d.blockerGO.layer = obs;        // ferme -> bloque LOS
+            else
+                d.blockerGO.layer = LayerMask.NameToLayer("Default"); // ouvert -> ne bloque pas
         }
+
 
         // --- Mise à jour des sets de collisions Héro/NME ---
         private void AddDynamicBlock(Vector2Int cell)
@@ -248,6 +316,56 @@ namespace Sarabande.Doors
             if (_hero) _hero.RemoveDynamicBlockCell(cell);
             if (_nmes != null) foreach (var n in _nmes) if (n) n.RemoveDynamicBlockCell(cell);
         }
+        // --- Sound ---
+        private void PlayWooshOpen(DoorRuntime d)
+        {
+            if (d.sfx && wooshOpenClip) d.sfx.PlayOneShot(wooshOpenClip, sfxVolume);
+        }
+        private void PlayWooshClose(DoorRuntime d)
+        {
+            if (d.sfx && wooshCloseClip) d.sfx.PlayOneShot(wooshCloseClip, sfxVolume);
+        }
+
+        private void StartTickFor(DoorRuntime d, float seconds)
+        {
+            if (d.tickCo != null) { StopCoroutine(d.tickCo); d.tickCo = null; }
+            if (!d.tick || !tickClip || seconds <= 0f) return;
+
+            d.tickCo = StartCoroutine(TickWindowRoutine(d, seconds));
+        }
+
+        private IEnumerator TickWindowRoutine(DoorRuntime d, float seconds)
+        {
+            // 1) Laisse le woosh respirer un poil
+            float delay = Mathf.Max(0f, tickStartDelay);
+            if (delay > 0f) yield return new WaitForSeconds(delay);
+
+            // 2) Temps restant pour le tic-tac "configuré"
+            float remaining = Mathf.Max(0f, seconds - delay);
+            if (remaining <= 0f) yield break;
+
+            // 3) Intervalle réél des "tick"
+            float interval = (tickIntervalSeconds > 0f) ? tickIntervalSeconds : Mathf.Max(0.01f, tickClip.length);
+
+            while (remaining > 0f)
+            {
+                // Joue un "tick" discret (OneShot respecte spatialBlend, min/maxDistance, etc.)
+                d.tick.PlayOneShot(tickClip, tickVolume);
+
+                // Attendre la fin du tick (ou l’intervalle choisi)
+                yield return new WaitForSeconds(interval);
+                remaining -= interval;
+            }
+
+            // Fin de fenêtre ? on s’assure qu’aucun tick ne continue
+            StopTickFor(d);
+        }
+
+        private void StopTickFor(DoorRuntime d)
+        {
+            if (d.tickCo != null) { StopCoroutine(d.tickCo); d.tickCo = null; }
+            // Pas besoin de Stop() : on joue en OneShot, pas de boucle en cours.
+        }
 
         // --- Reset ---
         public void ResetToInitial()
@@ -256,9 +374,11 @@ namespace Sarabande.Doors
             foreach (var d in _doors)
             {
                 if (d.timerCo != null) { StopCoroutine(d.timerCo); d.timerCo = null; }
+                StopTickFor(d); // ? coupe le tic-tac s’il jouait
+
                 SetBlockerVisible(d, true);
                 d.state = DoorState.Closed;
-                AddDynamicBlock(d.cell); // s'assure que la case redevient bloquée
+                AddDynamicBlock(d.cell);
             }
         }
     }
