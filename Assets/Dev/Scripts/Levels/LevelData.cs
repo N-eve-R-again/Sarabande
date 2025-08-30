@@ -29,5 +29,23 @@ namespace Sarabande.Levels
 
         [Header("Sortie")]
         public EdgeExit exit;        // H1 vers East
+
+        // --- Arrow Traps (proto) -----------------------------------------------------
+
+        [System.Serializable]
+        public struct ArrowTrapSpec
+        {
+            public GridCoord triggerCell;    // case walkable à fouler (HERO ou NME)
+            public GridCoord startCell;      // première case "dedans la map" que la flèche traverse
+            public EdgeDirection travelDir;  // direction de déplacement de la flèche (N/E/S/W)
+            [Min(0.1f)] public float arrowSpeed; // vitesse en unités monde / sec (à tweaker dans l'Inspector)
+
+            // --- options de réarmement ---
+            public bool canRearm;             // si true, le piège se réarme
+            [Min(0f)] public float rearmDelay; // temps avant réarmement (secondes)
+        }
+
+        [Tooltip("Pièges à flèche : quand on marche sur 'triggerCell', une flèche part de 'startCell' dans 'travelDir'.")]
+        public List<ArrowTrapSpec> arrowTraps = new();
     }
 }

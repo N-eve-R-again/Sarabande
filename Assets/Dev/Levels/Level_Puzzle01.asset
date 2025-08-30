@@ -84,3 +84,84 @@ MonoBehaviour:
       x: 7
       z: 0
     direction: 1
+  arrowTraps:
+  - triggerCell:
+      x: 5
+      z: 5
+    startCell:
+      x: 5
+      z: 4
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+  - triggerCell:
+      x: 0
+      z: 2
+    startCell:
+      x: 0
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+  - triggerCell:
+      x: 1
+      z: 0
+    startCell:
+      x: 1
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+  - triggerCell:
+      x: 2
+      z: 2
+    startCell:
+      x: 2
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+  - triggerCell:
+      x: 2
+      z: 0
+    startCell:
+      x: 2
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+  - triggerCell:
+      x: 4
+      z: 1
+    startCell:
+      x: 4
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+  - triggerCell:
+      x: 5
+      z: 1
+    startCell:
+      x: 5
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+  - triggerCell:
+      x: 7
+      z: 1
+    startCell:
+      x: 7
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0

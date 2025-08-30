@@ -497,6 +497,8 @@ GameObject:
   - component: {fileID: 619786943}
   - component: {fileID: 619786944}
   - component: {fileID: 619786945}
+  - component: {fileID: 619786946}
+  - component: {fileID: 619786947}
   m_Layer: 0
   m_Name: LevelRoot
   m_TagString: Untagged
@@ -576,6 +578,54 @@ MonoBehaviour:
   findOnAwake: 1
   rewindOverlay: {fileID: 869493706}
   rewindDuration: 1
+--- !u!114 &619786946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 619786941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 215cf200fec374b4eae91c3e08c46b6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  cellSize: 1
+  hero: {fileID: 1116510830}
+  resetManager: {fileID: 619786945}
+  arrowMaterial: {fileID: 2100000, guid: 84ce8959b7a624a41966d42d8c2cafbc, type: 2}
+  arrowThickness: 0.08
+  arrowLengthInCell: 0.7
+  obstaclesMask:
+    serializedVersion: 2
+    m_Bits: 8
+  projectilesLayerName: Projectiles
+--- !u!114 &619786947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 619786941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19dafddd12fa33b4da97a43900730f1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  cellSize: 1
+  wallHeight: 1
+  tileMaterial: {fileID: 2100000, guid: 7c12ca4230d5b064e90a0e3983fd21c9, type: 2}
+  tileSizeScale: 0.88
+  tileThickness: 0.02
+  tileUpLift: 0.01
+  tilePressDuration: 0.06
+  tileReleaseDuration: 0.15
+  slitMaterial: {fileID: 0}
+  slitWidthScale: 0.6
+  slitHeightScale: 0.35
+  slitThickness: 0.02
 --- !u!1 &653965775
 GameObject:
   m_ObjectHideFlags: 0
@@ -933,6 +983,8 @@ MonoBehaviour:
   bumpDistance: 0.3
   bumpOutDuration: 0.1
   bumpReturnDuration: 0.15
+  nmeYieldThreshold: 0.2
+  nmeVacateThreshold: 0.3
   onExit:
     m_PersistentCalls:
       m_Calls:
@@ -950,6 +1002,9 @@ MonoBehaviour:
         m_CallState: 2
   disableOnExit: 1
   faceOnMove: 1
+  enforceNoOverlap: 1
+  overlapReturnDuration: 0.08
+  overlapEarlyCheckFromT: 0.15
   resetManager: {fileID: 619786945}
 --- !u!114 &1116510831
 MonoBehaviour:
@@ -1324,7 +1379,7 @@ MonoBehaviour:
   cellSize: 1
   hero: {fileID: 1116510830}
   stepDuration: 0.45
-  interStepPause: 0.1
+  interStepPause: 0.2
   repathInterval: 0.2
   fovDegrees: 120
   losHeight: 0.5
@@ -1332,12 +1387,16 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   initialFacing: 1
+  attackPreDelay: 0.15
   attackWindup: 0.5
   attackRecover: 0.2
   telegraphMaterial: {fileID: 2100000, guid: 63393074901efc846bf2385de9ab6f91, type: 2}
   telegraphDiameter: 0.95
   telegraphY: 0.02
-  attackPreDelay: 0.15
+  drawFovGizmos: 1
+  gizmoFovRadius: 20
+  heroYieldThreshold: 0.2
+  heroVacateBlockThreshold: 0.3
   resetManager: {fileID: 619786945}
 --- !u!4 &1482975304
 Transform:
