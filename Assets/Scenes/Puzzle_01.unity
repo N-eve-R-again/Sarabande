@@ -647,6 +647,16 @@ MonoBehaviour:
   doorMaterial: {fileID: 2100000, guid: a5d83b4d705e713448fac4a7efd8d890, type: 2}
   obstaclesLayerName: Obstacles
   enterHoldThreshold: 0.25
+  wooshOpenClip: {fileID: 8300000, guid: c2e7448a3141d2b4ba4c44d08017a22f, type: 3}
+  wooshCloseClip: {fileID: 8300000, guid: c2e7448a3141d2b4ba4c44d08017a22f, type: 3}
+  tickClip: {fileID: 8300000, guid: 8a3249ab597f0e04594e9a961f6b7096, type: 3}
+  sfxVolume: 0.9
+  tickVolume: 0.6
+  spatialBlend: 0
+  minDistance: 2
+  maxDistance: 20
+  tickStartDelay: 0.08
+  tickIntervalSeconds: 0.35
 --- !u!114 &619786949
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -662,12 +672,17 @@ MonoBehaviour:
   levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   timedDoorSystem: {fileID: 619786948}
   cellSize: 1
-  leverHeight: 0.4
+  wallHeight: 1
   leverBaseMaterial: {fileID: 2100000, guid: a5d83b4d705e713448fac4a7efd8d890, type: 2}
-  leverHandleMaterial: {fileID: 2100000, guid: a5d83b4d705e713448fac4a7efd8d890, type: 2}
-  wallInset: 0.08
-  baseRadiusScale: 0.12
-  handleLengthScale: 0.5
+  leverHandleMaterial: {fileID: 2100000, guid: 57c00c2267d1a544b80b5cc4b6f2c9f4, type: 2}
+  wallInset: -0.1
+  mountHeightNorm: 0.7
+  baseRadiusScale: 0.284
+  baseThicknessScale: 0.3
+  handleThicknessScale: 0.25
+  handleLengthScale: 1
+  handleAngleUp: 80
+  handleAngleDown: 60
 --- !u!1 &653965775
 GameObject:
   m_ObjectHideFlags: 0

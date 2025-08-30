@@ -12,16 +12,23 @@ namespace Sarabande.Doors
         [SerializeField] private LevelData levelData;
         [SerializeField] private TimedDoorSystem timedDoorSystem; // référence au composant ci-dessus
         [SerializeField, Min(0.001f)] private float cellSize = 1f;
-        [SerializeField, Min(0.1f)] private float leverHeight = 0.4f;
+        [SerializeField, Min(0.1f)] private float wallHeight = 1f;
 
         [Header("Visuals")]
         [SerializeField] private Material leverBaseMaterial;
         [SerializeField] private Material leverHandleMaterial;
 
         [Header("Wall anchoring")]
-        [SerializeField, Min(0.0f)] private float wallInset = 0.08f;              // écart au mur (évite de “mordre” dedans)
-        [SerializeField, Range(0.05f, 0.5f)] private float baseRadiusScale = 0.12f; // rayon base cylindre relatif à la case
-        [SerializeField, Range(0.2f, 1.0f)] private float handleLengthScale = 0.5f; // hauteur/longueur relative de la poignée
+        [SerializeField] private float wallInset = 0.0f;                     // peut être négatif pour rentrer dans le mur
+        [SerializeField, Range(0f, 1f)] private float mountHeightNorm = 0.7f; // 0=sol, 1=haut du mur
+        [SerializeField, Range(0.05f, 0.5f)] private float baseRadiusScale = 0.16f;   // rayon (X/Z) relatif à la case
+        [SerializeField, Range(0.02f, 0.3f)] private float baseThicknessScale = 0.06f; // épaisseur (Y) relative à la hauteur de mur
+
+        [Header("Handle")]
+        [SerializeField, Range(0.02f, 0.25f)] private float handleThicknessScale = 0.08f; // épaisseur (X/Y) relative à la case
+        [SerializeField, Range(0.2f, 1.2f)] private float handleLengthScale = 0.7f;       // longueur (Z) relative à la case
+        [SerializeField, Range(0f, 90f)] private float handleAngleUp = 35f;               // angle poignée en position ON
+        [SerializeField, Range(0f, 90f)] private float handleAngleDown = 45f;             // angle poignée en position OFF
 
         private HeroController _hero;
         private Transform _parent;
@@ -34,6 +41,7 @@ namespace Sarabande.Doors
             public bool isOn; // OFF par défaut
             public Transform handle; // pour une petite rotation visuelle
             public bool pressedLatch; // true tant que le joueur maintient la poussée
+            public Transform pivot; // pivot de rotation
         }
 
         private readonly List<LeverRuntime> _levers = new();
@@ -57,6 +65,11 @@ namespace Sarabande.Doors
         {
             _levers.Clear();
             if (levelData.levers == null) return;
+            if (levelData.timedDoors == null || levelData.timedDoors.Count == 0)
+            {
+                Debug.LogWarning("[LeverSystem] Aucun TimedDoor dans LevelData, les leviers seront ignorés.");
+                return;
+            }
 
             int idx = 0;
             foreach (var spec in levelData.levers)
@@ -71,11 +84,11 @@ namespace Sarabande.Doors
                 };
                 _levers.Add(r);
 
-                // Visuel base + poignée
+                // 3.1) Position ancrée au mur demandé (requireFacing)
                 Vector3 c = GridCenter(cell);
                 float half = cellSize * 0.5f;
 
-                // 3.1) Position ancrée au mur demandé (requireFacing)
+                // Position au bord de la case, selon le mur ciblé
                 Vector3 basePos = c;
                 switch (r.requireFacing)
                 {
@@ -85,50 +98,70 @@ namespace Sarabande.Doors
                     case EdgeDirection.West: basePos.x = c.x - half + wallInset; break;
                 }
 
-                // 3.2) Instanciation de la base (cylindre), orientée vers le mur
+                // Hauteur de montage sur le mur (en proportion de wallHeight)
+                float mountY = Mathf.Lerp(0f, wallHeight, mountHeightNorm);
+
+                // --- Base (cylindre “plaque”) ---
                 var baseGo = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 baseGo.name = $"LeverBase_{idx}";
                 baseGo.transform.SetParent(_parent, false);
-                baseGo.transform.position = new Vector3(basePos.x, leverHeight * 0.25f, basePos.z);
-                baseGo.transform.rotation = Quaternion.Euler(0f, FacingYaw(r.requireFacing), 0f);
+                baseGo.transform.position = new Vector3(basePos.x, mountY, basePos.z);
 
-                // rayon de la base (x/z), hauteur ? 0.5 * leverHeight (comme avant)
-                float baseR = baseRadiusScale * cellSize;
-                baseGo.transform.localScale = new Vector3(baseR, leverHeight * 0.25f, baseR);
+                // On oriente la base pour que son +Z pointe vers L’INTÉRIEUR de la case
+                baseGo.transform.rotation = Quaternion.Euler(0f, InteriorYaw(r.requireFacing), 0f);
+
+                // Dimensions : cylindre fin + un peu large pour être visible top-down
+                float baseR = baseRadiusScale * cellSize;          // rayon (X/Z)
+                float baseThick = baseThicknessScale * wallHeight; // épaisseur (Y)
+                baseGo.transform.localScale = new Vector3(baseR, baseThick * 0.5f, baseR); // (Y est la moitié de la hauteur Unity=2)
 
                 var colB = baseGo.GetComponent<Collider>(); if (colB) Destroy(colB);
                 var mrB = baseGo.GetComponent<MeshRenderer>();
                 if (mrB) { mrB.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; mrB.receiveShadows = false; if (leverBaseMaterial) mrB.sharedMaterial = leverBaseMaterial; }
 
-                // 3.3) Poignée (cube) : on garde la même logique mais on ajuste sa taille
+                // --- Pivot (empty) au centre de la base ---
+                // La rotation se fera sur ce pivot, pas sur le cube directement
+                var pivotGo = new GameObject($"LeverPivot_{idx}").transform;
+                pivotGo.SetParent(baseGo.transform, false);
+                // 0.5f = rayon local du cylindre (Unity). On ajoute un tout petit débord pour être bien “à l’extérieur”.
+                const float worldOutset = 0.005f; // 5 mm monde
+                float localOutset = (baseGo.transform.lossyScale.z > 0f) ? (worldOutset / baseGo.transform.lossyScale.z) : 0f;
+                pivotGo.localPosition = new Vector3(0f, 0f, 0.5f + localOutset);
+
+
+                // --- Handle (cube) ---
+                // Épaisseur (X/Y) et longueur (Z) qui sort dans la case
+                float hT = handleThicknessScale * cellSize;
+                float hL = handleLengthScale * cellSize;
+
                 var handleGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 handleGo.name = $"LeverHandle_{idx}";
-                handleGo.transform.SetParent(baseGo.transform, false);
+                handleGo.transform.SetParent(pivotGo, false);
 
-                // hauteur de la poignée relative (un peu plus longue si tu veux)
-                float handleH = leverHeight * handleLengthScale;
-                // épaisseur fine
-                float handleT = cellSize * 0.1f;
-
-                handleGo.transform.localPosition = new Vector3(0f, leverHeight * 0.5f, 0f);
-                handleGo.transform.localScale = new Vector3(handleT, handleH, handleT);
+                // Place la poignée pour que son extrémité “haute” coïncide avec le pivot (elle sort sur +Z)
+                handleGo.transform.localScale = new Vector3(hT, hT, hL);
+                handleGo.transform.localPosition = new Vector3(0f, 0f, hL * 0.5f);
 
                 var colH = handleGo.GetComponent<Collider>(); if (colH) Destroy(colH);
                 var mrH = handleGo.GetComponent<MeshRenderer>();
                 if (mrH) { mrH.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; mrH.receiveShadows = false; if (leverHandleMaterial) mrH.sharedMaterial = leverHandleMaterial; }
 
+                // stocke les refs
                 r.handle = handleGo.transform;
+                r.pivot = pivotGo;
+
+                SetHandleVisual(r, false); // poignée vers le bas au spawn
 
                 idx++;
             }
         }
 
-        private static float FacingYaw(EdgeDirection d) => d switch
+        private static float InteriorYaw(EdgeDirection d) => d switch
         {
-            EdgeDirection.North => 0f,
-            EdgeDirection.East => 90f,
-            EdgeDirection.South => 180f,
-            EdgeDirection.West => 270f,
+            EdgeDirection.North => 180f, // intérieur = Sud
+            EdgeDirection.East => 270f, // intérieur = Ouest
+            EdgeDirection.South => 0f,   // intérieur = Nord
+            EdgeDirection.West => 90f,  // intérieur = Est
             _ => 0f
         };
 
@@ -179,26 +212,18 @@ namespace Sarabande.Doors
 
         }
 
-        private static Vector2Int HeldToCardinal(HeroController hero)
-        {
-            // On re-calcul l'intention comme dans le HeroController (même deadzone)
-            // Ici simplifié: on récupère l’orientation actuelle comme proxy si besoin,
-            // mais l’idéal serait d’exposer une propriété CurrentIntentDir dans HeroController.
-            // Pour rester simple, on prend la forward du hero.
-            Vector3 f = hero.transform.forward;
-            float ax = Mathf.Abs(f.x);
-            float az = Mathf.Abs(f.z);
-            if (ax > az) return f.x > 0 ? Vector2Int.right : Vector2Int.left;
-            else return f.z > 0 ? Vector2Int.up : Vector2Int.down;
-        }
-
         private void SetHandleVisual(LeverRuntime lv, bool on)
         {
-            if (!lv.handle) return;
-            // petit basculement visuel
-            float angle = on ? 35f : -35f;
-            lv.handle.localRotation = Quaternion.Euler(angle, 0f, 0f);
+            if (!lv.pivot) return;
+            // Angles POSITIFS dans l’Inspector
+            // OFF = poignée vers le bas  => -handleAngleDown
+            // ON  = poignée vers le haut => +handleAngleUp
+            float angle = on ? -handleAngleUp : handleAngleDown;
+
+            // Rotation autour de X local du pivot (la poignée sort sur +Z local)
+            lv.pivot.localRotation = Quaternion.Euler(angle, 0f, 0f);
         }
+
 
         // Reset = tout OFF
         public void ResetToInitial()
@@ -206,6 +231,7 @@ namespace Sarabande.Doors
             foreach (var lv in _levers)
             {
                 lv.isOn = false;
+                lv.pressedLatch = false;  // on “relâche” la latche
                 SetHandleVisual(lv, false);
             }
         }
