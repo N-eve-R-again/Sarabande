@@ -739,7 +739,7 @@ MonoBehaviour:
   hero: {fileID: 1116510830}
   resetManager: {fileID: 619786945}
   arrowMaterial: {fileID: 2100000, guid: 84ce8959b7a624a41966d42d8c2cafbc, type: 2}
-  arrowThickness: 0.08
+  arrowThickness: 0.12
   arrowLengthInCell: 0.7
   obstaclesMask:
     serializedVersion: 2

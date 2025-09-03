@@ -73,6 +73,7 @@ namespace Sarabande.NME
         private HashSet<(Vector2Int a, Vector2Int b)> _thinBlockers;
         private HashSet<(Vector2Int a, Vector2Int b)> _dynamicEdgeBlocks
             = new HashSet<(Vector2Int, Vector2Int)>();
+        private HashSet<Vector2Int> _dynamicBlockCells = new HashSet<Vector2Int>();
 
         // path courant (séquence de cases à suivre, exclut la case actuelle)
         private readonly List<Vector2Int> _path = new();
@@ -370,6 +371,12 @@ namespace Sarabande.NME
             foreach (var c in levelData.nonWalkables)
                 _blockedCells.Add(new Vector2Int(c.x, c.z));
 
+            if (_dynamicBlockCells != null)
+            {
+                foreach (var c in _dynamicBlockCells)
+                    _blockedCells.Add(c);
+            }
+
             _thinBlockers = new HashSet<(Vector2Int, Vector2Int)>();
             foreach (var e in levelData.thinWalls)
             {
@@ -617,20 +624,48 @@ namespace Sarabande.NME
                 }
             }
         }
-        public void AddDynamicBlockCell(Vector2Int c) => _blockedCells.Add(c);
-        public void RemoveDynamicBlockCell(Vector2Int c) => _blockedCells.Remove(c);
+        private void EnsureSets()
+        {
+            if (_blockedCells == null) BuildCollisionSets();
+        }
+        public void AddDynamicBlockCell(Vector2Int c)
+        {
+            EnsureSets();
+            _dynamicBlockCells.Add(c);
+            _blockedCells.Add(c);
+        }
 
+        public void RemoveDynamicBlockCell(Vector2Int c)
+        {
+            EnsureSets();
+            _dynamicBlockCells.Remove(c);
+
+            bool isStatic = false;
+            foreach (var gc in levelData.nonWalkables)
+                if (gc.x == c.x && gc.z == c.y) { isStatic = true; break; }
+
+            if (!isStatic) _blockedCells.Remove(c);
+        }
         public void AddDynamicEdgeBlock(Vector2Int a, Vector2Int b)
-            => _dynamicEdgeBlocks.Add(NormalizeEdge(a, b));
-
+        {
+            EnsureSets();
+            _dynamicEdgeBlocks.Add(NormalizeEdge(a, b));
+        }
         public void AddDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
-            => _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec(side)));
-
+        {
+            EnsureSets();
+            _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec(side)));
+        }
         public void RemoveDynamicEdgeBlock(Vector2Int a, Vector2Int b)
-            => _dynamicEdgeBlocks.Remove(NormalizeEdge(a, b));
-
+        {
+            EnsureSets();
+            _dynamicEdgeBlocks.Remove(NormalizeEdge(a, b));
+        }
         public void RemoveDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
-            => _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));
+        {
+            EnsureSets();
+            _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));
+        }
 
         private static Vector2Int DirToVec(EdgeDirection d) => d switch
         {

@@ -136,6 +136,9 @@ namespace Sarabande.Doors
                     tickCo = null
                 };
                 _doors.Add(r);
+
+                SetBlockerVisible(r, true);   // affiche le "bouchon" + layer Obstacles
+                AddDynamicBlock(r.cell);      // BLOQUE la case côté Hero/NME
             }
         }
 
