@@ -3,6 +3,7 @@ using UnityEngine;
 using Sarabande.Levels;
 using Sarabande.Core;
 using Sarabande.Player;
+using UnityEngine.Events;
 
 namespace Sarabande.Doors
 {
@@ -29,6 +30,10 @@ namespace Sarabande.Doors
         [SerializeField, Range(0.2f, 1.2f)] private float handleLengthScale = 0.7f;       // longueur (Z) relative à la case
         [SerializeField, Range(0f, 90f)] private float handleAngleUp = 35f;               // angle poignée en position ON
         [SerializeField, Range(0f, 90f)] private float handleAngleDown = 45f;             // angle poignée en position OFF
+
+        [Header("Events")]
+        public UnityEvent onAnyLeverTurnedOn;
+        public UnityEvent onAnyLeverTurnedOff;
 
         private HeroController _hero;
         private Transform _parent;
@@ -189,24 +194,34 @@ namespace Sarabande.Doors
                 Vector2Int intent = _hero ? _hero.CurrentIntentDir : Vector2Int.zero;
                 bool pressedNow = onCell && (intent == DirToVec(lv.requireFacing));
 
-                // EDGE: on ne toggle que sur front montant (pressed passer de false -> true)
-                if (pressedNow && !lv.pressedLatch)
+                // --- FRONT MONTANT ---
+                // on lit l'ancien état AVANT de l'écraser
+                bool wasPressed = lv.pressedLatch;
+
+                if (pressedNow && !wasPressed)
                 {
+                    // Toggle 1 seule fois à l’appui
                     if (!lv.isOn)
                     {
                         lv.isOn = true;
                         timedDoorSystem.OpenDoor(lv.doorIndex, levelData.timedDoors[lv.doorIndex].openSeconds);
                         SetHandleVisual(lv, true);
+
+                        // bruit / event
+                        Sarabande.Core.NoiseSystem.Emit(lv.cell);
+                        onAnyLeverTurnedOn?.Invoke();
                     }
                     else
                     {
                         lv.isOn = false;
-                        timedDoorSystem.ForceClose(lv.doorIndex); // fermeture immédiate (ta règle)
+                        timedDoorSystem.ForceClose(lv.doorIndex);
                         SetHandleVisual(lv, false);
+
+                        onAnyLeverTurnedOff?.Invoke();
                     }
                 }
 
-                // MAJ latch
+                // on MET À JOUR la latch APRÈS avoir testé le front
                 lv.pressedLatch = pressedNow;
             }
 

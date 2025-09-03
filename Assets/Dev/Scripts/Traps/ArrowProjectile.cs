@@ -27,6 +27,7 @@ namespace Sarabande.Traps
         // petits réglages
         [SerializeField, Min(0f)] private float yRay = 0.05f;           // hauteur du ray
         [SerializeField, Range(0.1f, 0.49f)] private float hitHalf = 0.35f; // “largeur” du couloir de hit (en fraction de case)
+        [SerializeField, Min(0f)] private float movingSlack = 0.05f; // en unités monde (?5 cm)
 
         public void Init(
             Vector3 dir, float speed, float cellSize, LayerMask obstaclesMask,
@@ -106,6 +107,7 @@ namespace Sarabande.Traps
             // Mouvement cardinale uniquement ? on simplifie
             // NORTH/SOUTH : on regarde la bande en X ; EAST/WEST : la bande en Z
             float half = hitHalf * _cellSize;
+            half += movingSlack + _speed * Time.deltaTime;
 
             if (Mathf.Abs(_dir.z) > 0.5f) // déplacement sur Z (N/S)
             {

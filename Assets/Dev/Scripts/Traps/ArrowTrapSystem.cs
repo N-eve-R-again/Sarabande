@@ -150,13 +150,12 @@ namespace Sarabande.Traps
             var triggerCell = new Vector2Int(spec.triggerCell.x, spec.triggerCell.z);
             if (_tileVisuals != null && _tileVisuals.TryGetValue(triggerCell, out var tile))
             {
-                // AVANT: tile.Press();
-                // MAINTENANT:
-                tile.PressAndHide();
-
+                tile.PressAndHide();                // AVANT: tile.Press();
                 if (spec.canRearm)
                     StartCoroutine(RearmTile(tile, spec.rearmDelay));
             }
+
+            Sarabande.Core.NoiseSystem.Emit(triggerCell);
 
             // spawn flèche
             Vector3 startPos = GridCenter(new Vector2Int(spec.startCell.x, spec.startCell.z)) + Vector3.up * 0.02f;

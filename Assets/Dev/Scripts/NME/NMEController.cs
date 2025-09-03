@@ -71,6 +71,8 @@ namespace Sarabande.NME
         // collisions (murs / murs fins)
         private HashSet<Vector2Int> _blockedCells;
         private HashSet<(Vector2Int a, Vector2Int b)> _thinBlockers;
+        private HashSet<(Vector2Int a, Vector2Int b)> _dynamicEdgeBlocks
+            = new HashSet<(Vector2Int, Vector2Int)>();
 
         // path courant (séquence de cases à suivre, exclut la case actuelle)
         private readonly List<Vector2Int> _path = new();
@@ -387,7 +389,7 @@ namespace Sarabande.NME
         private bool HasThinWallBetween(Vector2Int from, Vector2Int to)
         {
             var key = NormalizeEdge(from, to);
-            return _thinBlockers.Contains(key);
+            return _thinBlockers.Contains(key) || _dynamicEdgeBlocks.Contains(key);
         }
 
         /// <summary>
@@ -455,6 +457,8 @@ namespace Sarabande.NME
             _nextRepathAt = Time.time;
 
             BuildCollisionSets();
+
+            _dynamicEdgeBlocks.Clear();
 
             _gridPos = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
             transform.position = GridCenter(_gridPos);
@@ -615,5 +619,39 @@ namespace Sarabande.NME
         }
         public void AddDynamicBlockCell(Vector2Int c) => _blockedCells.Add(c);
         public void RemoveDynamicBlockCell(Vector2Int c) => _blockedCells.Remove(c);
+
+        public void AddDynamicEdgeBlock(Vector2Int a, Vector2Int b)
+            => _dynamicEdgeBlocks.Add(NormalizeEdge(a, b));
+
+        public void AddDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
+            => _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec(side)));
+
+        public void RemoveDynamicEdgeBlock(Vector2Int a, Vector2Int b)
+            => _dynamicEdgeBlocks.Remove(NormalizeEdge(a, b));
+
+        public void RemoveDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
+            => _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));
+
+        private static Vector2Int DirToVec(EdgeDirection d) => d switch
+        {
+            EdgeDirection.North => Vector2Int.up,    // (0, +1)
+            EdgeDirection.East => Vector2Int.right, // (+1, 0)
+            EdgeDirection.South => Vector2Int.down,  // (0, -1)
+            EdgeDirection.West => Vector2Int.left,  // (-1, 0)
+            _ => Vector2Int.zero
+        };
+
+        //--- Ear Noise ---
+        private void OnEnable() { NoiseSystem.NoiseRaised += OnNoiseRaised; }
+        private void OnDisable() { NoiseSystem.NoiseRaised -= OnNoiseRaised; }
+
+        private void OnNoiseRaised(Vector2Int at)
+        {
+            if (_state == NMEState.HeroUnspotted)
+            {
+                _state = NMEState.HeroSpotted;
+                _nextRepathAt = 0f;   // repath immédiat
+            }
+        }
     }
 }
