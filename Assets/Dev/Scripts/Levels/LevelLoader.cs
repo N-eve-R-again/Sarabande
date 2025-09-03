@@ -24,6 +24,10 @@ namespace Sarabande.Levels
         [SerializeField, Min(0.1f)] private float wallHeight = 1f;
         [SerializeField, Min(0.01f)] private float thinThickness = 0.10f;
 
+        [Header("Fake / Pass-Through Walls")]
+        [SerializeField] private bool buildPassThrough = true;
+        [SerializeField] private Material passThroughWallMaterial; // optionnel, sinon on réutilise wallMaterial
+
         [Header("Wall Materials")]
         [SerializeField] private Material wallMaterial;
         [SerializeField] private Material thinWallMaterial;
@@ -44,6 +48,7 @@ namespace Sarabande.Levels
         private Transform _gridParent;
         private Transform _wallsParent;
         private Transform _thinWallsParent;
+        private Transform _fakeWallsParent;
 
         private void Awake()
         {
@@ -60,12 +65,15 @@ namespace Sarabande.Levels
             _gridParent = new GameObject("GridLines").transform;
             _wallsParent = new GameObject("Walls").transform;
             _thinWallsParent = new GameObject("ThinWalls").transform;
+            _fakeWallsParent = new GameObject("FakeWalls").transform;
             _gridParent.SetParent(transform, false);
             _wallsParent.SetParent(transform, false);
             _thinWallsParent.SetParent(transform, false);
+            _fakeWallsParent.SetParent(transform, false);
 
             BuildGridLines();
             BuildWalls();
+            if (buildPassThrough) BuildPassThroughWalls();
             BuildThinWalls();
 
             if (showMarkers) BuildDebugMarkers();
@@ -234,6 +242,49 @@ namespace Sarabande.Levels
                     if (thinWallMaterial != null) mr.sharedMaterial = thinWallMaterial;
                     else if (wallMaterial != null) mr.sharedMaterial = wallMaterial;
                 }
+            }
+        }
+
+        private void BuildPassThroughWalls()
+        {
+            if (levelData.passThroughWalls == null) return;
+
+            // dé-duplication légère au cas où
+            var set = new HashSet<(int x, int z)>();
+
+            foreach (var c in levelData.passThroughWalls)
+            {
+                if (!set.Add((c.x, c.z)))
+                {
+                    Debug.LogWarning($"[LevelLoader] Doublon passThrough ignoré en ({c.x},{c.z}).");
+                    continue;
+                }
+
+                var center = GridCenter(c);
+
+                var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                go.name = $"FakeWall_{c.x}_{c.z}";
+                go.transform.SetParent(_fakeWallsParent, false);
+                go.transform.position = new Vector3(center.x, wallHeight * 0.5f, center.z);
+
+                // même gabarit que les murs “réels”
+                float sx = Mathf.Max(0.001f, cellSize - 2f * wallInset);
+                float sz = Mathf.Max(0.001f, cellSize - 2f * wallInset);
+                go.transform.localScale = new Vector3(sx, wallHeight, sz);
+
+                // Visuel identique
+                var mr = go.GetComponent<MeshRenderer>();
+                if (mr)
+                {
+                    mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    mr.receiveShadows = false;
+                    mr.sharedMaterial = passThroughWallMaterial ? passThroughWallMaterial : wallMaterial;
+                }
+
+                // Important : NE PAS le mettre sur "Obstacles" (pour la LOS)
+                // Option : retirer le collider pour éviter tout hasard physique
+                var col = go.GetComponent<Collider>();
+                if (col) Destroy(col);
             }
         }
 

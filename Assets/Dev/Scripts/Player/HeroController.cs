@@ -57,6 +57,9 @@ namespace Sarabande.Player
         // caches collisions
         private HashSet<Vector2Int> _blockedCells; // non-walkables
         private HashSet<(Vector2Int a, Vector2Int b)> _thinBlockers; // murs fins normalisés
+        private HashSet<(Vector2Int a, Vector2Int b)> _dynamicEdgeBlocks
+            = new HashSet<(Vector2Int, Vector2Int)>();
+
 
         private Vector2 _held;                 // dernier input maintenu (x,y)
         private bool _isMoving = false;
@@ -73,7 +76,6 @@ namespace Sarabande.Player
         public Vector3 WorldPos => transform.position;
         // pour notifier un seul input lors de l'activation d'un levier par exemple
         public Vector2Int CurrentIntentDir { get; private set; } = Vector2Int.zero;
-
 
         private void Start()
         {
@@ -123,6 +125,13 @@ namespace Sarabande.Player
             // Sortie spéciale : autoriser à sortir hors-grille depuis la case/direction d'Exit
             if (IsExitMove(_gridPos, dir))
             {
+                // NEW: si une gate bloque l'arête de sortie, on bump au lieu de sortir
+                if (HasThinWallBetween(_gridPos, target))   // <= utilise 'target' existant
+                {
+                    StartCoroutine(Bump(dir));
+                    return;
+                }
+
                 StartCoroutine(StepTo(target, isExitMove: true));
                 return;
             }
@@ -317,6 +326,27 @@ namespace Sarabande.Player
             }
         }
 
+        private bool HasThinWallBetween(Vector2Int from, Vector2Int to)
+        {
+            var key = NormalizeEdge(from, to);
+            bool thin = _thinBlockers.Contains(key);             // ton test existant
+            bool dyn = _dynamicEdgeBlocks.Contains(key);        // AJOUT
+            return thin || dyn;
+        }
+
+        public void AddDynamicEdgeBlock(Vector2Int a, Vector2Int b)
+            => _dynamicEdgeBlocks.Add(NormalizeEdge(a, b));
+
+        public void AddDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
+            => _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec(side)));
+
+        public void RemoveDynamicEdgeBlock(Vector2Int a, Vector2Int b)
+            => _dynamicEdgeBlocks.Remove(NormalizeEdge(a, b));
+
+        public void RemoveDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
+            => _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));
+
+
         private bool CanEnterCellConsideringNME(Vector2Int target, Vector2Int dir)
         {
             if (_nmes == null) return true;
@@ -395,12 +425,6 @@ namespace Sarabande.Player
             return (a.y <= b.y) ? (a, b) : (b, a);
         }
 
-        private bool HasThinWallBetween(Vector2Int from, Vector2Int to)
-        {
-            var key = NormalizeEdge(from, to);
-            return _thinBlockers.Contains(key);
-        }
-
         private System.Collections.IEnumerator Bump(Vector2Int dir)
         {
             if (_isMoving) yield break;
@@ -468,6 +492,8 @@ namespace Sarabande.Player
             _readyAtTime = 0f;
 
             BuildCollisionSets();
+
+            _dynamicEdgeBlocks.Clear();
 
             _gridPos = new Vector2Int(levelData.heroSpawn.x, levelData.heroSpawn.z);
             var spawnCenter = GridCenter(_gridPos);

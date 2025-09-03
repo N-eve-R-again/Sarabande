@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sarabande.Core;
+using UnityEngine.Serialization;
 
 namespace Sarabande.Levels
 {
@@ -30,6 +31,9 @@ namespace Sarabande.Levels
         [Header("Sortie")]
         public EdgeExit exit;        // H1 vers East
 
+        [Header("Décor (murs traversables)")]
+        public List<GridCoord> passThroughWalls = new();  // ex: A6, etc.
+
         // --- Arrow Traps (proto) -----------------------------------------------------
 
         [System.Serializable]
@@ -56,6 +60,7 @@ namespace Sarabande.Levels
             public GridCoord cell;                  // ex: B5
             [Min(0.1f)] public float openSeconds = 3f;  // durée d'ouverture de base
         }
+        public List<TimedDoorSpec> timedDoors = new();
 
         [System.Serializable]
         public class LeverSpec
@@ -64,10 +69,54 @@ namespace Sarabande.Levels
             public EdgeDirection requireFacing = EdgeDirection.North; // direction à pousser
             [Min(0)] public int linkedDoorIndex = 0;   // index dans la liste 'timedDoors'
         }
-
-        // Listes
-        public List<TimedDoorSpec> timedDoors = new();
         public List<LeverSpec> levers = new();
+
+        // --- Messages ---
+
+        [Header("Messages")]
+        public List<MessageSpec> messages = new();
+
+        [System.Serializable]
+        public class MessageSpec
+        {
+            // ?? NOUVEAU champ cohérent avec le reste du projet
+            public GridCoord cell;        // utilise x / z comme partout
+
+            [TextArea(2, 5)] public string text;
+            [Min(0.1f)] public float displaySeconds = 3f;
+            public AudioClip voiceClip;
+        }
+
+        // --- Dalles Disco ---
+
+        [System.Serializable]
+        public class DiscoSequenceSpec
+        {
+            // Strict order of tiles to step on
+            public List<GridCoord> cells = new List<GridCoord>();
+
+            // Per-step timers; if length mismatches, use defaultStepSeconds
+            public List<float> stepSeconds = new List<float>();
+
+            // Auto-start when this timed door opens; -1 = no auto-start
+            public int startOnDoorIndex = -1;
+
+            // Default if stepSeconds[i] missing
+            public float defaultStepSeconds = 0.8f;
+        }
+
+        public List<DiscoSequenceSpec> discoSequences = new List<DiscoSequenceSpec>();
+
+        // --- Grid Gates (barreaux sur une ARÊTE, bloquent le passage mais pas la LOS / flèches) ---
+        [System.Serializable]
+        public class GridGateSpec
+        {
+            public GridCoord cell;                 // case A
+            public EdgeDirection side;             // bord de A (vers B = A + side)
+            public bool initiallyOpen = false;     // fermé par défaut (bloque), sinon déjà ouvert
+        }
+        public List<GridGateSpec> gridGates = new();
+
 
     }
 }
