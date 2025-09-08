@@ -4,6 +4,7 @@ using Sarabande.Levels;
 using Sarabande.Core;
 using Sarabande.Player;
 using UnityEngine.Events;
+using static Sarabande.Core.GridUtils;
 
 namespace Sarabande.Doors
 {
@@ -43,19 +44,24 @@ namespace Sarabande.Doors
             public Vector2Int cell;
             public EdgeDirection requireFacing;
             public int doorIndex;
-            public bool isOn; // OFF par défaut
-            public Transform handle; // pour une petite rotation visuelle
-            public bool pressedLatch; // true tant que le joueur maintient la poussée
-            public Transform pivot; // pivot de rotation
+            public bool isOn;               // OFF par défaut
+            public Transform handle;        // pour une petite rotation visuelle
+            public bool pressedLatch;       // true tant que le joueur maintient la poussée
+            public Transform pivot;         // pivot de rotation
         }
 
         private readonly List<LeverRuntime> _levers = new();
 
         private void Awake()
         {
-            if (!levelData || !timedDoorSystem) { Debug.LogError("[LeverSystem] Références manquantes."); enabled = false; return; }
+            if (!levelData || !timedDoorSystem)
+            {
+                Debug.LogError("[LeverSystem] Références manquantes.");
+                enabled = false;
+                return;
+            }
 
-            _hero = FindObjectOfType<HeroController>(true);
+            _hero = FindFirstObjectByType<HeroController>(FindObjectsInactive.Include);
 
             // S’ABONNER ICI (côté levier)
             timedDoorSystem.DoorClosed += OnDoorClosed;
@@ -70,6 +76,7 @@ namespace Sarabande.Doors
         {
             _levers.Clear();
             if (levelData.levers == null) return;
+
             if (levelData.timedDoors == null || levelData.timedDoors.Count == 0)
             {
                 Debug.LogWarning("[LeverSystem] Aucun TimedDoor dans LevelData, les leviers seront ignorés.");
@@ -90,7 +97,7 @@ namespace Sarabande.Doors
                 _levers.Add(r);
 
                 // 3.1) Position ancrée au mur demandé (requireFacing)
-                Vector3 c = GridCenter(cell);
+                Vector3 c = Center(cell, cellSize);
                 float half = cellSize * 0.5f;
 
                 // Position au bord de la case, selon le mur ciblé
@@ -122,7 +129,12 @@ namespace Sarabande.Doors
 
                 var colB = baseGo.GetComponent<Collider>(); if (colB) Destroy(colB);
                 var mrB = baseGo.GetComponent<MeshRenderer>();
-                if (mrB) { mrB.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; mrB.receiveShadows = false; if (leverBaseMaterial) mrB.sharedMaterial = leverBaseMaterial; }
+                if (mrB)
+                {
+                    mrB.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    mrB.receiveShadows = false;
+                    if (leverBaseMaterial) mrB.sharedMaterial = leverBaseMaterial;
+                }
 
                 // --- Pivot (empty) au centre de la base ---
                 // La rotation se fera sur ce pivot, pas sur le cube directement
@@ -132,7 +144,6 @@ namespace Sarabande.Doors
                 const float worldOutset = 0.005f; // 5 mm monde
                 float localOutset = (baseGo.transform.lossyScale.z > 0f) ? (worldOutset / baseGo.transform.lossyScale.z) : 0f;
                 pivotGo.localPosition = new Vector3(0f, 0f, 0.5f + localOutset);
-
 
                 // --- Handle (cube) ---
                 // Épaisseur (X/Y) et longueur (Z) qui sort dans la case
@@ -149,7 +160,12 @@ namespace Sarabande.Doors
 
                 var colH = handleGo.GetComponent<Collider>(); if (colH) Destroy(colH);
                 var mrH = handleGo.GetComponent<MeshRenderer>();
-                if (mrH) { mrH.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; mrH.receiveShadows = false; if (leverHandleMaterial) mrH.sharedMaterial = leverHandleMaterial; }
+                if (mrH)
+                {
+                    mrH.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    mrH.receiveShadows = false;
+                    if (leverHandleMaterial) mrH.sharedMaterial = leverHandleMaterial;
+                }
 
                 // stocke les refs
                 r.handle = handleGo.transform;
@@ -168,18 +184,6 @@ namespace Sarabande.Doors
             EdgeDirection.South => 0f,   // intérieur = Nord
             EdgeDirection.West => 90f,  // intérieur = Est
             _ => 0f
-        };
-
-        private Vector3 GridCenter(Vector2Int c)
-            => new Vector3((c.x + 0.5f) * cellSize, 0f, (c.y + 0.5f) * cellSize);
-
-        private Vector2Int DirToVec(EdgeDirection d) => d switch
-        {
-            EdgeDirection.North => Vector2Int.up,
-            EdgeDirection.East => Vector2Int.right,
-            EdgeDirection.South => Vector2Int.down,
-            EdgeDirection.West => Vector2Int.left,
-            _ => Vector2Int.zero
         };
 
         private void Update()
@@ -224,12 +228,12 @@ namespace Sarabande.Doors
                 // on MET À JOUR la latch APRÈS avoir testé le front
                 lv.pressedLatch = pressedNow;
             }
-
         }
 
         private void SetHandleVisual(LeverRuntime lv, bool on)
         {
             if (!lv.pivot) return;
+
             // Angles POSITIFS dans l’Inspector
             // OFF = poignée vers le bas  => -handleAngleDown
             // ON  = poignée vers le haut => +handleAngleUp
@@ -238,7 +242,6 @@ namespace Sarabande.Doors
             // Rotation autour de X local du pivot (la poignée sort sur +Z local)
             lv.pivot.localRotation = Quaternion.Euler(angle, 0f, 0f);
         }
-
 
         // Reset = tout OFF
         public void ResetToInitial()
@@ -250,11 +253,13 @@ namespace Sarabande.Doors
                 SetHandleVisual(lv, false);
             }
         }
+
         private void OnDestroy()
         {
             if (timedDoorSystem != null)
                 timedDoorSystem.DoorClosed -= OnDoorClosed;
         }
+
         private void OnDoorClosed(int doorIndex)
         {
             foreach (var lv in _levers)

@@ -72,3 +72,15 @@ MonoBehaviour:
   - folder: {fileID: 102900000, guid: b8e34e044c9159142b6504cf85219b44, type: 3}
     folderIcon: {fileID: 2800000, guid: 9eb3abe27b751d940897ed27d44dccc6, type: 3}
     overlayIcon: {fileID: 0}
+  - folder: {fileID: 102900000, guid: 5aac5fdfd96749b4397f5796ec1300ec, type: 3}
+    folderIcon: {fileID: 2800000, guid: 9eb3abe27b751d940897ed27d44dccc6, type: 3}
+    overlayIcon: {fileID: 0}
+  - folder: {fileID: 102900000, guid: 374a7d6b711fbfc4a9cfa528e3767edc, type: 3}
+    folderIcon: {fileID: 2800000, guid: 9eb3abe27b751d940897ed27d44dccc6, type: 3}
+    overlayIcon: {fileID: 0}
+  - folder: {fileID: 102900000, guid: b0cecfd84c6182e459f623e18a3f71c1, type: 3}
+    folderIcon: {fileID: 2800000, guid: 9eb3abe27b751d940897ed27d44dccc6, type: 3}
+    overlayIcon: {fileID: 0}
+  - folder: {fileID: 102900000, guid: 317e9f298b3dd3043b279069781843df, type: 3}
+    folderIcon: {fileID: 2800000, guid: 9eb3abe27b751d940897ed27d44dccc6, type: 3}
+    overlayIcon: {fileID: 0}

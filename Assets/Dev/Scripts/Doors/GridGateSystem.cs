@@ -4,6 +4,7 @@ using Sarabande.Core;
 using Sarabande.Levels;
 using Sarabande.Player;   // HeroController
 using Sarabande.NME;      // NMEController
+using static Sarabande.Core.GridUtils;
 
 namespace Sarabande.Gates
 {
@@ -40,8 +41,8 @@ namespace Sarabande.Gates
             {
                 Debug.LogError("[GridGateSystem] LevelData manquant."); enabled = false; return;
             }
-            _hero = FindObjectOfType<HeroController>(true);
-            _nmes = FindObjectsOfType<NMEController>(true);
+            _hero = FindFirstObjectByType<HeroController>(FindObjectsInactive.Include);
+            _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
             _parent = new GameObject("GridGates").transform;
             _parent.SetParent(transform, false);
@@ -64,7 +65,7 @@ namespace Sarabande.Gates
                 var b = a + DirToVec(spec.side);
 
                 // visuel: mince “barre/quad” placé AU MILIEU de l’arête A-B
-                var mid = (GridCenter(a) + GridCenter(b)) * 0.5f;
+                var mid = (Center(a, cellSize) + Center(b, cellSize)) * 0.5f;
                 var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 go.name = $"GridGate_{i}_({a.x},{a.y})-{spec.side}";
                 go.transform.SetParent(_parent, false);
@@ -186,18 +187,5 @@ namespace Sarabande.Gates
             if (_hero) _hero.RemoveDynamicEdgeBlock(a, b);
             if (_nmes != null) foreach (var n in _nmes) if (n) n.RemoveDynamicEdgeBlock(a, b);
         }
-
-        // --- Utils ---
-        private Vector3 GridCenter(Vector2Int c)
-            => new Vector3((c.x + 0.5f) * cellSize, 0f, (c.y + 0.5f) * cellSize);
-
-        private static Vector2Int DirToVec(EdgeDirection d) => d switch
-        {
-            EdgeDirection.North => Vector2Int.up,
-            EdgeDirection.South => Vector2Int.down,
-            EdgeDirection.East => Vector2Int.right,
-            EdgeDirection.West => Vector2Int.left,
-            _ => Vector2Int.zero
-        };
     }
 }

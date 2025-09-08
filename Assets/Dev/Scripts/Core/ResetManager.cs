@@ -27,19 +27,36 @@ namespace Sarabande.Core
         public void CollectResettables()
         {
             _resettables.Clear();
-            var all = FindObjectsOfType<MonoBehaviour>(true);
+            var all = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (var mb in all)
                 if (mb is IResettable r)
                     _resettables.Add(r);
+        }
+
+        private static int ResetOrder(IResettable r)
+        {
+            // 0 = Acteurs (vident d’abord leurs caches dynamiques)
+            if (r is Sarabande.Player.HeroController) return 0;
+            if (r is Sarabande.NME.NMEController) return 0;
+
+            // 1 = Systèmes qui ré-appliquent des verrous/collisions
+            if (r is Sarabande.Gates.GridGateSystem) return 1;
+            if (r is Sarabande.Doors.TimedDoorSystem) return 1;
+
+            // 2 = le reste
+            return 2;
         }
 
         /// <summary>Réinitialise tous les objets enregistrés.</summary>
         public void ResetAll()
         {
             CollectResettables();
+            _resettables.Sort((a, b) => ResetOrder(a).CompareTo(ResetOrder(b)));
+
             foreach (var r in _resettables)
                 r.ResetToInitial();
         }
+
         public void ResetWithRewind()
         {
             if (IsResetInProgress) return;               // anti double-lancement
