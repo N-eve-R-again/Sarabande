@@ -6,6 +6,7 @@ using Sarabande.Core;
 using Sarabande.Player;
 using Sarabande.NME;
 using System;
+using static Sarabande.Core.GridUtils;
 
 namespace Sarabande.Doors
 {
@@ -66,8 +67,8 @@ namespace Sarabande.Doors
         {
             if (!levelData) { Debug.LogError("[TimedDoorSystem] LevelData manquant."); enabled = false; return; }
 
-            _hero = FindObjectOfType<HeroController>(true);
-            _nmes = FindObjectsOfType<NMEController>(true);
+            _hero = FindFirstObjectByType<HeroController>(FindObjectsInactive.Include);
+            _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
             _parent = new GameObject("TimedDoors").transform;
             _parent.SetParent(transform, false);
@@ -89,7 +90,7 @@ namespace Sarabande.Doors
                 go.name = $"Door_{cell.x}_{cell.y}";
                 go.transform.SetParent(_parent, false);
 
-                Vector3 c = GridCenter(cell);
+                Vector3 c = Center(cell, cellSize);
                 go.transform.position = new Vector3(c.x, wallHeight * 0.5f, c.z);
                 go.transform.localScale = new Vector3(cellSize, wallHeight, cellSize);
 
@@ -141,9 +142,6 @@ namespace Sarabande.Doors
                 AddDynamicBlock(r.cell);      // BLOQUE la case côté Hero/NME
             }
         }
-
-        private Vector3 GridCenter(Vector2Int c)
-            => new Vector3((c.x + 0.5f) * cellSize, 0f, (c.y + 0.5f) * cellSize);
 
         // --- API appelée par les leviers ---
 

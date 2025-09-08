@@ -4,6 +4,7 @@ using UnityEngine;
 using Sarabande.Core;
 using Sarabande.Levels;
 using Sarabande.Player; // HeroController
+using static Sarabande.Core.GridUtils;
 
 namespace Sarabande.NME
 {
@@ -48,7 +49,8 @@ namespace Sarabande.NME
 
         [Header("Hero Conflict")]
         [SerializeField, Range(0f, 0.5f)] private float heroYieldThreshold = 0.15f;     // t max pour que l’NME cède
-        [SerializeField, Range(0f, 0.5f)] private float heroVacateBlockThreshold = 0.25f; // case du héros reste bloquée tant qu’il ne l’a pas assez libérée
+        //[SerializeField, Range(0f, 0.5f)] private float heroVacateBlockThreshold = 0.25f; // case du héros reste bloquée tant qu’il ne l’a pas assez libérée
+        // paramètre plus usité au dessus.
 
         [SerializeField] private ResetManager resetManager;  // à assigner (LevelRoot)
 
@@ -90,7 +92,7 @@ namespace Sarabande.NME
             BuildCollisionSets();
 
             _gridPos = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
-            transform.position = GridCenter(_gridPos);
+            transform.position = Center(_gridPos, cellSize);
 
             // init exposées (si tu les as)
             FromCell = ToCell = _gridPos;
@@ -221,7 +223,7 @@ namespace Sarabande.NME
 
         private bool IsHeroInsideCell(Vector2Int cell)
         {
-            Vector3 center = GridCenter(cell);
+            Vector3 center = Center(cell, cellSize);
             float half = cellSize * 0.5f;
             Vector3 p = hero.WorldPos;
 
@@ -242,7 +244,7 @@ namespace Sarabande.NME
             MoveProgress = 0f;
 
             Vector3 start = transform.position;
-            Vector3 end = GridCenter(target);
+            Vector3 end = Center(target, cellSize);
 
             // Si conflit direct sur la même target au démarrage du step : l'NME cède si sa progression reste <= seuil
             bool checkYield = false;
@@ -345,7 +347,7 @@ namespace Sarabande.NME
             {
                 var d = dirs[i];
                 var n = c + d;
-                if (!InsideBounds(n)) continue;
+                if (!InsideBounds(n, levelData.width, levelData.height)) continue;
                 if (_blockedCells.Contains(n)) continue;
                 if (HasThinWallBetween(c, n)) continue;
 
@@ -386,13 +388,6 @@ namespace Sarabande.NME
             }
         }
 
-        private static (Vector2Int, Vector2Int) NormalizeEdge(Vector2Int a, Vector2Int b)
-        {
-            if (a.x < b.x) return (a, b);
-            if (a.x > b.x) return (b, a);
-            return (a.y <= b.y) ? (a, b) : (b, a);
-        }
-
         private bool HasThinWallBetween(Vector2Int from, Vector2Int to)
         {
             var key = NormalizeEdge(from, to);
@@ -411,21 +406,11 @@ namespace Sarabande.NME
             return !HasThinWallBetween(a, b);          // adjacent oui, mais pas à travers un thin wall
         }
 
-        private bool InsideBounds(Vector2Int c)
-        {
-            return c.x >= 0 && c.x < levelData.width && c.y >= 0 && c.y < levelData.height;
-        }
-
-        private Vector3 GridCenter(Vector2Int c)
-        {
-            return new Vector3((c.x + 0.5f) * cellSize, 0f, (c.y + 0.5f) * cellSize);
-        }
-
         // --- Facing / rotation ---
 
         private void SetFacing(EdgeDirection dir)
         {
-            Vector3 fwd = DirToVector(dir);
+            var fwd = DirToWorld(dir);
             if (fwd.sqrMagnitude > 0f)
                 transform.rotation = Quaternion.LookRotation(fwd, Vector3.up);
         }
@@ -436,18 +421,6 @@ namespace Sarabande.NME
             else if (delta == Vector2Int.left) SetFacing(EdgeDirection.West);
             else if (delta == Vector2Int.up) SetFacing(EdgeDirection.North);
             else if (delta == Vector2Int.down) SetFacing(EdgeDirection.South);
-        }
-
-        private static Vector3 DirToVector(EdgeDirection dir)
-        {
-            return dir switch
-            {
-                EdgeDirection.North => new Vector3(0f, 0f, 1f),
-                EdgeDirection.East => new Vector3(1f, 0f, 0f),
-                EdgeDirection.South => new Vector3(0f, 0f, -1f),
-                EdgeDirection.West => new Vector3(-1f, 0f, 0f),
-                _ => Vector3.forward
-            };
         }
 
         // --- Reset ---
@@ -468,7 +441,7 @@ namespace Sarabande.NME
             _dynamicEdgeBlocks.Clear();
 
             _gridPos = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
-            transform.position = GridCenter(_gridPos);
+            transform.position = Center(_gridPos, cellSize);
 
             SetFacing(initialFacing);
             _state = NMEState.HeroUnspotted;
@@ -482,7 +455,7 @@ namespace Sarabande.NME
             go.name = "AttackTelegraph";
             var col = go.GetComponent<Collider>(); if (col) Destroy(col);
 
-            var center = GridCenter(cell);
+            var center = Center(cell, cellSize);
             float halfHeight = 0.01f;
 
             go.transform.position = new Vector3(center.x, telegraphY + halfHeight, center.z);
@@ -666,15 +639,6 @@ namespace Sarabande.NME
             EnsureSets();
             _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));
         }
-
-        private static Vector2Int DirToVec(EdgeDirection d) => d switch
-        {
-            EdgeDirection.North => Vector2Int.up,    // (0, +1)
-            EdgeDirection.East => Vector2Int.right, // (+1, 0)
-            EdgeDirection.South => Vector2Int.down,  // (0, -1)
-            EdgeDirection.West => Vector2Int.left,  // (-1, 0)
-            _ => Vector2Int.zero
-        };
 
         //--- Ear Noise ---
         private void OnEnable() { NoiseSystem.NoiseRaised += OnNoiseRaised; }

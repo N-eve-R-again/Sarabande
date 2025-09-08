@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 using Sarabande.Core;
 using Sarabande.Levels;
 using Sarabande.NME;
+using static Sarabande.Core.GridUtils;
 using System.Collections.Generic;
 using UnityEngine.Events;
 
@@ -89,13 +90,13 @@ namespace Sarabande.Player
 
             BuildCollisionSets();
 
-            _nmes = FindObjectsOfType<NMEController>(true);
+            _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
             // Coord grille du spawn (ex. D8)
             _gridPos = new Vector2Int(levelData.heroSpawn.x, levelData.heroSpawn.z);
 
             // Centre monde de la case de spawn
-            Vector3 spawnCenter = GridCenter(_gridPos);
+            Vector3 spawnCenter = Center(_gridPos, cellSize);
 
             // Position initiale : une case "à l'extérieur" depuis la direction choisie
             Vector3 outside = spawnCenter + EntryOffset(levelData.heroEntry);
@@ -138,7 +139,7 @@ namespace Sarabande.Player
             }
 
             // 1) hors-grille -> bump
-            if (!InsideBounds(target))
+            if (!InsideBounds(target, levelData.width, levelData.height))
             {
                 StartCoroutine(Bump(dir));
                 return;
@@ -184,7 +185,7 @@ namespace Sarabande.Player
             MoveProgress = 0f;
 
             Vector3 start = transform.position;
-            Vector3 end = GridCenter(target);
+            Vector3 end = Center(target, cellSize);
 
             float t = 0f;
             while (t < 1f)
@@ -271,16 +272,6 @@ namespace Sarabande.Player
 
         // --- Utilitaires ---
 
-        private Vector3 GridCenter(Vector2Int c)
-        {
-            return new Vector3((c.x + 0.5f) * cellSize, 0f, (c.y + 0.5f) * cellSize);
-        }
-
-        private bool InsideBounds(Vector2Int c)
-        {
-            return c.x >= 0 && c.x < levelData.width && c.y >= 0 && c.y < levelData.height;
-        }
-
         private static Vector2Int HeldToCardinal(Vector2 v, float deadzone)
         {
             if (v.sqrMagnitude < deadzone * deadzone) return Vector2Int.zero;
@@ -295,16 +286,7 @@ namespace Sarabande.Player
         }
 
         private Vector3 EntryOffset(EdgeDirection dir)
-        {
-            switch (dir)
-            {
-                case EdgeDirection.North: return new Vector3(0f, 0f, cellSize);
-                case EdgeDirection.East: return new Vector3(cellSize, 0f, 0f);
-                case EdgeDirection.South: return new Vector3(0f, 0f, -cellSize);
-                case EdgeDirection.West: return new Vector3(-cellSize, 0f, 0f);
-                default: return Vector3.zero;
-            }
-        }
+            => DirToWorld(dir) * cellSize;
 
         private System.Collections.IEnumerator SpawnInFromEdge()
         {
@@ -437,13 +419,6 @@ namespace Sarabande.Player
             return false;
         }
 
-        private static (Vector2Int, Vector2Int) NormalizeEdge(Vector2Int a, Vector2Int b)
-        {
-            if (a.x < b.x) return (a, b);
-            if (a.x > b.x) return (b, a);
-            return (a.y <= b.y) ? (a, b) : (b, a);
-        }
-
         private System.Collections.IEnumerator Bump(Vector2Int dir)
         {
             if (_isMoving) yield break;
@@ -480,19 +455,6 @@ namespace Sarabande.Player
             _readyAtTime = Time.time + interStepPause;
         }
 
-
-        private static Vector2Int DirToVec(EdgeDirection dir)
-        {
-            return dir switch
-            {
-                EdgeDirection.North => Vector2Int.up,
-                EdgeDirection.East => Vector2Int.right,
-                EdgeDirection.South => Vector2Int.down,
-                EdgeDirection.West => Vector2Int.left,
-                _ => Vector2Int.zero
-            };
-        }
-
         private bool IsExitMove(Vector2Int from, Vector2Int dir)
         {
             var exit = levelData.exit;
@@ -510,12 +472,16 @@ namespace Sarabande.Player
             _isMoving = false;
             _readyAtTime = 0f;
 
-            BuildCollisionSets();
-
+            // 1) VIDER d’abord les dynamiques (cells + edges)
+            _dynamicBlockCells.Clear();
             _dynamicEdgeBlocks.Clear();
 
+            // 2) Puis reconstruire les sets statiques à partir du LevelData
+            BuildCollisionSets();
+
+            // 3) (la GridGateSystem & TimedDoorSystem vont réinjecter leurs verrous tout de suite après leur propre Reset)
             _gridPos = new Vector2Int(levelData.heroSpawn.x, levelData.heroSpawn.z);
-            var spawnCenter = GridCenter(_gridPos);
+            var spawnCenter = Center(_gridPos, cellSize);
             var outside = spawnCenter + EntryOffset(levelData.heroEntry);
             transform.position = outside;
 

@@ -5,6 +5,7 @@ using Sarabande.Player;
 using Sarabande.NME;
 using Sarabande.Core;   // <-- pour EdgeDirection
 using Sarabande.Traps;
+using static Sarabande.Core.GridUtils;
 
 namespace Sarabande.Traps
 {
@@ -27,6 +28,13 @@ namespace Sarabande.Traps
         [SerializeField] private Material arrowMaterial;          // placeholder
         [SerializeField, Min(0.02f)] private float arrowThickness = 0.08f;
         [SerializeField, Min(0.1f)] private float arrowLengthInCell = 0.7f; // longueur visuelle
+
+        [Header("Sprite (projectile)")]
+        [SerializeField] private Sprite arrowSprite;                 // sprite "North"
+        [SerializeField, Range(0.1f, 2f)] private float spriteScale = 0.8f;
+        [SerializeField] private float spriteYOffset = 0.02f;
+        [SerializeField] private string spriteSortingLayer = "Default";
+        [SerializeField] private int spriteOrderInLayer = 50;
 
         [Header("Collision")]
         [SerializeField] private LayerMask obstaclesMask;         // coche "Obstacles"
@@ -58,12 +66,12 @@ namespace Sarabande.Traps
                 return;
             }
 
-            _nmes = FindObjectsOfType<NMEController>(true);
+            _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
             int count = levelData.arrowTraps?.Count ?? 0;
             _runtime = new TrapRuntime[count];
             _tileVisuals = new System.Collections.Generic.Dictionary<Vector2Int, TrapTileVisual>();
-            var tiles = FindObjectsOfType<TrapTileVisual>(true);
+            var tiles = FindObjectsByType<TrapTileVisual>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (var tv in tiles)
                 if (tv != null)
                     _tileVisuals[tv.Cell] = tv;
@@ -157,60 +165,72 @@ namespace Sarabande.Traps
 
             Sarabande.Core.NoiseSystem.Emit(triggerCell);
 
-            // spawn flèche
-            Vector3 startPos = GridCenter(new Vector2Int(spec.startCell.x, spec.startCell.z)) + Vector3.up * 0.02f;
-            Vector3 dir = DirToVector(spec.travelDir);
+            // --- spawn flèche (sprite à plat) ---
+            Vector3 startPos = Center(new Vector2Int(spec.startCell.x, spec.startCell.z), cellSize) + Vector3.up * 0.02f;
+            Vector3 dir = DirToWorld(spec.travelDir);
 
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            go.name = $"Arrow_{index}";
+            // Parent qui porte la rotation (yaw) = direction de déplacement
+            var go = new GameObject($"Arrow_{index}");
             go.transform.position = startPos;
             go.transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
 
-            // scale visuelle (longueur dans l'axe Z local)
-            float sx = arrowThickness * cellSize;
-            float sy = arrowThickness * cellSize;
-            float sz = arrowLengthInCell * cellSize;
-            go.transform.localScale = new Vector3(sx, sy, sz);
-
-            // enlever le collider pour ne pas interférer
-            var col = go.GetComponent<Collider>(); if (col) Destroy(col);
-
-            // material
-            var mr = go.GetComponent<MeshRenderer>();
-            if (mr != null)
-            {
-                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                mr.receiveShadows = false;
-                if (arrowMaterial) mr.sharedMaterial = arrowMaterial;
-            }
-
-            // layer projectiles (optionnel)
+            // Layer projectiles (parent + enfant)
             int projLayer = LayerMask.NameToLayer(projectilesLayerName);
             if (projLayer != -1) go.layer = projLayer;
 
-            // logique
+            if (arrowSprite != null)
+            {
+                // Enfant "Sprite" couché à plat
+                var child = new GameObject("Sprite");
+                child.transform.SetParent(go.transform, false);
+                child.transform.localPosition = new Vector3(0f, spriteYOffset, 0f);
+                child.transform.localRotation = Quaternion.Euler(-90f, 180f, 0f); // à plat (XZ)
+
+                var sr = child.AddComponent<SpriteRenderer>();
+                sr.sprite = arrowSprite;
+                sr.sortingLayerName = spriteSortingLayer;
+                sr.sortingOrder = spriteOrderInLayer;
+                sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                sr.receiveShadows = false;
+
+                // Fit largeur ? cellSize * spriteScale (en conservant le ratio)
+                float w = sr.sprite != null ? sr.sprite.bounds.size.x : 1f;
+                if (w <= 0f) w = 1f;
+                float s = (cellSize * spriteScale) / w;
+                child.transform.localScale = new Vector3(s, s, 1f);
+
+                if (projLayer != -1) child.layer = projLayer;
+            }
+            else
+            {
+                // Fallback visuel cube si aucun sprite n'est assigné
+                var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cube.name = "FallbackCube";
+                cube.transform.SetParent(go.transform, false);
+                cube.transform.localPosition = Vector3.zero;
+
+                float sx = arrowThickness * cellSize;
+                float sy = arrowThickness * cellSize;
+                float sz = arrowLengthInCell * cellSize;
+                cube.transform.localScale = new Vector3(sx, sy, sz);
+
+                var col = cube.GetComponent<Collider>(); if (col) Destroy(col);
+                var mr = cube.GetComponent<MeshRenderer>();
+                if (mr)
+                {
+                    mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    mr.receiveShadows = false;
+                    if (arrowMaterial) mr.sharedMaterial = arrowMaterial;
+                }
+                if (projLayer != -1) cube.layer = projLayer;
+            }
+
+            // Logique inchangée
             var ap = go.AddComponent<ArrowProjectile>();
             ap.Init(
                 dir, spec.arrowSpeed, cellSize, obstaclesMask,
                 levelData, hero, _nmes, resetManager
             );
-        }
-
-        private Vector3 GridCenter(Vector2Int c)
-        {
-            return new Vector3((c.x + 0.5f) * cellSize, 0f, (c.y + 0.5f) * cellSize);
-        }
-
-        private static Vector3 DirToVector(EdgeDirection dir)
-        {
-            return dir switch
-            {
-                EdgeDirection.North => new Vector3(0f, 0f, 1f),
-                EdgeDirection.East => new Vector3(1f, 0f, 0f),
-                EdgeDirection.South => new Vector3(0f, 0f, -1f),
-                EdgeDirection.West => new Vector3(-1f, 0f, 0f),
-                _ => Vector3.forward
-            };
         }
 
         // --- Reset : on réarme tout (pour un reset de niveau complet) ---

@@ -3,7 +3,7 @@ using UnityEngine;
 using Sarabande.Core;
 using Sarabande.Levels;
 using Sarabande.Player;
-using Sarabande.UI; // pour MessagePopupUI_TMP et MessagesUIController
+using Sarabande.UI;
 
 namespace Sarabande.Messages
 {
@@ -11,7 +11,7 @@ namespace Sarabande.Messages
     /// - Affiche un popup + joue la voix quand HÉRO entre sur une case "message".
     /// - Met à jour le compteur (icône + X/Total).
     /// - Les messages collectés sont DÉFINITIFS (ne reset pas).
-    /// - Construit de petits marqueurs visuels au sol pour les messages non-collectés.
+    /// - Construit des marqueurs visuels au sol (sprite plat) pour les messages non-collectés.
     /// À attacher sur LevelRoot.
     /// </summary>
     public class MessageSystem : MonoBehaviour, IResettable
@@ -26,22 +26,24 @@ namespace Sarabande.Messages
         [SerializeField] private MessagesUIController messagesUI;    // UI_Canvas/UI_MessagesRoot
         [SerializeField] private Sprite counterIcon;
 
-        [Header("Marker visuals")]
-        [SerializeField] private Material markerMaterial;
-        [SerializeField, Range(0.05f, 0.6f)] private float markerRadiusScale = 0.18f;
-        [SerializeField, Range(0.01f, 0.3f)] private float markerThickness = 0.03f;
-        [SerializeField, Min(0f)] private float markerY = 0.01f;     // petit offset au-dessus du sol
+        [Header("Marker Sprite (in-level)")]
+        [SerializeField] private Sprite markerSprite;                // <-- sprite à déposer ici
+        [SerializeField] private string sortingLayerName = "Default";
+        [SerializeField] private int orderInLayer = 20;
+        [SerializeField, Min(0f)] private float markerY = 0.02f;     // petit offset au-dessus du sol
+        [SerializeField] private bool fitToCell = true;              // ajuste la largeur au cellSize
+        [SerializeField, Range(0.1f, 2f)] private float spriteScale = 1f; // multiplicateur
+        [SerializeField] private Color spriteTint = Color.white;     // possibilité d’alpha < 1
 
         [Header("Audio")]
         [SerializeField, Range(0f, 1f)] private float voiceVolume = 0.9f;
 
         // runtime
-        private readonly HashSet<int> _collected = new();                // messages déjà pris (persiste à travers Reset)
+        private readonly HashSet<int> _collected = new();
         private readonly Dictionary<Vector2Int, int> _cellToIndex = new();
         private readonly Dictionary<int, GameObject> _markers = new();
         private Vector2Int _lastHeroCell;
         private AudioSource _voice;
-
         private Transform _markersParent;
 
         private void Awake()
@@ -53,11 +55,11 @@ namespace Sarabande.Messages
                 return;
             }
 
-            // Audio source 2D pour la voix (non spatialisée)
+            // Audio 2D pour la voix
             _voice = gameObject.AddComponent<AudioSource>();
             _voice.playOnAwake = false;
             _voice.loop = false;
-            _voice.spatialBlend = 0f; // 2D
+            _voice.spatialBlend = 0f;
             _voice.volume = voiceVolume;
 
             _markersParent = new GameObject("MessageMarkers").transform;
@@ -67,7 +69,7 @@ namespace Sarabande.Messages
 
             _lastHeroCell = hero.GridPos;
 
-            // UI compteur (icône + valeurs initiales)
+            // UI compteur
             int total = levelData.messages?.Count ?? 0;
             messagesUI?.SetIcon(counterIcon);
             messagesUI?.SetCounter(_collected.Count, total);
@@ -109,27 +111,37 @@ namespace Sarabande.Messages
                 // si déjà collecté, pas de marker
                 if (_collected.Contains(i)) continue;
 
-                // petit disque/cylindre plat au sol
-                var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                go.name = $"MsgMarker_{i}_({cell.x},{cell.y})";
+                // sprite plat au sol (XY pivot -> couché sur XZ)
+                var go = new GameObject($"MsgMarker_{i}_({cell.x},{cell.y})");
                 go.transform.SetParent(_markersParent, false);
 
                 Vector3 c = GridCenter(cell);
-                float r = markerRadiusScale * cellSize;
-                float h = markerThickness; // hauteur monde (Y)
+                go.transform.position = new Vector3(c.x, markerY, c.z);
 
-                go.transform.position = new Vector3(c.x, markerY + h * 0.5f, c.z);
-                // Pour un cylindre Unity: scale.y = half-height
-                go.transform.localScale = new Vector3(r, h * 0.5f, r);
+                // enfant avec SpriteRenderer
+                var srGO = new GameObject("Sprite");
+                srGO.transform.SetParent(go.transform, false);
+                srGO.transform.localRotation = Quaternion.Euler(90f, 0f, 0f); // XY -> XZ (face caméra top-down)
+                var sr = srGO.AddComponent<SpriteRenderer>();
+                sr.sprite = markerSprite;
+                sr.color = spriteTint;
+                sr.sortingLayerName = sortingLayerName;
+                sr.sortingOrder = orderInLayer;
+                sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                sr.receiveShadows = false;
 
-                // désactive le collider
-                var col = go.GetComponent<Collider>(); if (col) Destroy(col);
-                var mr = go.GetComponent<MeshRenderer>();
-                if (mr)
+                // scale pour s’aligner sur la largeur de case si demandé
+                if (fitToCell && sr.sprite != null)
                 {
-                    mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    mr.receiveShadows = false;
-                    if (markerMaterial) mr.sharedMaterial = markerMaterial;
+                    float spriteWorldWidth = sr.sprite.bounds.size.x; // à scale=1
+                    if (spriteWorldWidth <= 0f) spriteWorldWidth = 1f;
+                    float targetWidth = cellSize * spriteScale;
+                    float s = targetWidth / spriteWorldWidth;
+                    srGO.transform.localScale = new Vector3(s, s, 1f);
+                }
+                else
+                {
+                    srGO.transform.localScale = Vector3.one * spriteScale;
                 }
 
                 _markers[i] = go;
@@ -157,10 +169,10 @@ namespace Sarabande.Messages
 
             var spec = levelData.messages[index];
 
-            // popup (tu as demandé une durée configurable par message)
+            // popup
             popupUI?.Show(spec.text, Mathf.Max(0.1f, spec.displaySeconds));
 
-            // voix (si fournie)
+            // voix
             if (_voice && spec.voiceClip)
             {
                 if (_voice.isPlaying) _voice.Stop();
@@ -170,18 +182,14 @@ namespace Sarabande.Messages
             // compteur UI
             int total = levelData.messages?.Count ?? 0;
             messagesUI?.SetCounter(_collected.Count, total);
-
-            // (optionnel) bruitage pour NME : Sarabande.Core.NoiseSystem.Emit(cell); si jamais tu le veux
         }
 
         // --- Reset ---
-        // IMPORTANT: on NE vide PAS _collected (les messages restent acquis).
-        // On ne reconstruit que les marqueurs restants.
+        // On NE vide PAS _collected (les messages restent acquis).
         public void ResetToInitial()
         {
             BuildMapsAndMarkers();
 
-            // remet le compteur (au cas où)
             int total = levelData.messages?.Count ?? 0;
             messagesUI?.SetCounter(_collected.Count, total);
         }
