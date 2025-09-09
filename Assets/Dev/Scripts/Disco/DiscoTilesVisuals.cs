@@ -39,6 +39,9 @@ namespace Sarabande.Disco
             new Color(1.00f, 0.20f, 0.80f)
         };
 
+        [Header("Palette (Materials)")]
+        [SerializeField] private Material[] colorMaterials;
+
         private Transform _parent; // "DiscoTiles"
         private readonly Dictionary<Vector2Int, DiscoTileVisual> _tiles = new();
 
@@ -86,6 +89,12 @@ namespace Sarabande.Disco
                 for (int i = _parent.childCount - 1; i >= 0; i--)
                     DestroyImmediate(_parent.GetChild(i).gameObject);
             }
+        }
+
+        private Material RandMat()
+        {
+            if (colorMaterials == null || colorMaterials.Length == 0) return null;
+            return colorMaterials[Random.Range(0, colorMaterials.Length)];
         }
 
         private void BuildAll()
@@ -177,16 +186,23 @@ namespace Sarabande.Disco
         {
             if (!_tiles.TryGetValue(cell, out var parts)) return;
 
+            // Si une palette de matériaux est fournie, on la privilégie.
+            Material mat = RandMat();
+
             switch (s)
             {
                 case State.Off:
                     parts.SetOff();
                     break;
+
                 case State.On:
-                    parts.SetOn(color);
+                    if (mat) parts.SetOn(mat);           // palette matériau (émissif)
+                    else parts.SetOn(color);         // fallback couleur (émission via code)
                     break;
+
                 case State.Next:
-                    parts.SetNext(color);
+                    if (mat) parts.SetNext(mat);         // palette matériau sur le "core"
+                    else parts.SetNext(color);       // fallback couleur (core émissif)
                     break;
             }
         }

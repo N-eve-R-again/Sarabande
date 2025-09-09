@@ -114,10 +114,38 @@ namespace Sarabande.Disco
             }
         }
 
+        public void SetNext(Material m)
+        {
+            // base grise (OFF)
+            SetRendererColor(_baseR, _baseOffColor, emission: false);
+
+            if (_coreR)
+            {
+                _coreR.enabled = true;
+                _coreR.sharedMaterial = m;
+                // Optionnel : si tu veux atténuer la “NEXT”, dé-commente :
+                // var c = m.HasProperty("_EmissionColor") ? m.GetColor("_EmissionColor") : Color.white;
+                // var mpb = new MaterialPropertyBlock();
+                // _coreR.GetPropertyBlock(mpb);
+                // mpb.SetColor("_EmissionColor", c * 0.7f); // facteur "nextIntensity"
+                // _coreR.SetPropertyBlock(mpb);
+            }
+        }
+
         public void SetOn(Color c)
         {
             // Base pleine lumineuse, core caché
             SetRendererColor(_baseR, c * _onIntensity, emission: true);
+            if (_coreR) _coreR.enabled = false;
+        }
+
+        public void SetOn(Material m)
+        {
+            if (_baseR)
+            {
+                _baseR.sharedMaterial = m;   // on réutilise le même material asset (pas d’instance inutile)
+                _baseR.enabled = true;
+            }
             if (_coreR) _coreR.enabled = false;
         }
 
