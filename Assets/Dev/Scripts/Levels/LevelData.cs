@@ -34,6 +34,8 @@ namespace Sarabande.Levels
         [Header("Décor (murs traversables)")]
         public List<GridCoord> passThroughWalls = new();  // ex: A6, etc.
 
+
+
         // --- Arrow Traps (proto) -----------------------------------------------------
 
         [System.Serializable]
@@ -88,6 +90,10 @@ namespace Sarabande.Levels
         }
 
         // --- Dalles Disco ---
+
+        [Header("Disco Start")]
+        [Tooltip("Cases qui déclenchent la séquence disco quand le HÉRO y entre.")]
+        public List<GridCoord> discoStartTiles = new();
 
         [System.Serializable]
         public class DiscoSequenceSpec
