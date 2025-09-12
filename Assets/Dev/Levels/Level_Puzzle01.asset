@@ -198,6 +198,9 @@ MonoBehaviour:
     text: Tout est affaire de sensation, suivre le rythme et les pulsions.
     displaySeconds: 6
     voiceClip: {fileID: 8300000, guid: 97edbf8a9daad764eadd66ad422e0648, type: 3}
+  discoStartTiles:
+  - x: 2
+    z: 4
   discoSequences:
   - cells:
     - x: 0
@@ -213,7 +216,7 @@ MonoBehaviour:
     - x: 6
       z: 2
     stepSeconds:
-    - 4.5
+    - 2
     - 2
     - 2
     - 2.5
@@ -226,3 +229,4 @@ MonoBehaviour:
       x: 7
       z: 0
     side: 1
+    initiallyOpen: 0

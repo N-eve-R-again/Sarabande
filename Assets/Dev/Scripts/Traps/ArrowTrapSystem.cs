@@ -19,7 +19,9 @@ namespace Sarabande.Traps
     public class ArrowTrapSystem : MonoBehaviour, Sarabande.Core.IResettable
     {
         [Header("Data & Refs")]
-        [SerializeField] private LevelData levelData;
+        [SerializeField] private bool useLevelContext = true;
+        [SerializeField] private Sarabande.Core.LevelContext levelContext;
+        [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
         [SerializeField, Min(0.001f)] private float cellSize = 1f;
         [SerializeField] private HeroController hero;
         [SerializeField] private Sarabande.Core.ResetManager resetManager;
@@ -266,5 +268,43 @@ namespace Sarabande.Traps
             yield return new WaitForSeconds(delay);
             if (tile != null) tile.ShowThenRelease();
         }
+        private void AttachContext()
+        {
+            if (!useLevelContext) return;
+
+            if (!levelContext)
+                levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
+
+            if (levelContext != null)
+            {
+                levelContext.LevelDataChanged += HandleContextLevelDataChanged;
+                HandleContextLevelDataChanged(levelContext.LevelData); // init immédiate
+            }
+            else
+            {
+                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
+            }
+        }
+
+        private void DetachContext()
+        {
+            if (levelContext != null)
+                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
+        }
+
+        private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
+        {
+            if (levelData == ld) return;
+            levelData = ld;
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                UnityEditor.EditorUtility.SetDirty(this); // l’inspector reflète la maj auto
+#endif
+        }
+        private void OnEnable() { AttachContext(); }
+        private void OnDisable() { DetachContext(); }
+#if UNITY_EDITOR
+        private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
+#endif
     }
 }

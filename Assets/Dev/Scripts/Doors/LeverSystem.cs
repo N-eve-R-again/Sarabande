@@ -11,10 +11,13 @@ namespace Sarabande.Doors
     public class LeverSystem : MonoBehaviour, IResettable
     {
         [Header("Data")]
-        [SerializeField] private LevelData levelData;
         [SerializeField] private TimedDoorSystem timedDoorSystem; // référence au composant ci-dessus
         [SerializeField, Min(0.001f)] private float cellSize = 1f;
         [SerializeField, Min(0.1f)] private float wallHeight = 1f;
+        [SerializeField] private bool useLevelContext = true;
+        [SerializeField] private Sarabande.Core.LevelContext levelContext;
+        [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
+
 
         [Header("Visuals")]
         [SerializeField] private Material leverBaseMaterial;
@@ -272,5 +275,45 @@ namespace Sarabande.Doors
                 }
             }
         }
+        private void AttachContext()
+        {
+            if (!useLevelContext) return;
+
+            if (!levelContext)
+                levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
+
+            if (levelContext != null)
+            {
+                levelContext.LevelDataChanged += HandleContextLevelDataChanged;
+                HandleContextLevelDataChanged(levelContext.LevelData); // init immédiate
+            }
+            else
+            {
+                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
+            }
+        }
+
+        private void DetachContext()
+        {
+            if (levelContext != null)
+                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
+        }
+
+        private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
+        {
+            if (levelData == ld) return;
+            levelData = ld;
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                UnityEditor.EditorUtility.SetDirty(this); // l’inspector reflète la maj auto
+#endif
+            // NOTE: si ce système a besoin de se "rebuild" quand le LevelData change,
+            // appelle ici ta méthode interne (ex: RebuildFromLevelData()).
+        }
+        private void OnEnable() { AttachContext(); }
+        private void OnDisable() { DetachContext(); }
+#if UNITY_EDITOR
+        private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
+#endif
     }
 }
