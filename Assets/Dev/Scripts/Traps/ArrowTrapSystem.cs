@@ -9,13 +9,6 @@ using static Sarabande.Core.GridUtils;
 
 namespace Sarabande.Traps
 {
-    /// <summary>
-    /// Observe HÉRO + NME ; déclenche les flèches quand on entre sur les cases trigger.
-    /// - Une flèche par entrée sur une dalle (déclenchement “edge”).
-    /// - Respecte canRearm/rearmDelay par piège.
-    /// - Spawne un ArrowProjectile paramétré (vitesse, dir, masque obstacles).
-    /// À attacher sur LevelRoot.
-    /// </summary>
     public class ArrowTrapSystem : MonoBehaviour, Sarabande.Core.IResettable
     {
         [Header("Data & Refs")]
@@ -27,37 +20,51 @@ namespace Sarabande.Traps
         [SerializeField] private Sarabande.Core.ResetManager resetManager;
 
         [Header("Visuals")]
-        [SerializeField] private Material arrowMaterial;          // placeholder
+        [SerializeField] private Material arrowMaterial;
         [SerializeField, Min(0.02f)] private float arrowThickness = 0.08f;
-        [SerializeField, Min(0.1f)] private float arrowLengthInCell = 0.7f; // longueur visuelle
+        [SerializeField, Min(0.1f)] private float arrowLengthInCell = 0.7f;
 
         [Header("Sprite (projectile)")]
-        [SerializeField] private Sprite arrowSprite;                 // sprite "North"
+        [SerializeField] private Sprite arrowSprite; // sprite "North"
         [SerializeField, Range(0.1f, 2f)] private float spriteScale = 0.8f;
         [SerializeField] private float spriteYOffset = 0.02f;
         [SerializeField] private string spriteSortingLayer = "Default";
         [SerializeField] private int spriteOrderInLayer = 50;
 
         [Header("Collision")]
-        [SerializeField] private LayerMask obstaclesMask;         // coche "Obstacles"
+        [SerializeField] private LayerMask obstaclesMask;
 
         [Header("Layer (optionnel)")]
         [SerializeField] private string projectilesLayerName = "Projectiles";
 
-        private NMEController[] _nmes;
-        private System.Collections.Generic.Dictionary<Vector2Int, TrapTileVisual> _tileVisuals;
+        [Header("Audio")]
+        [SerializeField] private AudioClip clickTriggerClip;  // clic dalle
+        [SerializeField] private AudioClip bowReleaseClip;    // corde
+        [SerializeField] private AudioClip hitLoveClip;       // pouf love (impact)
+        [SerializeField, Range(0f, 1f)] private float clickVolume = 0.9f;
+        [SerializeField, Range(0f, 1f)] private float releaseVolume = 0.9f;
+        [SerializeField, Range(0f, 1f)] private float hitVolume = 1f;
+        [SerializeField, Range(0f, 1f)] private float spatialBlend = 1f; // 3D
+        [SerializeField] private float minDistance = 2f;
+        [SerializeField] private float maxDistance = 18f;
 
-        // état runtime des pièges
-        private struct TrapRuntime
-        {
-            public bool armed;
-            public float nextReadyTime;
-        }
+        [Header("FX")]
+        [Tooltip("Prefab de FX (ParticleSystem/VFX Graph) pour l’impact cœur.")]
+        [SerializeField] private GameObject hitLoveFxPrefab;
+        [Tooltip("Durée de vie fallback si le prefab n’auto-détruit pas.")]
+        [SerializeField, Min(0.1f)] private float fxLifetime = 1.5f;
+        [SerializeField] private float fxYOffset = 0.05f;
+
+        private NMEController[] _nmes;
+        private Dictionary<Vector2Int, TrapTileVisual> _tileVisuals;
+        private struct TrapRuntime { public bool armed; public float nextReadyTime; }
         private TrapRuntime[] _runtime;
 
-        // mémoires d’entrée de case (edge detection)
         private Vector2Int _lastHeroCell;
         private readonly Dictionary<NMEController, Vector2Int> _lastNmeCell = new();
+
+        // Parent propre pour retrouver tous les FX rapidement dans la hiérarchie
+        private Transform _fxParent;
 
         private void Start()
         {
@@ -68,70 +75,47 @@ namespace Sarabande.Traps
                 return;
             }
 
+            // Dossier pour FX runtime (pour “où le trouver après”)
+            var fxRoot = new GameObject("FX_Runtime");
+            _fxParent = fxRoot.transform;
+            _fxParent.SetParent(transform, false);
+
             _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
             int count = levelData.arrowTraps?.Count ?? 0;
             _runtime = new TrapRuntime[count];
-            _tileVisuals = new System.Collections.Generic.Dictionary<Vector2Int, TrapTileVisual>();
+            _tileVisuals = new Dictionary<Vector2Int, TrapTileVisual>();
             var tiles = FindObjectsByType<TrapTileVisual>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var tv in tiles)
-                if (tv != null)
-                    _tileVisuals[tv.Cell] = tv;
+            foreach (var tv in tiles) if (tv != null) _tileVisuals[tv.Cell] = tv;
 
-            for (int i = 0; i < count; i++)
-            {
-                _runtime[i].armed = true;
-                _runtime[i].nextReadyTime = 0f;
-            }
+            for (int i = 0; i < count; i++) { _runtime[i].armed = true; _runtime[i].nextReadyTime = 0f; }
 
             _lastHeroCell = hero.GridPos;
-            if (_nmes != null)
-            {
-                foreach (var n in _nmes)
-                    if (n != null)
-                        _lastNmeCell[n] = n.GridPos;
-            }
+            if (_nmes != null) foreach (var n in _nmes) if (n != null) _lastNmeCell[n] = n.GridPos;
         }
 
         private void Update()
         {
-            // réarmement éventuel
             for (int i = 0; i < _runtime.Length; i++)
             {
                 if (!_runtime[i].armed && Time.time >= _runtime[i].nextReadyTime)
-                {
-                    var spec = levelData.arrowTraps[i];
-                    if (spec.canRearm) _runtime[i].armed = true;
-                }
+                { var spec = levelData.arrowTraps[i]; if (spec.canRearm) _runtime[i].armed = true; }
             }
 
-            // Héro : détection d’entrée de case
-            Vector2Int heroCell = hero.GridPos;
-            if (heroCell != _lastHeroCell)
-            {
-                TryTriggerAtCell(heroCell);
-                _lastHeroCell = heroCell;
-            }
+            var heroCell = hero.GridPos;
+            if (heroCell != _lastHeroCell) { TryTriggerAtCell(heroCell); _lastHeroCell = heroCell; }
 
-            // NME : détection d’entrée de case
             if (_nmes != null)
             {
                 foreach (var n in _nmes)
                 {
                     if (n == null) continue;
-                    Vector2Int cell = n.GridPos;
+                    var cell = n.GridPos;
                     if (_lastNmeCell.TryGetValue(n, out var prev))
                     {
-                        if (cell != prev)
-                        {
-                            TryTriggerAtCell(cell);
-                            _lastNmeCell[n] = cell;
-                        }
+                        if (cell != prev) { TryTriggerAtCell(cell); _lastNmeCell[n] = cell; }
                     }
-                    else
-                    {
-                        _lastNmeCell[n] = cell;
-                    }
+                    else _lastNmeCell[n] = cell;
                 }
             }
         }
@@ -143,50 +127,41 @@ namespace Sarabande.Traps
                 if (!_runtime[i].armed) continue;
                 var spec = levelData.arrowTraps[i];
                 if (enteredCell.x == spec.triggerCell.x && enteredCell.y == spec.triggerCell.z)
-                {
                     FireTrap(i, spec);
-                }
             }
         }
 
         private void FireTrap(int index, LevelData.ArrowTrapSpec spec)
         {
-            // désarme + programme réarmement si nécessaire
             _runtime[index].armed = false;
-            if (spec.canRearm)
-                _runtime[index].nextReadyTime = Time.time + spec.rearmDelay;
+            if (spec.canRearm) _runtime[index].nextReadyTime = Time.time + spec.rearmDelay;
 
-            // ... (juste après avoir armé/désarmé)
             var triggerCell = new Vector2Int(spec.triggerCell.x, spec.triggerCell.z);
             if (_tileVisuals != null && _tileVisuals.TryGetValue(triggerCell, out var tile))
             {
-                tile.PressAndHide();                // AVANT: tile.Press();
-                if (spec.canRearm)
-                    StartCoroutine(RearmTile(tile, spec.rearmDelay));
+                tile.PressAndHide();
+                if (spec.canRearm) StartCoroutine(RearmTile(tile, spec.rearmDelay));
             }
 
+            PlayOneShotAt(clickTriggerClip, Center(triggerCell, cellSize) + Vector3.up * 0.02f, clickVolume);
             Sarabande.Core.NoiseSystem.Emit(triggerCell);
 
-            // --- spawn flèche (sprite à plat) ---
             Vector3 startPos = Center(new Vector2Int(spec.startCell.x, spec.startCell.z), cellSize) + Vector3.up * 0.02f;
             Vector3 dir = DirToWorld(spec.travelDir);
 
-            // Parent qui porte la rotation (yaw) = direction de déplacement
             var go = new GameObject($"Arrow_{index}");
             go.transform.position = startPos;
             go.transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
 
-            // Layer projectiles (parent + enfant)
             int projLayer = LayerMask.NameToLayer(projectilesLayerName);
             if (projLayer != -1) go.layer = projLayer;
 
             if (arrowSprite != null)
             {
-                // Enfant "Sprite" couché à plat
                 var child = new GameObject("Sprite");
                 child.transform.SetParent(go.transform, false);
                 child.transform.localPosition = new Vector3(0f, spriteYOffset, 0f);
-                child.transform.localRotation = Quaternion.Euler(-90f, 180f, 0f); // à plat (XZ)
+                child.transform.localRotation = Quaternion.Euler(-90f, 180f, 0f);
 
                 var sr = child.AddComponent<SpriteRenderer>();
                 sr.sprite = arrowSprite;
@@ -195,7 +170,6 @@ namespace Sarabande.Traps
                 sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 sr.receiveShadows = false;
 
-                // Fit largeur ? cellSize * spriteScale (en conservant le ratio)
                 float w = sr.sprite != null ? sr.sprite.bounds.size.x : 1f;
                 if (w <= 0f) w = 1f;
                 float s = (cellSize * spriteScale) / w;
@@ -205,7 +179,6 @@ namespace Sarabande.Traps
             }
             else
             {
-                // Fallback visuel cube si aucun sprite n'est assigné
                 var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 cube.name = "FallbackCube";
                 cube.transform.SetParent(go.transform, false);
@@ -227,78 +200,45 @@ namespace Sarabande.Traps
                 if (projLayer != -1) cube.layer = projLayer;
             }
 
-            // Logique inchangée
+            PlayOneShotAt(bowReleaseClip, startPos, releaseVolume);
+
             var ap = go.AddComponent<ArrowProjectile>();
-            ap.Init(
-                dir, spec.arrowSpeed, cellSize, obstaclesMask,
-                levelData, hero, _nmes, resetManager
-            );
+            ap.Init(dir, spec.arrowSpeed, cellSize, obstaclesMask, levelData, hero, _nmes, resetManager);
+            ap.InitAudio(hitLoveClip, hitVolume, spatialBlend, minDistance, maxDistance);
+            ap.InitFx(hitLoveFxPrefab, _fxParent, fxLifetime, fxYOffset);
         }
 
-        // --- Reset : on réarme tout (pour un reset de niveau complet) ---
         public void ResetToInitial()
         {
-            for (int i = 0; i < _runtime.Length; i++)
-            {
-                _runtime[i].armed = true;
-                _runtime[i].nextReadyTime = 0f;
-            }
+            for (int i = 0; i < _runtime.Length; i++) { _runtime[i].armed = true; _runtime[i].nextReadyTime = 0f; }
 
             _lastHeroCell = hero.GridPos;
-            if (_nmes != null)
-            {
-                foreach (var n in _nmes)
-                    if (n != null)
-                        _lastNmeCell[n] = n.GridPos;
-            }
+            if (_nmes != null) foreach (var n in _nmes) if (n != null) _lastNmeCell[n] = n.GridPos;
 
-            if (_tileVisuals != null)
-            {
-                foreach (var kv in _tileVisuals)
-                    if (kv.Value != null) kv.Value.ResetVisual();
-            }
-
-            // on peut aussi clean d’éventuelles flèches résiduelles :
-            // (optionnel) détruit tous les GameObjects "Arrow_*" sous ce LevelRoot
-            // -> pas indispensable si on réinitialise toujours la scène proprement.
+            if (_tileVisuals != null) foreach (var kv in _tileVisuals) if (kv.Value != null) kv.Value.ResetVisual();
         }
 
         private System.Collections.IEnumerator RearmTile(TrapTileVisual tile, float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            if (tile != null) tile.ShowThenRelease();
-        }
+        { yield return new WaitForSeconds(delay); if (tile != null) tile.ShowThenRelease(); }
+
         private void AttachContext()
         {
             if (!useLevelContext) return;
-
-            if (!levelContext)
-                levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
-
+            if (!levelContext) levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
             if (levelContext != null)
             {
                 levelContext.LevelDataChanged += HandleContextLevelDataChanged;
-                HandleContextLevelDataChanged(levelContext.LevelData); // init immédiate
+                HandleContextLevelDataChanged(levelContext.LevelData);
             }
-            else
-            {
-                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
-            }
+            else Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
         }
-
-        private void DetachContext()
-        {
-            if (levelContext != null)
-                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
-        }
-
+        private void DetachContext() { if (levelContext != null) levelContext.LevelDataChanged -= HandleContextLevelDataChanged; }
         private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
         {
             if (levelData == ld) return;
             levelData = ld;
 #if UNITY_EDITOR
-            if (!Application.isPlaying)
-                UnityEditor.EditorUtility.SetDirty(this); // l’inspector reflète la maj auto
+            if (!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(this);
 #endif
         }
         private void OnEnable() { AttachContext(); }
@@ -306,5 +246,22 @@ namespace Sarabande.Traps
 #if UNITY_EDITOR
         private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
 #endif
+
+        private void PlayOneShotAt(AudioClip clip, Vector3 pos, float vol)
+        {
+            if (!clip) return;
+            var go = new GameObject("SFX_ArrowTrap_OneShot");
+            go.transform.position = pos;
+            var src = go.AddComponent<AudioSource>();
+            src.playOnAwake = false;
+            src.loop = false;
+            src.clip = clip;
+            src.volume = Mathf.Clamp01(vol);
+            src.spatialBlend = spatialBlend;
+            src.minDistance = minDistance;
+            src.maxDistance = maxDistance;
+            src.Play();
+            Destroy(go, clip.length + 0.1f);
+        }
     }
 }

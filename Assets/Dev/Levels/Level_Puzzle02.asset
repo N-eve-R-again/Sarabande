@@ -14,25 +14,197 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 8
   height: 8
-  nonWalkables: []
-  thinWalls: []
+  nonWalkables:
+  - x: 0
+    z: 0
+  - x: 1
+    z: 0
+  - x: 2
+    z: 0
+  - x: 3
+    z: 0
+  - x: 4
+    z: 0
+  - x: 5
+    z: 0
+  - x: 6
+    z: 0
+  - x: 7
+    z: 0
+  - x: 7
+    z: 1
+  - x: 7
+    z: 2
+  - x: 7
+    z: 4
+  - x: 7
+    z: 5
+  - x: 7
+    z: 6
+  - x: 7
+    z: 7
+  - x: 0
+    z: 7
+  - x: 1
+    z: 7
+  - x: 2
+    z: 7
+  - x: 3
+    z: 7
+  - x: 4
+    z: 7
+  - x: 5
+    z: 7
+  - x: 6
+    z: 7
+  - x: 2
+    z: 6
+  - x: 3
+    z: 6
+  - x: 4
+    z: 6
+  - x: 5
+    z: 6
+  - x: 6
+    z: 6
+  - x: 4
+    z: 5
+  - x: 5
+    z: 5
+  - x: 6
+    z: 5
+  - x: 4
+    z: 2
+  - x: 5
+    z: 4
+  - x: 6
+    z: 4
+  thinWalls:
+  - a:
+      x: 1
+      z: 1
+    b:
+      x: 1
+      z: 2
+  - a:
+      x: 2
+      z: 1
+    b:
+      x: 2
+      z: 2
+  - a:
+      x: 5
+      z: 1
+    b:
+      x: 4
+      z: 1
+  - a:
+      x: 3
+      z: 2
+    b:
+      x: 2
+      z: 2
+  - a:
+      x: 3
+      z: 3
+    b:
+      x: 2
+      z: 3
   heroSpawn:
     x: 0
-    z: 0
+    z: 3
   nmeSpawn:
     x: 0
-    z: 0
-  heroEntry: 0
+    z: 6
+  heroEntry: 3
   exit:
     fromCell:
-      x: 0
-      z: 0
-    direction: 0
+      x: 7
+      z: 3
+    direction: 1
   passThroughWalls: []
-  arrowTraps: []
-  timedDoors: []
+  arrowTraps:
+  - triggerCell:
+      x: 2
+      z: 2
+    startCell:
+      x: 2
+      z: 5
+    travelDir: 2
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+  - triggerCell:
+      x: 3
+      z: 3
+    startCell:
+      x: 3
+      z: 1
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+  - triggerCell:
+      x: 5
+      z: 3
+    startCell:
+      x: 5
+      z: 1
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+  timedDoors:
+  - cell:
+      x: 7
+      z: 3
+    openSeconds: 2
   levers: []
-  messages: []
+  messages:
+  - cell:
+      x: 2
+      z: 3
+    text: Certaines dalles t'ouvrent la voie, d'autres te font fondre d'amour.
+    displaySeconds: 3
+    voiceClip: {fileID: 0}
+  - cell:
+      x: 4
+      z: 1
+    text: "Et si tu faisais d\xE9couvrir l'amour \xE0 ce zombie ?"
+    displaySeconds: 3
+    voiceClip: {fileID: 0}
+  - cell:
+      x: 4
+      z: 4
+    text: Tu as tout juste le temps de passer...enfin normalement...
+    displaySeconds: 3
+    voiceClip: {fileID: 0}
   discoStartTiles: []
   discoSequences: []
-  gridGates: []
+  gridGates:
+  - cell:
+      x: 1
+      z: 4
+    side: 3
+    initiallyOpen: 0
+  - cell:
+      x: 1
+      z: 6
+    side: 3
+    initiallyOpen: 0
+  - cell:
+      x: 1
+      z: 5
+    side: 3
+    initiallyOpen: 0
+  triggerPads:
+  - cell:
+      x: 1
+      z: 3
+    canBeTriggeredByNME: 1
+    triggerId: OPEN_TIMED_DOOR
+  triggerBindings:
+  - id: OPEN_TIMED_DOOR
+    action: 0
+    targetIndex: 0
+    secondsOverride: -1

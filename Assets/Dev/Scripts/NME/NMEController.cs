@@ -20,7 +20,9 @@ namespace Sarabande.NME
     public class NMEController : MonoBehaviour, IResettable
     {
         [Header("Data & Refs")]
-        [SerializeField] private LevelData levelData;
+        [SerializeField] private bool useLevelContext = true;
+        [SerializeField] private Sarabande.Core.LevelContext levelContext;
+        [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
         [SerializeField, Min(0.001f)] private float cellSize = 1f;
         [SerializeField] private HeroController hero;
 
@@ -178,6 +180,14 @@ namespace Sarabande.NME
 
                             _path.RemoveAt(0);
                             FaceDirection(next - _gridPos);
+                            // Si une gate est fermée pile entre la case actuelle et 'next', on annule et on repath.
+                            if (HasThinWallBetween(_gridPos, next))
+                            {
+                                _readyAt = Time.time + interStepPause;
+                                _path.Clear();
+                                _nextRepathAt = 0f;     // repath immédiat
+                                return;
+                            }
                             StartCoroutine(StepTo(next));
                         }
                         else
@@ -242,6 +252,16 @@ namespace Sarabande.NME
             FromCell = _gridPos;
             ToCell = target;
             MoveProgress = 0f;
+
+            // --- STOP si une gate vient de (re)se fermer entre ma case et la cible ---
+            if (HasThinWallBetween(_gridPos, target))
+            {
+                _isMoving = false;
+                _readyAt = Time.time + interStepPause;
+                _path.Clear();          // évite de garder un noeud devenu invalide
+                _nextRepathAt = 0f;     // repath immédiat au prochain Update
+                yield break;
+            }
 
             Vector3 start = transform.position;
             Vector3 end = Center(target, cellSize);
@@ -439,6 +459,11 @@ namespace Sarabande.NME
             BuildCollisionSets();
 
             _dynamicEdgeBlocks.Clear();
+
+            // Important : réappliquer les grilles fermées au NME fraîchement reset
+            var gateSys = FindFirstObjectByType<Sarabande.Gates.GridGateSystem>(FindObjectsInactive.Include);
+            if (gateSys != null)
+                gateSys.ReapplyBlocksTo(this);
 
             _gridPos = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
             transform.position = Center(_gridPos, cellSize);
@@ -641,8 +666,16 @@ namespace Sarabande.NME
         }
 
         //--- Ear Noise ---
-        private void OnEnable() { NoiseSystem.NoiseRaised += OnNoiseRaised; }
-        private void OnDisable() { NoiseSystem.NoiseRaised -= OnNoiseRaised; }
+        private void OnEnable() 
+        { 
+            NoiseSystem.NoiseRaised += OnNoiseRaised;
+            AttachContext();
+        }
+        private void OnDisable() 
+        { 
+            NoiseSystem.NoiseRaised -= OnNoiseRaised;
+            DetachContext();
+        }
 
         private void OnNoiseRaised(Vector2Int at)
         {
@@ -652,5 +685,48 @@ namespace Sarabande.NME
                 _nextRepathAt = 0f;   // repath immédiat
             }
         }
+        // --- LevelContext plumbing ---
+        private void AttachContext()
+        {
+            // si tu veux pouvoir désactiver, garde ce bool
+            // if (!useLevelContext) return;
+            if (!levelContext)
+                levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
+
+            if (levelContext != null)
+            {
+                levelContext.LevelDataChanged += HandleContextLevelDataChanged;
+                HandleContextLevelDataChanged(levelContext.LevelData); // init immédiate
+            }
+            else
+            {
+                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
+            }
+        }
+
+        private void DetachContext()
+        {
+            if (levelContext != null)
+                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
+        }
+
+        private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
+        {
+            if (levelData == ld) return;
+            levelData = ld;
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                UnityEditor.EditorUtility.SetDirty(this);
+#endif
+
+            // En jeu, on se replace proprement sur le nouveau LevelData
+            if (Application.isPlaying && isActiveAndEnabled && levelData != null)
+                ResetToInitial();
+        }
+#if UNITY_EDITOR
+        private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
+#endif
+
     }
 }

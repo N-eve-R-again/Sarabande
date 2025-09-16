@@ -21,7 +21,9 @@ namespace Sarabande.Player
     public class HeroController : MonoBehaviour, Sarabande.Core.IResettable
     {
         [Header("Data")]
-        [SerializeField] private LevelData levelData;
+        [SerializeField] private bool useLevelContext = true;
+        [SerializeField] private Sarabande.Core.LevelContext levelContext;
+        [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
         [SerializeField, Min(0.001f)] private float cellSize = 1f;
 
         [Header("Movement")]
@@ -512,5 +514,51 @@ namespace Sarabande.Player
 
             if (!isStatic) _blockedCells.Remove(c);
         }
+        // --- LevelContext plumbing ---
+        private void AttachContext()
+        {
+            if (!useLevelContext) return;
+
+            if (!levelContext)
+                levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
+
+            if (levelContext != null)
+            {
+                levelContext.LevelDataChanged += HandleContextLevelDataChanged;
+                HandleContextLevelDataChanged(levelContext.LevelData); // init immédiate
+            }
+            else
+            {
+                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
+            }
+        }
+
+        private void DetachContext()
+        {
+            if (levelContext != null)
+                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
+        }
+
+        private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
+        {
+            if (levelData == ld) return;
+            levelData = ld;
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                UnityEditor.EditorUtility.SetDirty(this);
+#endif
+
+            // En jeu : se replacer sur le spawn du nouveau niveau
+            if (Application.isPlaying && isActiveAndEnabled && levelData != null)
+                ResetToInitial();
+        }
+
+        private void OnEnable() { AttachContext(); }
+        private void OnDisable() { DetachContext(); }
+#if UNITY_EDITOR
+        private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
+#endif
+
     }
 }
