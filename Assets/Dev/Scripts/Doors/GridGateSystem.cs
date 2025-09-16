@@ -158,6 +158,21 @@ namespace Sarabande.Gates
             for (int i = 0; i < _gates.Count; i++) OpenGate(i);
         }
 
+        // Réapplique les arêtes fermées au NME donné (utile quand un NME est reset seul)
+        public void ReapplyBlocksTo(Sarabande.NME.NMEController nme)
+        {
+            if (nme == null) return;
+            for (int i = 0; i < _gates.Count; i++)
+            {
+                var g = _gates[i];
+                if (!g.isOpen)
+                {
+                    // nme.AddDynamicEdgeBlock(g.a, g.b) mais sans toucher Héro/les autres
+                    nme.AddDynamicEdgeBlock(g.a, g.b);
+                }
+            }
+        }
+
         // --- Reset (F5 / échec) ---
         public void ResetToInitial()
         {

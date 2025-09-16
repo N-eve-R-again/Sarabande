@@ -123,6 +123,30 @@ namespace Sarabande.Levels
         }
         public List<GridGateSpec> gridGates = new();
 
+        // --- TRIGGERS GÉNÉRIQUES (Dalles + Table de routage) ---------------------------
+        [System.Serializable]
+        public class TriggerPadSpec
+        {
+            public GridCoord cell;              // case de la dalle
+            public bool canBeTriggeredByNME = true; // le NME peut l'activer ?
+            public string triggerId;            // identifiant logique (ex: "OPEN_EXIT_DOOR")
+        }
+        public List<TriggerPadSpec> triggerPads = new();
 
+        public enum TriggerActionKind
+        {
+            TimedDoorOpen = 0,
+            // (plus tard : ArrowTrapFire, DiscoStart, MessageShow, etc.)
+        }
+
+        [System.Serializable]
+        public class TriggerBinding
+        {
+            public string id;                   // doit matcher TriggerPadSpec.triggerId (et/ou un levier si tu veux)
+            public TriggerActionKind action;    // pour l’instant : TimedDoorOpen
+            public int targetIndex = -1;        // index de la porte (TimedDoorSpec) si action=TimedDoorOpen
+            public float secondsOverride = -1f; // <0 => utilise la durée du LevelData.timedDoors[targetIndex]
+        }
+        public List<TriggerBinding> triggerBindings = new();
     }
 }
