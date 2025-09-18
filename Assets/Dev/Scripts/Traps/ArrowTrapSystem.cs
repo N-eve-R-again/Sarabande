@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 using Sarabande.Levels;
 using Sarabande.Player;
 using Sarabande.NME;
 using Sarabande.Core;   // <-- pour EdgeDirection
 using Sarabande.Traps;
 using static Sarabande.Core.GridUtils;
+using ArrowEmission = Sarabande.Levels.LevelData.ArrowEmission;
 
 namespace Sarabande.Traps
 {
@@ -62,6 +64,8 @@ namespace Sarabande.Traps
 
         private Vector2Int _lastHeroCell;
         private readonly Dictionary<NMEController, Vector2Int> _lastNmeCell = new();
+
+        private readonly Dictionary<int, List<Coroutine>> _trapCo = new();
 
         // Parent propre pour retrouver tous les FX rapidement dans la hiérarchie
         private Transform _fxParent;
@@ -146,10 +150,187 @@ namespace Sarabande.Traps
             PlayOneShotAt(clickTriggerClip, Center(triggerCell, cellSize) + Vector3.up * 0.02f, clickVolume);
             Sarabande.Core.NoiseSystem.Emit(triggerCell);
 
-            Vector3 startPos = Center(new Vector2Int(spec.startCell.x, spec.startCell.z), cellSize) + Vector3.up * 0.02f;
-            Vector3 dir = DirToWorld(spec.travelDir);
+            // NEW: stoppe toute émission encore en cours pour CE trap
+            StopTrapEmissions(index);
 
-            var go = new GameObject($"Arrow_{index}");
+            // NEW: résout la/les émissions à partir du spec (fallback si liste vide)
+            var emissions = ResolveEmissions(spec);
+
+            // NEW: lance les coroutines d’émission pour chaque entrée
+            for (int e = 0; e < emissions.Count; e++)
+            {
+                var em = emissions[e];
+                if (!ValidateEmission(em, index, e))
+                    continue; // on SKIP cette émission si elle est invalide
+
+                // Tir(s) à horaires fixes
+                if (em.shotTimes != null && em.shotTimes.Any(t => t >= 0f))
+                {
+                    var coA = StartCoroutine(EmitFixedTimesRoutine(em));
+                    RegisterTrapCo(index, coA);
+                }
+
+                // Pattern répétitif seulement si repeat est correctement paramétré
+                if (em.repeat && (em.repeatCount > 0 || em.repeatDuration > 0f))
+                {
+                    var coB = StartCoroutine(EmitRepeatRoutine(em));
+                    RegisterTrapCo(index, coB);
+                }
+            }
+        }
+
+        private List<ArrowEmission> ResolveEmissions(LevelData.ArrowTrapSpec spec)
+        {
+            if (spec.emissions != null && spec.emissions.Count > 0)
+                return spec.emissions;
+
+            return new List<ArrowEmission>
+    {
+        new ArrowEmission
+        {
+            startCell  = spec.startCell,
+            travelDir  = spec.travelDir,
+            arrowSpeed = (spec.arrowSpeed > 0f ? spec.arrowSpeed : 6f),
+            shotTimes  = new List<float> { 0f },
+            repeat     = false
+        }
+    };
+        }
+
+        private void RegisterTrapCo(int index, Coroutine co)
+        {
+            if (co == null) return;
+            if (!_trapCo.TryGetValue(index, out var list))
+            {
+                list = new List<Coroutine>();
+                _trapCo[index] = list;
+            }
+            list.Add(co);
+        }
+
+        private void StopTrapEmissions(int index)
+        {
+            if (_trapCo.TryGetValue(index, out var list))
+            {
+                foreach (var c in list) if (c != null) StopCoroutine(c);
+                list.Clear();
+            }
+        }
+
+        private bool ValidateEmission(ArrowEmission em, int trapIndex, int emissionIndex)
+        {
+            if (levelData == null) return false;
+
+            int w = levelData.width;
+            int h = levelData.height;
+            var sc = new Vector2Int(em.startCell.x, em.startCell.z);
+
+            // 1) startCell dans la grille
+            if (sc.x < 0 || sc.x >= w || sc.y < 0 || sc.y >= h)
+            {
+                Debug.LogError($"[ArrowTrapSystem] Missing spec for arrowtrap emission (trap {trapIndex}, emission {emissionIndex}): startCell {sc} out of bounds.");
+                return false;
+            }
+
+            // 2) vitesse valide
+            if (em.arrowSpeed <= 0f)
+            {
+                Debug.LogError($"[ArrowTrapSystem] Missing spec for arrowtrap emission (trap {trapIndex}, emission {emissionIndex}): arrowSpeed must be > 0.");
+                return false;
+            }
+
+            // 3) planning de tir valide
+            bool hasFixed = em.shotTimes != null && em.shotTimes.Any(t => t >= 0f);
+            bool hasRepeat = em.repeat && (em.repeatCount > 0 || em.repeatDuration > 0f);
+
+            if (!hasFixed && !hasRepeat)
+            {
+                Debug.LogError($"[ArrowTrapSystem] Missing spec for arrowtrap emission (trap {trapIndex}, emission {emissionIndex}): define shotTimes >= 0 OR set repeat with repeatCount > 0 or repeatDuration > 0.");
+                return false;
+            }
+
+            return true;
+        }
+
+
+        private System.Collections.IEnumerator EmitFixedTimesRoutine(ArrowEmission em)
+        {
+            if (em.shotTimes == null || em.shotTimes.Count == 0) yield break;
+
+            // trier & convertir en deltas
+            var times = em.shotTimes.Where(t => t >= 0f).OrderBy(t => t).ToList();
+            if (times.Count == 0) yield break;
+
+            float prev = 0f;
+            foreach (var t in times)
+            {
+                float wait = Mathf.Max(0f, t - prev);
+                if (wait > 0f) yield return new WaitForSeconds(wait);
+                SpawnArrow(new Vector2Int(em.startCell.x, em.startCell.z), em.travelDir, (em.arrowSpeed > 0f ? em.arrowSpeed : 6f));
+                prev = t;
+            }
+        }
+
+        private System.Collections.IEnumerator EmitRepeatRoutine(ArrowEmission em)
+        {
+            if (em.repeatStartDelay > 0f) yield return new WaitForSeconds(em.repeatStartDelay);
+
+            var startCell = new Vector2Int(em.startCell.x, em.startCell.z);
+            float speed = (em.arrowSpeed > 0f ? em.arrowSpeed : 6f);
+
+            if (em.repeatCount > 0)
+            {
+                for (int i = 0; i < em.repeatCount; i++)
+                {
+                    SpawnArrow(startCell, em.travelDir, speed);
+                    if (i < em.repeatCount - 1)
+                        yield return new WaitForSeconds(Mathf.Max(0.01f, em.repeatInterval));
+                }
+                yield break;
+            }
+
+            if (em.repeatDuration > 0f)
+            {
+                float tEnd = Time.time + em.repeatDuration;
+                while (Time.time < tEnd)
+                {
+                    SpawnArrow(startCell, em.travelDir, speed);
+                    yield return new WaitForSeconds(Mathf.Max(0.01f, em.repeatInterval));
+                }
+                yield break;
+            }
+
+            yield break;
+        }
+
+        // --- ResetToInitial : ajouter l’arrêt des émissions programmées ---
+        public void ResetToInitial()
+        {
+            // (logique existante)
+            for (int i = 0; i < _runtime.Length; i++) { _runtime[i].armed = true; _runtime[i].nextReadyTime = 0f; }
+            _lastHeroCell = hero.GridPos;
+            if (_nmes != null) foreach (var n in _nmes) if (n != null) _lastNmeCell[n] = n.GridPos;
+            if (_tileVisuals != null) foreach (var kv in _tileVisuals) if (kv.Value != null) kv.Value.ResetVisual();
+
+            // NEW: stoppe toutes les planifications en cours
+            foreach (var kv in _trapCo)
+            {
+                var list = kv.Value;
+                if (list == null) continue;
+                foreach (var c in list) if (c != null) StopCoroutine(c);
+                list.Clear();
+            }
+        }
+
+        private System.Collections.IEnumerator RearmTile(TrapTileVisual tile, float delay)
+        { yield return new WaitForSeconds(delay); if (tile != null) tile.ShowThenRelease(); }
+
+        public void SpawnArrow(Vector2Int startCell, Sarabande.Core.EdgeDirection travelDir, float speed)
+        {
+            Vector3 startPos = Center(startCell, cellSize) + Vector3.up * 0.02f;
+            Vector3 dir = DirToWorld(travelDir);
+
+            var go = new GameObject($"Arrow_{startCell.x}_{startCell.y}_{travelDir}");
             go.transform.position = startPos;
             go.transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
 
@@ -200,26 +381,17 @@ namespace Sarabande.Traps
                 if (projLayer != -1) cube.layer = projLayer;
             }
 
+
+
+            // SFX de départ
             PlayOneShotAt(bowReleaseClip, startPos, releaseVolume);
 
-            var ap = go.AddComponent<ArrowProjectile>();
-            ap.Init(dir, spec.arrowSpeed, cellSize, obstaclesMask, levelData, hero, _nmes, resetManager);
+            // Projectile
+            var ap = go.AddComponent<Sarabande.Traps.ArrowProjectile>();
+            ap.Init(dir, speed, cellSize, obstaclesMask, levelData, hero, _nmes, resetManager);
             ap.InitAudio(hitLoveClip, hitVolume, spatialBlend, minDistance, maxDistance);
             ap.InitFx(hitLoveFxPrefab, _fxParent, fxLifetime, fxYOffset);
         }
-
-        public void ResetToInitial()
-        {
-            for (int i = 0; i < _runtime.Length; i++) { _runtime[i].armed = true; _runtime[i].nextReadyTime = 0f; }
-
-            _lastHeroCell = hero.GridPos;
-            if (_nmes != null) foreach (var n in _nmes) if (n != null) _lastNmeCell[n] = n.GridPos;
-
-            if (_tileVisuals != null) foreach (var kv in _tileVisuals) if (kv.Value != null) kv.Value.ResetVisual();
-        }
-
-        private System.Collections.IEnumerator RearmTile(TrapTileVisual tile, float delay)
-        { yield return new WaitForSeconds(delay); if (tile != null) tile.ShowThenRelease(); }
 
         private void AttachContext()
         {

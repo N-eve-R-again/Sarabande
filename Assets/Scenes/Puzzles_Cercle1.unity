@@ -667,6 +667,7 @@ Transform:
   m_Children:
   - {fileID: 1997612981}
   - {fileID: 1316843240}
+  - {fileID: 912100978}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &619786943
@@ -702,7 +703,7 @@ MonoBehaviour:
   obstaclesLayerName: Obstacles
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
 --- !u!114 &619786944
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -747,7 +748,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   cellSize: 1
   hero: {fileID: 1116510830}
   resetManager: {fileID: 619786945}
@@ -791,7 +792,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   tileMaterial: {fileID: 2100000, guid: 7c12ca4230d5b064e90a0e3983fd21c9, type: 2}
   tileSizeScale: 0.88
   tileThickness: 0.02
@@ -803,6 +804,8 @@ MonoBehaviour:
   topDepthScale: 0.18
   topMarkerThickness: 0.01
   markBorders: 1
+  hideTrapPadOnDiscoCells: 1
+  includeDiscoStartTiles: 1
 --- !u!114 &619786948
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -819,7 +822,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   doorMaterial: {fileID: 2100000, guid: 1e9535572be16514a8fb9a41dfab99d8, type: 2}
   obstaclesLayerName: Obstacles
   enterHoldThreshold: 0.25
@@ -850,7 +853,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   leverBaseMaterial: {fileID: 2100000, guid: a5d83b4d705e713448fac4a7efd8d890, type: 2}
   leverHandleMaterial: {fileID: 2100000, guid: 57c00c2267d1a544b80b5cc4b6f2c9f4, type: 2}
   wallInset: -0.1
@@ -883,7 +886,7 @@ MonoBehaviour:
   hero: {fileID: 1116510830}
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   popupUI: {fileID: 1561477412}
   messagesUI: {fileID: 726012885}
   counterIcon: {fileID: 21300000, guid: d039e12f80705d14dbac75824581a56c, type: 3}
@@ -910,7 +913,7 @@ MonoBehaviour:
   cellSize: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   baseMaterial: {fileID: 0}
   coreMaterial: {fileID: 0}
   tileSizeScale: 0.9
@@ -952,7 +955,7 @@ MonoBehaviour:
   visuals: {fileID: 619786951}
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   sequenceIndex: 0
   autoStartOnPlay: 0
   onSequenceStart:
@@ -1061,7 +1064,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   gateMaterial: {fileID: 2100000, guid: f8551db646f5c4a4e823ffa9105c5725, type: 2}
   gateLayerName: Default
 --- !u!114 &619786954
@@ -1082,7 +1085,7 @@ MonoBehaviour:
   sequenceIndex: 0
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   readyMaterial: {fileID: 2100000, guid: 8ec4a79a5fb2fe94d9dc1d0de82ecf57, type: 2}
   activeMaterial: {fileID: 2100000, guid: 34d2daf413916db4aabe22be19f745ce, type: 2}
   tileSizeScale: 0.9
@@ -1101,7 +1104,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cd0e652d4439774f976f77782bdadc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
 --- !u!114 &619786956
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1116,7 +1119,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   timedDoorSystem: {fileID: 619786948}
 --- !u!114 &619786957
 MonoBehaviour:
@@ -1132,7 +1135,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   cellSize: 1
   hero: {fileID: 1116510830}
   timedDoorSystem: {fileID: 619786948}
@@ -1677,6 +1680,132 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &912100977
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 912100978}
+  - component: {fileID: 912100982}
+  - component: {fileID: 912100981}
+  - component: {fileID: 912100980}
+  - component: {fileID: 912100979}
+  m_Layer: 0
+  m_Name: Pad_1_3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &912100978
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912100977}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.5, y: 0.02, z: 3.5}
+  m_LocalScale: {x: 1, y: 0.04, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 619786942}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &912100979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912100977}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c69290f24e574448aa8285d3a917113, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  yUp: 0.02
+  yDown: 0
+  pressDuration: 0.06
+  releaseDuration: 0.15
+  mr: {fileID: 0}
+--- !u!23 &912100980
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912100977}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 1
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &912100981
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912100977}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!33 &912100982
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912100977}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &939712196
 GameObject:
   m_ObjectHideFlags: 0
@@ -1835,7 +1964,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   cellSize: 1
   stepDuration: 0.35
   interStepPause: 0.1
@@ -2699,7 +2828,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
+  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
   cellSize: 1
   hero: {fileID: 1116510830}
   stepDuration: 0.45

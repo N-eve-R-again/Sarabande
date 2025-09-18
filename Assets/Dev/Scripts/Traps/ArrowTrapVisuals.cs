@@ -36,12 +36,16 @@ namespace Sarabande.Traps
         [SerializeField, Min(0.005f)] private float topMarkerThickness = 0.01f;    // épaisseur (verticale)
         [SerializeField] private bool markBorders = true;                           // mettre un marqueur aussi sur les bords de map
 
+        [SerializeField] private bool hideTrapPadOnDiscoCells = true;
+        [SerializeField] private bool includeDiscoStartTiles = true;
+
         private Transform _tilesParent;
         private Transform _wallMarksParent;
 
         private HashSet<Vector2Int> _nonWalkableSet;              // murs pleins (cases non-walkable)
         private HashSet<Vector2Int> _placedWallMarks;             // pour éviter les doublons
         private HashSet<string> _placedBorderMarks;               // dédoublonnage des bords (clé: "x,y,dir")
+        private HashSet<Vector2Int> _discoCells;
 
         private void Awake()
         {
@@ -61,6 +65,7 @@ namespace Sarabande.Traps
             _placedWallMarks = new HashSet<Vector2Int>();
             _placedBorderMarks = new HashSet<string>();
 
+            BuildDiscoCellSet();
             BuildTiles();
             BuildWallTopMarkers();
         }
@@ -73,6 +78,13 @@ namespace Sarabande.Traps
                 var spec = levelData.arrowTraps[i];
                 var cell = new Vector2Int(spec.triggerCell.x, spec.triggerCell.z);
                 Vector3 center = GridCenter(cell);
+
+                if (hideTrapPadOnDiscoCells && IsDiscoCell(cell))
+                {
+                    // rien à construire pour cette dalle trap ; elle restera invisible,
+                    // mais le piège se déclenchera toujours côté ArrowTrapSystem.
+                    continue;
+                }
 
                 // géométrie : cube fin, < 1 case
                 var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -113,29 +125,57 @@ namespace Sarabande.Traps
         {
             if (levelData.arrowTraps == null) return;
 
-            float y = wallHeight + topMarkerThickness * 0.5f + 0.001f; // au-dessus du mur (évite z-fighting)
+            float y = wallHeight + topMarkerThickness * 0.5f + 0.001f;
+
             for (int i = 0; i < levelData.arrowTraps.Count; i++)
             {
                 var spec = levelData.arrowTraps[i];
 
-                // le mur émetteur est "derrière" startCell, côté opposé à travelDir
-                var start = new Vector2Int(spec.startCell.x, spec.startCell.z);
-                var opposite = Opposite(spec.travelDir);
-                var off = OffsetFor(opposite);
-                var behind = start + off;
+                bool hasEmissions = (spec.emissions != null && spec.emissions.Count > 0);
 
-                if (InsideBounds(behind) && _nonWalkableSet.Contains(behind))
+                // --- si on a des emissions, on ignore le legacy ---
+                if (!hasEmissions)
                 {
-                    // Cas mur "plein" dans la grille : marqueur centré au-dessus du mur (une seule fois)
-                    if (_placedWallMarks.Add(behind))
-                        CreateTopMarkerAtCell(behind, y);
+                    var start = new Vector2Int(spec.startCell.x, spec.startCell.z);
+                    var opposite = Opposite(spec.travelDir);
+                    var off = OffsetFor(opposite);
+                    var behind = start + off;
+
+                    if (InsideBounds(behind) && _nonWalkableSet.Contains(behind))
+                    {
+                        if (_placedWallMarks.Add(behind))
+                            CreateTopMarkerAtCell(behind, y);
+                    }
+                    else if (markBorders)
+                    {
+                        string key = $"{start.x},{start.y},{opposite}";
+                        if (_placedBorderMarks.Add(key))
+                            CreateTopMarkerOnBorder(start, opposite, y);
+                    }
                 }
-                else if (markBorders)
+
+                // --- NOUVEAU: markers pour chaque emission ---
+                if (hasEmissions)
                 {
-                    // Cas bord de map : marqueur "bord" centré sur l'arête de startCell (clé dir + cell pour dédoublonner)
-                    string key = $"{start.x},{start.y},{opposite}";
-                    if (_placedBorderMarks.Add(key))
-                        CreateTopMarkerOnBorder(start, opposite, y);
+                    foreach (var em in spec.emissions)
+                    {
+                        var emStart = new Vector2Int(em.startCell.x, em.startCell.z);
+                        var emOpp = Opposite(em.travelDir);
+                        var emOff = OffsetFor(emOpp);
+                        var behind = emStart + emOff;
+
+                        if (InsideBounds(behind) && _nonWalkableSet.Contains(behind))
+                        {
+                            if (_placedWallMarks.Add(behind))
+                                CreateTopMarkerAtCell(behind, y);
+                        }
+                        else if (markBorders)
+                        {
+                            string key = $"{emStart.x},{emStart.y},{emOpp}";
+                            if (_placedBorderMarks.Add(key))
+                                CreateTopMarkerOnBorder(emStart, emOpp, y);
+                        }
+                    }
                 }
             }
         }
@@ -203,6 +243,35 @@ namespace Sarabande.Traps
                 mr.receiveShadows = false;
                 if (wallTopMaterial) mr.sharedMaterial = wallTopMaterial;
             }
+        }
+
+        private void BuildDiscoCellSet()
+        {
+            _discoCells = new HashSet<Vector2Int>();
+            if (levelData == null) return;
+
+            // 1) Toutes les cases des séquences disco
+            if (levelData.discoSequences != null)
+            {
+                foreach (var seq in levelData.discoSequences)
+                {
+                    if (seq?.cells == null) continue;
+                    foreach (var c in seq.cells)
+                        _discoCells.Add(new Vector2Int(c.x, c.z));
+                }
+            }
+
+            // 2) Optionnel : cases “start” disco
+            if (includeDiscoStartTiles && levelData.discoStartTiles != null)
+            {
+                foreach (var c in levelData.discoStartTiles)
+                    _discoCells.Add(new Vector2Int(c.x, c.z));
+            }
+        }
+
+        private bool IsDiscoCell(Vector2Int cell)
+        {
+            return _discoCells != null && _discoCells.Contains(cell);
         }
 
         // --- Utils ---
@@ -289,6 +358,10 @@ namespace Sarabande.Traps
             if (!Application.isPlaying)
                 UnityEditor.EditorUtility.SetDirty(this); // l’inspector reflète la maj auto
 #endif
+            if (Application.isPlaying)
+            {
+                BuildDiscoCellSet();  // <-- NOUVEAU
+            }
             // NOTE: si ce système a besoin de se "rebuild" quand le LevelData change,
             // appelle ici ta méthode interne (ex: RebuildFromLevelData()).
         }
