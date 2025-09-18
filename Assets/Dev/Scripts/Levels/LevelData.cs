@@ -49,6 +49,32 @@ namespace Sarabande.Levels
             // --- options de réarmement ---
             public bool canRearm;             // si true, le piège se réarme
             [Min(0f)] public float rearmDelay; // temps avant réarmement (secondes)
+
+            // --- NOUVEAU : liste d'émissions avancées ---
+            public List<ArrowEmission> emissions;  // si null/empty => fallback sur le comportement legacy 1 flèche
+        }
+
+        [System.Serializable]
+        public class ArrowEmission
+        {
+            [Header("Origin & Direction")]
+            public GridCoord startCell;                          // origine (peut différer du spec.startCell legacy)
+            public Sarabande.Core.EdgeDirection travelDir;      // direction de cette emission
+            [UnityEngine.Min(0.05f)] public float arrowSpeed = 6f;
+
+            [Header("Fixed times (absolute, after trigger)")]
+            public List<float> shotTimes;                       // ex: [0, 2, 8] => 3 flèches à 0s, 2s, 8s
+
+            [Header("Repeating schedule")]
+            public bool repeat = false;                         // si true, on déclenche un pattern répétitif
+            [UnityEngine.Min(0f)] public float repeatStartDelay = 0f;
+            [UnityEngine.Min(0.01f)] public float repeatInterval = 0.2f;
+
+            [Tooltip("Si > 0, répète pendant cette durée (en s). Ignoré si repeatCount > 0.")]
+            [UnityEngine.Min(0f)] public float repeatDuration = 0f;
+
+            [Tooltip("Si > 0, tire exactement N fois (intervalle constant). Prend le pas sur repeatDuration.")]
+            [UnityEngine.Min(0)] public int repeatCount = 0;
         }
 
         [Tooltip("Pièges à flèche : quand on marche sur 'triggerCell', une flèche part de 'startCell' dans 'travelDir'.")]
