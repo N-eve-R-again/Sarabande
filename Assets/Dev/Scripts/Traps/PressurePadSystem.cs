@@ -28,6 +28,14 @@ namespace Sarabande.Triggers
         [Tooltip("Optionnel : si laissé vide, on fera un FindObjectsByType<TrapTileVisual>().")]
         [SerializeField] private TrapTileVisual[] padVisualsInScene;
 
+        [Header("Pad Tile (visuel unifié)")]
+        [SerializeField] private Material padTileMaterial;
+        [SerializeField, Range(0.5f, 0.98f)] private float padTileSizeScale = 0.88f;
+        [SerializeField, Min(0.005f)] private float padTileThickness = 0.02f;
+        [SerializeField, Min(0f)] private float padTileUpLift = 0.01f;
+        [SerializeField, Min(0.01f)] private float padTilePressDuration = 0.06f;
+        [SerializeField, Min(0.01f)] private float padTileReleaseDuration = 0.15f;
+
         // runtime
         private NMEController[] _nmes;
 
@@ -242,27 +250,46 @@ namespace Sarabande.Triggers
         }
         private TrapTileVisual CreatePadVisual(Vector2Int cell)
         {
-            // Petit cube fin, pas de collider, + TrapTileVisual configuré
+            // Géométrie identique aux dalles de pièges (unifiée)
             var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = $"Pad_{cell.x}_{cell.y}";
             go.transform.SetParent(transform, false);
 
+            // Centre de la case
             var center = Center(cell, cellSize);
-            float yUp = 0.02f;   // comme ton TrapTileVisual par défaut
-            float yDown = 0.00f;
 
-            // place le centre au bon Y (TrapTileVisual animera entre yUp et yDown)
-            go.transform.position = new Vector3(center.x, yUp, center.z);
-            go.transform.localScale = new Vector3(cellSize, yUp* 2f, cellSize);
+            // Dimensions (comme ArrowTrapVisuals)
+            float sx = padTileSizeScale * cellSize;
+            float sy = padTileThickness;
+            float sz = padTileSizeScale * cellSize;
 
+            // Centres Y (repos/enfoncé) -> on centre le cube et on anime le "centre", pas la face
+            float yDownCenter = sy * 0.5f;                  // affleure le sol
+            float yUpCenter = yDownCenter + padTileUpLift; // léger relief
+
+            // Pose au repos (léger relief)
+            go.transform.position = new Vector3(center.x, yUpCenter, center.z);
+            go.transform.localScale = new Vector3(sx, sy, sz);
+
+            // Mat/ombres + pas de collider
             var col = go.GetComponent<Collider>(); if (col) Destroy(col);
+            var mr = go.GetComponent<MeshRenderer>();
+            if (mr)
+            {
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                mr.receiveShadows = false;
+                if (padTileMaterial) mr.sharedMaterial = padTileMaterial;
+            }
 
+            // Animation via TrapTileVisual (mêmes durées que les dalles pièges)
             var tv = go.AddComponent<TrapTileVisual>();
             tv.SetupCell(cell);
-            tv.ConfigureHeights(yUp, yDown);
+            tv.ConfigureHeights(yUpCenter, yDownCenter);
+            tv.ConfigureDurations(padTilePressDuration, padTileReleaseDuration);
             return tv;
         }
-    private void DetachContext()
+
+        private void DetachContext()
         {
             if (levelContext != null)
                 levelContext.LevelDataChanged -= HandleContextLevelDataChanged;

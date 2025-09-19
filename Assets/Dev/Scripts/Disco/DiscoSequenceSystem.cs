@@ -38,6 +38,17 @@ namespace Sarabande.Disco
         [SerializeField] private float minDistance = 1f;
         [SerializeField] private float maxDistance = 15f;
 
+        [Header("Next-core growth")]
+        // 0.20 = 20% de la dalle ; 0.80 = 80% de la dalle
+        [SerializeField, Range(0f, 1f)] private float nextCoreMinScale = 0.20f;
+        [SerializeField, Range(0f, 1f)] private float nextCoreMaxScale = 0.80f;
+        // Petite pause avant le tick : pendant ces X secondes, le core n’augmente plus (reste à 80%)
+        [SerializeField, Min(0f)] private float nextCoreSnapLeadSeconds = 0.08f;
+
+        // Debug
+        [SerializeField] private bool debugDisco = true;
+
+
         // --- runtime ---
         private List<Vector2Int> _cells;    // cellules de la séquence active
         private List<float> _durations;     // secondes par étape (alignée à _cells)
@@ -75,11 +86,13 @@ namespace Sarabande.Disco
         private void Update()
         {
             if (!_running) return;
+            UpdateNextCoreGrowth();
 
             // 1) échec immédiat si Hero marche sur une tuile future (index > _step)
             var heroIdx = IndexOfCell(hero.GridPos);
             if (heroIdx >= 0 && heroIdx > _step)
             {
+                if (debugDisco) Debug.Log($"[Disco][FAIL] future tile: step={_step} heroIdx={heroIdx} hero={hero.GridPos}");
                 FailSequence();
                 return;
             }
@@ -104,14 +117,13 @@ namespace Sarabande.Disco
             // 2) tick de fin d’étape
             if (Time.time >= _deadline)
             {
-                // doit être sur la tuile ON courante au moment du tick
                 if (hero.GridPos == _cells[_step])
                 {
-                    PlayStepDing();   // “ding” à la validation
                     AdvanceStep();
                 }
                 else
                 {
+                    if (debugDisco) Debug.Log($"[Disco][FAIL] missed tick: step={_step} expected={_cells[_step]} hero={hero.GridPos} t={Time.time:0.000} deadline={_deadline:0.000}");
                     FailSequence();
                 }
             }
@@ -160,7 +172,10 @@ namespace Sarabande.Disco
             // État initial : 0 = ON, 1 = NEXT, le reste OFF (mais visibles)
             visuals.SetState(_cells[0], DiscoTilesVisuals.State.On, PickBright());
             if (_cells.Count >= 2)
+            {
                 visuals.SetState(_cells[1], DiscoTilesVisuals.State.Next, PickBright());
+                visuals.SetNextCoreFill(_cells[1], nextCoreMinScale); // 20% de la dalle au départ
+            }
 
             _deadline = Time.time + _durations[0];
 
@@ -200,7 +215,10 @@ namespace Sarabande.Disco
 
             int nextIdx = _step + 1;
             if (nextIdx < _cells.Count)
+            {
                 visuals.SetState(_cells[nextIdx], DiscoTilesVisuals.State.Next, PickBright());
+                visuals.SetNextCoreFill(_cells[nextIdx], nextCoreMinScale); // repart à 20%
+            }
 
             _deadline = Time.time + _durations[_step];
 
@@ -215,8 +233,27 @@ namespace Sarabande.Disco
             _progressForStep = -1;
             StopProgress();
 
+            if (visuals) visuals.ClearAllNextCores();
+
             visuals.SetAllOff();
             onSequenceFail?.Invoke();
+        }
+        private void UpdateNextCoreGrowth()
+        {
+            if (!_running || _step < 0 || _step >= _cells.Count) return;
+
+            int nextIdx = _step + 1;
+            if (nextIdx >= _cells.Count) return; // pas de NEXT à la dernière étape
+
+            float stepTotal = _durations[_step];
+            float growthDuration = Mathf.Max(0.01f, stepTotal - nextCoreSnapLeadSeconds);
+
+            // temps écoulé dans l’étape en cours
+            float elapsed = Mathf.Clamp(stepTotal - Mathf.Max(0f, _deadline - Time.time), 0f, growthDuration);
+            float u = Mathf.Clamp01(elapsed / growthDuration);
+
+            float frac = Mathf.Lerp(nextCoreMinScale, nextCoreMaxScale, u);   // 20% -> 80% de la dalle
+            if (visuals) visuals.SetNextCoreFill(_cells[nextIdx], frac);      // fraction de dalle
         }
 
         // --- util ---
@@ -236,8 +273,19 @@ namespace Sarabande.Disco
 
         public void ResetToInitial()
         {
-            StopSequence();
-            if (visuals) visuals.SetAllOff();
+            // On capture si on était réellement en cours pour ne pas spammer l’event au boot
+            bool wasRunning = _running;
+
+            StopSequence();                 // coupe l’état interne + sons de progression
+            if (visuals)                    // nettoie le visuel
+            {
+                visuals.ClearAllNextCores();
+                visuals.SetAllOff();
+            }
+
+            // IMPORTANT : prévenir tout le monde que la disco s’arrête suite à un fail (reset)
+            if (wasRunning)
+                onSequenceFail?.Invoke();
         }
 
         // --- LevelContext wiring ---

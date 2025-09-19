@@ -50,6 +50,10 @@ namespace Sarabande.Levels
             public bool canRearm;             // si true, le piège se réarme
             [Min(0f)] public float rearmDelay; // temps avant réarmement (secondes)
 
+            // NOUVEAU : lier l’activation du piège à la Disco
+            [Header("Disco Link")]
+            public bool linkToDisco;   // si true : ce trap ne peut s’activer que pendant la Disco, et se réarme à chaque start
+
             // --- NOUVEAU : liste d'émissions avancées ---
             public List<ArrowEmission> emissions;  // si null/empty => fallback sur le comportement legacy 1 flèche
         }

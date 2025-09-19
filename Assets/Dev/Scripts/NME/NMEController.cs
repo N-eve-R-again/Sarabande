@@ -58,6 +58,8 @@ namespace Sarabande.NME
 
         private NMEState _state = NMEState.HeroUnspotted;
 
+        private GameObject _activeTelegraph;
+
         // positions/logique
         private Vector2Int _gridPos;
         private bool _isMoving = false;
@@ -448,6 +450,7 @@ namespace Sarabande.NME
         public void ResetToInitial()
         {
             StopAllCoroutines();
+            CancelAttackImmediate();
             MoveProgress = 0f;
             FromCell = ToCell = _gridPos;
             _isAttacking = false;
@@ -476,16 +479,18 @@ namespace Sarabande.NME
 
         private GameObject CreateTelegraphMarker(Vector2Int cell)
         {
+            // Sécurité : jamais deux marqueurs en même temps
+            DestroyTelegraphIfAny();
+
             var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             go.name = "AttackTelegraph";
             var col = go.GetComponent<Collider>(); if (col) Destroy(col);
 
             var center = Center(cell, cellSize);
             float halfHeight = 0.01f;
-
             go.transform.position = new Vector3(center.x, telegraphY + halfHeight, center.z);
             go.transform.localScale = new Vector3(telegraphDiameter, 0.01f, telegraphDiameter);
-            go.transform.SetParent(transform, true); // conserve la position MONDE
+            go.transform.SetParent(transform, true); // position monde
 
             var mr = go.GetComponent<MeshRenderer>();
             if (mr)
@@ -495,6 +500,7 @@ namespace Sarabande.NME
                 if (telegraphMaterial) mr.sharedMaterial = telegraphMaterial;
             }
 
+            _activeTelegraph = go; // <-- on mémorise
             return go;
         }
 
@@ -552,6 +558,23 @@ namespace Sarabande.NME
             _isAttacking = false;
             _readyAt = Time.time + interStepPause;
         }
+
+        private void DestroyTelegraphIfAny()
+        {
+            if (_activeTelegraph)
+            {
+                Destroy(_activeTelegraph);
+                _activeTelegraph = null;
+            }
+        }
+
+        // Optionnel, pratique pour clarifier l’intention
+        private void CancelAttackImmediate()
+        {
+            _isAttacking = false;
+            DestroyTelegraphIfAny();
+        }
+
 
         // exposer la position logique si besoin ailleurs
         public Vector2Int GridPos => _gridPos;
@@ -671,9 +694,10 @@ namespace Sarabande.NME
             NoiseSystem.NoiseRaised += OnNoiseRaised;
             AttachContext();
         }
-        private void OnDisable() 
-        { 
+        private void OnDisable()
+        {
             NoiseSystem.NoiseRaised -= OnNoiseRaised;
+            DestroyTelegraphIfAny();
             DetachContext();
         }
 
