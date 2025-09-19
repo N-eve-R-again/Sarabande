@@ -179,7 +179,11 @@ namespace Sarabande.Messages
             if (_voice && spec.voiceClip)
             {
                 if (_voice.isPlaying) _voice.Stop();
-                _voice.PlayOneShot(spec.voiceClip, voiceVolume);
+                Sarabande.Audio.AudioHub.I?.PlayVoiceAt(
+    spec.voiceClip,
+    transform.position, // 2D, la position n'a pas d'importance
+    voiceVolume
+);
             }
 
             // compteur UI

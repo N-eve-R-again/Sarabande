@@ -5,6 +5,7 @@ using UnityEngine.Events;
 using Sarabande.Core;
 using Sarabande.Levels;
 using Sarabande.Player;
+using Sarabande.Audio;
 
 namespace Sarabande.Disco
 {
@@ -367,14 +368,15 @@ namespace Sarabande.Disco
         private void PlayStepDing()
         {
             if (!stepDingClip) return;
-            PlayOneShotAt(stepDingClip, CellCenterWorld(_cells[Mathf.Clamp(_step, 0, _cells.Count - 1)]), dingVolume);
+            var pos = CellCenterWorld(_cells[Mathf.Clamp(_step, 0, _cells.Count - 1)]);
+            AudioHub.I?.PlaySFXAt(stepDingClip, pos, dingVolume, spatialBlend, minDistance, maxDistance);
         }
 
         private void PlaySuccessJingle()
         {
             if (!successJingleClip) return;
             Vector3 pos = (hero ? hero.WorldPos : transform.position);
-            PlayOneShotAt(successJingleClip, pos, successVolume);
+            AudioHub.I?.PlaySFXAt(successJingleClip, pos, successVolume, spatialBlend, minDistance, maxDistance);
         }
 
         private void EnsureProgressSourceAt(Vector3 worldPos)
@@ -385,26 +387,20 @@ namespace Sarabande.Disco
                 go.transform.SetParent(transform, false);
                 _progressSrc = go.AddComponent<AudioSource>();
                 _progressSrc.playOnAwake = false;
-                _progressSrc.loop = false; // le clip se termine au tick, pas besoin de loop
+                _progressSrc.loop = false;
+
+                // NEW: router vers le groupe SFX du mixer via le hub
+                Sarabande.Audio.AudioHub.I?.RouteToSFX(_progressSrc);
             }
             _progressSrc.transform.position = worldPos;
         }
 
         private void PlayOneShotAt(AudioClip clip, Vector3 pos, float volume)
         {
-            if (!clip) return;
-            var go = new GameObject("SFX_DiscoOneShot");
-            go.transform.position = pos;
-            var src = go.AddComponent<AudioSource>();
-            src.playOnAwake = false;
-            src.loop = false;
-            src.clip = clip;
-            src.volume = volume;
-            src.spatialBlend = spatialBlend;
-            src.minDistance = minDistance;
-            src.maxDistance = maxDistance;
-            src.Play();
-            Destroy(go, clip.length + 0.1f);
+            Sarabande.Audio.AudioHub.I?.PlaySFXAt(
+                clip, pos, volume,
+                spatialBlend, minDistance, maxDistance
+            );
         }
 
         private Vector3 CellCenterWorld(Vector2Int cell)

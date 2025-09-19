@@ -155,18 +155,15 @@ namespace Sarabande.Traps
         private void PlayHitLoveAt(Vector3 pos)
         {
             if (!_hitLoveClip) return;
-            var go = new GameObject("SFX_Arrow_HitLove");
-            go.transform.position = pos + Vector3.up * _impactYOffset; // <-- offset appliqué
-            var src = go.AddComponent<AudioSource>();
-            src.playOnAwake = false;
-            src.loop = false;
-            src.clip = _hitLoveClip;
-            src.volume = _hitVolume;
-            src.spatialBlend = _spatialBlend;
-            src.minDistance = _minDistance;
-            src.maxDistance = _maxDistance;
-            src.Play();
-            Object.Destroy(go, _hitLoveClip.length + 0.1f);
+
+            Sarabande.Audio.AudioHub.I?.PlaySFXAt(
+                _hitLoveClip,
+                pos + Vector3.up * _impactYOffset, // petit offset pour éviter le sol
+                _hitVolume,
+                _spatialBlend,
+                _minDistance,
+                _maxDistance
+            );
         }
 
         private void SpawnHitFx(Vector3 pos)

@@ -154,7 +154,16 @@ namespace Sarabande.Traps
                 if (spec.canRearm) StartCoroutine(RearmTile(tile, spec.rearmDelay));
             }
 
-            PlayOneShotAt(clickTriggerClip, Center(triggerCell, cellSize) + Vector3.up * 0.02f, clickVolume);
+            var posTrig = Center(triggerCell, cellSize) + Vector3.up * 0.02f;
+
+            Sarabande.Audio.AudioHub.I?.PlaySFXAt(
+    clickTriggerClip,
+    posTrig,
+    clickVolume,
+    spatialBlend,
+    minDistance,
+    maxDistance
+);
             Sarabande.Core.NoiseSystem.Emit(triggerCell);
 
             // NEW: stoppe toute émission encore en cours pour CE trap
@@ -391,7 +400,14 @@ namespace Sarabande.Traps
 
 
             // SFX de départ
-            PlayOneShotAt(bowReleaseClip, startPos, releaseVolume);
+            Sarabande.Audio.AudioHub.I?.PlaySFXAt(
+    bowReleaseClip,
+    startPos,
+    releaseVolume,
+    spatialBlend,
+    minDistance,
+    maxDistance
+);
 
             // Projectile
             var ap = go.AddComponent<Sarabande.Traps.ArrowProjectile>();
@@ -449,22 +465,5 @@ namespace Sarabande.Traps
 #if UNITY_EDITOR
         private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
 #endif
-
-        private void PlayOneShotAt(AudioClip clip, Vector3 pos, float vol)
-        {
-            if (!clip) return;
-            var go = new GameObject("SFX_ArrowTrap_OneShot");
-            go.transform.position = pos;
-            var src = go.AddComponent<AudioSource>();
-            src.playOnAwake = false;
-            src.loop = false;
-            src.clip = clip;
-            src.volume = Mathf.Clamp01(vol);
-            src.spatialBlend = spatialBlend;
-            src.minDistance = minDistance;
-            src.maxDistance = maxDistance;
-            src.Play();
-            Destroy(go, clip.length + 0.1f);
-        }
     }
 }

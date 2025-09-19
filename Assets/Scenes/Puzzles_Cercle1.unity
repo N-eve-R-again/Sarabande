@@ -786,7 +786,7 @@ MonoBehaviour:
   obstaclesLayerName: Obstacles
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
 --- !u!114 &619786944
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -831,7 +831,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   cellSize: 1
   hero: {fileID: 1116510830}
   resetManager: {fileID: 619786945}
@@ -876,7 +876,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   tileMaterial: {fileID: 2100000, guid: 7c12ca4230d5b064e90a0e3983fd21c9, type: 2}
   tileSizeScale: 0.88
   tileThickness: 0.02
@@ -906,7 +906,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   doorMaterial: {fileID: 2100000, guid: 1e9535572be16514a8fb9a41dfab99d8, type: 2}
   obstaclesLayerName: Obstacles
   enterHoldThreshold: 0.25
@@ -937,7 +937,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   leverBaseMaterial: {fileID: 2100000, guid: a5d83b4d705e713448fac4a7efd8d890, type: 2}
   leverHandleMaterial: {fileID: 2100000, guid: 57c00c2267d1a544b80b5cc4b6f2c9f4, type: 2}
   wallInset: -0.1
@@ -970,7 +970,7 @@ MonoBehaviour:
   hero: {fileID: 1116510830}
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   popupUI: {fileID: 1561477412}
   messagesUI: {fileID: 726012885}
   counterIcon: {fileID: 21300000, guid: d039e12f80705d14dbac75824581a56c, type: 3}
@@ -997,7 +997,7 @@ MonoBehaviour:
   cellSize: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   baseMaterial: {fileID: 0}
   coreMaterial: {fileID: 0}
   tileSizeScale: 0.9
@@ -1040,7 +1040,7 @@ MonoBehaviour:
   visuals: {fileID: 619786951}
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   sequenceIndex: 0
   autoStartOnPlay: 0
   onSequenceStart:
@@ -1225,7 +1225,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   gateMaterial: {fileID: 2100000, guid: f8551db646f5c4a4e823ffa9105c5725, type: 2}
   gateLayerName: Default
 --- !u!114 &619786954
@@ -1246,7 +1246,7 @@ MonoBehaviour:
   sequenceIndex: 0
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   readyMaterial: {fileID: 2100000, guid: 8ec4a79a5fb2fe94d9dc1d0de82ecf57, type: 2}
   activeMaterial: {fileID: 2100000, guid: 34d2daf413916db4aabe22be19f745ce, type: 2}
   tileSizeScale: 0.9
@@ -1265,7 +1265,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cd0e652d4439774f976f77782bdadc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
 --- !u!114 &619786956
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1280,7 +1280,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   timedDoorSystem: {fileID: 619786948}
 --- !u!114 &619786957
 MonoBehaviour:
@@ -1296,7 +1296,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   cellSize: 1
   hero: {fileID: 1116510830}
   timedDoorSystem: {fileID: 619786948}
@@ -1506,6 +1506,7 @@ GameObject:
   m_Component:
   - component: {fileID: 735958319}
   - component: {fileID: 735958318}
+  - component: {fileID: 735958320}
   m_Layer: 0
   m_Name: AudioRoot
   m_TagString: Untagged
@@ -1529,7 +1530,7 @@ MonoBehaviour:
   discoLoop: {fileID: 8300000, guid: 666f76dc7e951b84bb6a4e8563d26a50, type: 3}
   baseVolume: 1
   discoVolume: 1
-  output: {fileID: 0}
+  output: {fileID: -670971045294681233, guid: dd03d28b40da34e439f2bc000fa61079, type: 2}
   crossfadeMs: 0
 --- !u!4 &735958319
 Transform:
@@ -1546,6 +1547,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &735958320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735958317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a4f10b187b75b741876e3c45ffebebc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mixer: {fileID: 24100000, guid: dd03d28b40da34e439f2bc000fa61079, type: 2}
+  masterGroup: {fileID: 24300002, guid: dd03d28b40da34e439f2bc000fa61079, type: 2}
+  musicGroup: {fileID: -670971045294681233, guid: dd03d28b40da34e439f2bc000fa61079, type: 2}
+  sfxGroup: {fileID: -2392012942702537343, guid: dd03d28b40da34e439f2bc000fa61079, type: 2}
+  uiGroup: {fileID: -6902587785371777920, guid: dd03d28b40da34e439f2bc000fa61079, type: 2}
+  voiceGroup: {fileID: -8668553729144238186, guid: dd03d28b40da34e439f2bc000fa61079, type: 2}
+  ambienceGroup: {fileID: -7427445695813447108, guid: dd03d28b40da34e439f2bc000fa61079, type: 2}
+  masterParam: MasterVol
+  musicParam: MusicVol
+  sfxParam: SFXVol
+  uiParam: UIVol
+  voiceParam: VoiceVol
+  ambParam: AmbVol
+  sfxMaxVoices: 24
+  sfxDefaultPriority: 128
+  musicSource: {fileID: 0}
+  dontDestroyOnLoad: 0
 --- !u!1 &805807276
 GameObject:
   m_ObjectHideFlags: 0
@@ -2383,7 +2413,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   cellSize: 1
   stepDuration: 0.35
   interStepPause: 0.1
@@ -3356,7 +3386,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 951d2ef7ac1d0b6439605eaf441dc860, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   cellSize: 1
   hero: {fileID: 1116510830}
   stepDuration: 0.45

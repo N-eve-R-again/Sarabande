@@ -61,7 +61,15 @@ namespace Sarabande.Core
 
             // Affiche l’overlay + joue le SFX en même temps
             if (rewindOverlay) rewindOverlay.ShowFor(rewindDuration);
-            PlayRewindSfx();
+            // Son de rewind via le bus SFX, en 2D (spatialBlend=0)
+            Sarabande.Audio.AudioHub.I?.PlaySFXAt(
+                rewindClip,
+                transform.position,
+                rewindVolume,
+                0f,   // spatialBlend=0 => 2D
+                1f,   // minDistance
+                20f   // maxDistance
+            );
 
             yield return new WaitForSeconds(rewindDuration);
             ResetAll();
@@ -70,20 +78,5 @@ namespace Sarabande.Core
 
         [ContextMenu("Reset Level Now")]
         private void ContextResetNow() => ResetAll();
-
-        private void PlayRewindSfx()
-        {
-            if (!rewindClip) return;
-            var go = new GameObject("SFX_Rewind_OneShot");
-            go.transform.SetParent(transform, false);
-            var src = go.AddComponent<AudioSource>();
-            src.playOnAwake = false;
-            src.loop = false;
-            src.clip = rewindClip;
-            src.volume = rewindVolume;
-            src.spatialBlend = rewindSpatialBlend; // par défaut 2D (collé à l’UI)
-            src.Play();
-            Destroy(go, rewindClip.length + 0.1f);
-        }
     }
 }

@@ -15,570 +15,223 @@ MonoBehaviour:
   width: 8
   height: 8
   nonWalkables:
-  - x: 2
-    z: 1
+  - x: 0
+    z: 7
   - x: 1
-    z: 2
+    z: 7
+  - x: 2
+    z: 7
+  - x: 4
+    z: 7
+  - x: 5
+    z: 7
+  - x: 6
+    z: 7
+  - x: 7
+    z: 7
+  - x: 1
+    z: 5
+  - x: 2
+    z: 5
+  - x: 3
+    z: 5
+  - x: 4
+    z: 5
+  - x: 6
+    z: 5
+  - x: 1
+    z: 3
+  - x: 2
+    z: 3
+  - x: 3
+    z: 3
+  - x: 4
+    z: 3
   - x: 5
     z: 3
   - x: 6
     z: 3
-  - x: 3
-    z: 4
-  - x: 6
-    z: 7
-  thinWalls: []
+  - x: 7
+    z: 3
+  thinWalls:
+  - a:
+      x: 3
+      z: 1
+    b:
+      x: 4
+      z: 1
+  - a:
+      x: 5
+      z: 1
+    b:
+      x: 6
+      z: 1
+  - a:
+      x: 5
+      z: 0
+    b:
+      x: 6
+      z: 0
   heroSpawn:
-    x: 0
-    z: 0
-  nmeSpawn:
-    x: 7
+    x: 3
     z: 7
-  heroEntry: 3
+  nmeSpawn:
+    x: 1
+    z: 6
+  heroEntry: 0
   exit:
     fromCell:
       x: 7
       z: 0
     direction: 1
-  passThroughWalls: []
+  passThroughWalls:
+  - x: 0
+    z: 5
   arrowTraps:
   - triggerCell:
-      x: 6
+      x: 5
+      z: 5
+    startCell:
+      x: 5
+      z: 4
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    emissions: []
+  - triggerCell:
+      x: 0
       z: 2
     startCell:
       x: 0
       z: 0
     travelDir: 0
-    arrowSpeed: 0
+    arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
-    linkToDisco: 1
-    emissions:
-    - startCell:
-        x: 7
-        z: 0
-      travelDir: 0
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 1
-      repeatCount: 0
-    - startCell:
-        x: 7
-        z: 1
-      travelDir: 3
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 1
-      repeatCount: 0
-    - startCell:
-        x: 5
-        z: 0
-      travelDir: 0
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 1
-      repeatCount: 0
+    emissions: []
   - triggerCell:
       x: 1
-      z: 3
+      z: 0
     startCell:
-      x: 0
+      x: 1
       z: 0
     travelDir: 0
-    arrowSpeed: 0
+    arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
-    linkToDisco: 1
-    emissions:
-    - startCell:
-        x: 0
-        z: 7
-      travelDir: 2
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 1
-      repeatCount: 0
-    - startCell:
-        x: 2
-        z: 7
-      travelDir: 2
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 1
-      repeatCount: 0
-    - startCell:
-        x: 0
-        z: 4
-      travelDir: 1
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 1.5
-      repeatCount: 0
+    emissions: []
   - triggerCell:
-      x: 4
-      z: 5
+      x: 2
+      z: 2
     startCell:
-      x: 0
+      x: 2
       z: 0
     travelDir: 0
-    arrowSpeed: 0
+    arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
-    linkToDisco: 1
-    emissions:
-    - startCell:
-        x: 3
-        z: 7
-      travelDir: 2
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.5
-      repeatCount: 0
-    - startCell:
-        x: 5
-        z: 7
-      travelDir: 2
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.5
-      repeatCount: 0
-    - startCell:
-        x: 7
-        z: 4
-      travelDir: 3
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.5
-      repeatCount: 0
-    - startCell:
-        x: 0
-        z: 6
-      travelDir: 1
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.5
-      repeatCount: 0
+    emissions: []
   - triggerCell:
-      x: 6
-      z: 5
+      x: 2
+      z: 0
     startCell:
-      x: 0
+      x: 2
       z: 0
     travelDir: 0
-    arrowSpeed: 0
+    arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
-    linkToDisco: 1
-    emissions:
-    - startCell:
-        x: 7
-        z: 0
-      travelDir: 0
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 1
-      repeatCount: 0
-    - startCell:
-        x: 5
-        z: 7
-      travelDir: 2
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 1
-      repeatCount: 0
-    - startCell:
-        x: 0
-        z: 6
-      travelDir: 1
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 1
-      repeatCount: 0
-    - startCell:
-        x: 4
-        z: 4
-      travelDir: 1
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.5
-      repeatCount: 0
+    emissions: []
   - triggerCell:
       x: 4
       z: 1
     startCell:
-      x: 0
+      x: 4
       z: 0
     travelDir: 0
-    arrowSpeed: 0
+    arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
-    linkToDisco: 1
-    emissions:
-    - startCell:
-        x: 7
-        z: 2
-      travelDir: 3
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-    - startCell:
-        x: 7
-        z: 0
-      travelDir: 3
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-    - startCell:
-        x: 5
-        z: 0
-      travelDir: 0
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.5
-      repeatCount: 0
-    - startCell:
-        x: 3
-        z: 0
-      travelDir: 0
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.5
-      repeatCount: 0
-  - triggerCell:
-      x: 2
-      z: 6
-    startCell:
-      x: 0
-      z: 0
-    travelDir: 0
-    arrowSpeed: 0
-    canRearm: 0
-    rearmDelay: 0
-    linkToDisco: 1
-    emissions:
-    - startCell:
-        x: 1
-        z: 7
-      travelDir: 2
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-    - startCell:
-        x: 3
-        z: 7
-      travelDir: 2
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-    - startCell:
-        x: 0
-        z: 7
-      travelDir: 1
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-    - startCell:
-        x: 0
-        z: 5
-      travelDir: 1
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-  - triggerCell:
-      x: 2
-      z: 5
-    startCell:
-      x: 0
-      z: 0
-    travelDir: 0
-    arrowSpeed: 0
-    canRearm: 0
-    rearmDelay: 0
-    linkToDisco: 1
-    emissions:
-    - startCell:
-        x: 0
-        z: 4
-      travelDir: 1
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-    - startCell:
-        x: 0
-        z: 6
-      travelDir: 1
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-    - startCell:
-        x: 1
-        z: 7
-      travelDir: 2
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-    - startCell:
-        x: 3
-        z: 7
-      travelDir: 2
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-  - triggerCell:
-      x: 2
-      z: 4
-    startCell:
-      x: 0
-      z: 0
-    travelDir: 0
-    arrowSpeed: 0
-    canRearm: 0
-    rearmDelay: 0
-    linkToDisco: 1
-    emissions:
-    - startCell:
-        x: 0
-        z: 3
-      travelDir: 1
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 4
-      repeatCount: 0
-    - startCell:
-        x: 0
-        z: 5
-      travelDir: 1
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 4
-      repeatCount: 0
-    - startCell:
-        x: 1
-        z: 7
-      travelDir: 2
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 4
-      repeatCount: 0
+    emissions: []
   - triggerCell:
       x: 5
-      z: 0
+      z: 1
     startCell:
-      x: 0
+      x: 5
       z: 0
     travelDir: 0
-    arrowSpeed: 0
+    arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
-    linkToDisco: 1
-    emissions:
-    - startCell:
-        x: 4
-        z: 0
-      travelDir: 0
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-    - startCell:
-        x: 6
-        z: 0
-      travelDir: 0
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
-    - startCell:
-        x: 7
-        z: 1
-      travelDir: 3
-      arrowSpeed: 6
-      shotTimes: []
-      repeat: 1
-      repeatStartDelay: 0
-      repeatInterval: 0.25
-      repeatDuration: 0.75
-      repeatCount: 0
+    emissions: []
+  - triggerCell:
+      x: 7
+      z: 1
+    startCell:
+      x: 7
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    emissions: []
   timedDoors:
   - cell:
-      x: 4
-      z: 3
-    openSeconds: 2.5
-  - cell:
-      x: 7
-      z: 6
-    openSeconds: 5
-  levers:
-  - cell:
-      x: 6
-      z: 4
-    requireFacing: 2
-    linkedDoorIndex: 0
-  - cell:
-      x: 6
-      z: 4
-    requireFacing: 2
-    linkedDoorIndex: 1
-  messages:
-  - cell:
-      x: 5
-      z: 2
-    text: Reste pour charger chaque dalle disco
-    displaySeconds: 3
-    voiceClip: {fileID: 0}
-  - cell:
       x: 1
       z: 4
-    text: Touche les dalles disco dans l'ordre
-    displaySeconds: 3
-    voiceClip: {fileID: 0}
+    openSeconds: 4
+  levers:
   - cell:
       x: 4
-      z: 3
-    text: "Suis le rythme et tu \xE9viteras le zombi"
-    displaySeconds: 3
-    voiceClip: {fileID: 0}
+      z: 6
+    requireFacing: 0
+    linkedDoorIndex: 0
+  messages:
+  - cell:
+      x: 0
+      z: 6
+    text: "Cet endroit respire... ou plut\xF4t soupire..."
+    displaySeconds: 4
+    voiceClip: {fileID: 8300000, guid: 21124b32ac434bf4f91102c015b56fe3, type: 3}
+  - cell:
+      x: 1
+      z: 1
+    text: "Allez bouge moi ce boule, \xE7a vient du bas..."
+    displaySeconds: 4
+    voiceClip: {fileID: 8300000, guid: a1221e28227fa5c4598a321b5ee6dcb9, type: 3}
+  - cell:
+      x: 7
+      z: 2
+    text: Tout est affaire de sensation, suivre le rythme et les pulsions.
+    displaySeconds: 6
+    voiceClip: {fileID: 8300000, guid: 97edbf8a9daad764eadd66ad422e0648, type: 3}
   discoStartTiles:
   - x: 2
-    z: 2
+    z: 4
   discoSequences:
   - cells:
-    - x: 6
-      z: 2
-    - x: 1
-      z: 3
-    - x: 4
-      z: 5
-    - x: 6
-      z: 5
-    - x: 4
-      z: 1
-    - x: 2
-      z: 6
-    - x: 2
-      z: 5
-    - x: 2
+    - x: 0
       z: 4
+    - x: 1
+      z: 2
+    - x: 4
+      z: 2
+    - x: 4
+      z: 0
     - x: 5
       z: 0
-    - x: 7
-      z: 0
+    - x: 6
+      z: 2
     stepSeconds:
+    - 2
+    - 2
+    - 2
     - 2.5
-    - 4.5
-    - 5
-    - 1.4
-    - 3.5
-    - 5
-    - 1.5
-    - 5
+    - 1
     - 4
-    - 1.5
     startOnDoorIndex: 0
-    defaultStepSeconds: 0
+    defaultStepSeconds: 8
   gridGates:
   - cell:
       x: 7
