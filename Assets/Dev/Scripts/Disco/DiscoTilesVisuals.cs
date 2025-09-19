@@ -48,6 +48,14 @@ namespace Sarabande.Disco
         private Transform _parent; // "DiscoTiles"
         private readonly Dictionary<Vector2Int, DiscoTileVisual> _tiles = new();
 
+        // Cache des Core par cellule
+        private readonly Dictionary<Vector2Int, Transform> _coreByCell = new();
+
+        // Paramètre d’ajustement : 1.0 = le Core à 100% occupe toute la dalle,
+        // 0.95 = laisse une marge pour éviter le z-fighting/aliasing visuel en bord.
+        [Header("Next Core Sizing")]
+        [SerializeField, Range(0.5f, 1.2f)] private float coreFullRelativeToTile = 0.96f;
+
         public DiscoTileVisual GetTile(Vector2Int c)
             => _tiles.TryGetValue(c, out var t) ? t : null;
 
@@ -209,6 +217,67 @@ namespace Sarabande.Disco
                     break;
             }
         }
+
+        /// <summary>
+        /// 'fraction' est une fraction de la dalle (0..1). 1 = taille de la dalle,
+        /// modulée par 'coreFullRelativeToTile' (ex: 0.96) pour garder un liseré.
+        /// </summary>
+        // 1) Fraction de dalle -> scale du "Core"
+        public void SetNextCoreFill(Vector2Int cell, float fraction)
+        {
+            var baseTf = TryGetBaseTransform(cell);
+            var core = TryGetCoreTransform(cell);
+            if (!baseTf || !core) return;
+
+            fraction = Mathf.Clamp01(fraction);
+
+            // Taille cible = taille de la dalle ("Base") * facteur de marge * fraction
+            var baseLS = baseTf.localScale;
+            float tgtX = baseLS.x * coreFullRelativeToTile * fraction;
+            float tgtZ = baseLS.z * coreFullRelativeToTile * fraction;
+
+            var ls = core.localScale;
+            core.localScale = new Vector3(tgtX, ls.y, tgtZ);
+        }
+
+        // 2) Récup du Transform du "Core" (et cache)
+        private Transform TryGetCoreTransform(Vector2Int cell)
+        {
+            if (_coreByCell.TryGetValue(cell, out var t) && t) return t;
+
+            var tile = GetTile(cell);
+            if (!tile) return null;
+
+            // IMPORTANT: on cherche sur le transform du tile
+            var core = tile.transform.Find("Core");
+            if (core) _coreByCell[cell] = core;
+            return core;
+        }
+
+        // 3) Récup du Transform du "Base" (nouveau helper)
+        private Transform TryGetBaseTransform(Vector2Int cell)
+        {
+            var tile = GetTile(cell);
+            if (!tile) return null;
+            return tile.transform.Find("Base");
+        }
+
+        // 4) Remise à zéro de tous les cores (même ceux pas encore en cache)
+        public void ClearAllNextCores()
+        {
+            // On parcourt toutes les dalles connues
+            foreach (var kv in _tiles)
+            {
+                var cell = kv.Key;
+                var core = TryGetCoreTransform(cell);
+                if (!core) continue;
+
+                var ls = core.localScale;
+                core.localScale = new Vector3(0f, ls.y, 0f);
+            }
+            // On garde le cache (_coreByCell) tel quel, il évite des Find() ensuite.
+        }
+
         private void AttachContext()
         {
             if (!useLevelContext) return;

@@ -57,6 +57,9 @@ namespace Sarabande.Traps
         [SerializeField, Min(0.1f)] private float fxLifetime = 1.5f;
         [SerializeField] private float fxYOffset = 0.05f;
 
+        [SerializeField] private Sarabande.Disco.DiscoSequenceSystem disco; // assigner dans l’Inspector (ou auto-find)
+        private bool _discoRunning = false;
+
         private NMEController[] _nmes;
         private Dictionary<Vector2Int, TrapTileVisual> _tileVisuals;
         private struct TrapRuntime { public bool armed; public float nextReadyTime; }
@@ -130,6 +133,10 @@ namespace Sarabande.Traps
             {
                 if (!_runtime[i].armed) continue;
                 var spec = levelData.arrowTraps[i];
+
+                if (spec.linkToDisco && !_discoRunning)
+                    continue;
+
                 if (enteredCell.x == spec.triggerCell.x && enteredCell.y == spec.triggerCell.z)
                     FireTrap(i, spec);
             }
@@ -391,6 +398,30 @@ namespace Sarabande.Traps
             ap.Init(dir, speed, cellSize, obstaclesMask, levelData, hero, _nmes, resetManager);
             ap.InitAudio(hitLoveClip, hitVolume, spatialBlend, minDistance, maxDistance);
             ap.InitFx(hitLoveFxPrefab, _fxParent, fxLifetime, fxYOffset);
+        }
+
+        public void OnDiscoStart()
+        {
+            _discoRunning = true;
+
+            // Réarmer tous les traps liés à la Disco, peu importe leur état/canRearm
+            if (levelData == null || _runtime == null) return;
+            for (int i = 0; i < _runtime.Length && i < (levelData.arrowTraps?.Count ?? 0); i++)
+            {
+                var spec = levelData.arrowTraps[i];
+                if (spec.linkToDisco)
+                {
+                    _runtime[i].armed = true;
+                    _runtime[i].nextReadyTime = 0f;
+                    // sécurité : si ce trap avait des émissions programmées qui traînent (après un restart), on purge
+                    StopTrapEmissions(i);
+                }
+            }
+        }
+
+        public void OnDiscoStop()
+        {
+            _discoRunning = false;
         }
 
         private void AttachContext()
