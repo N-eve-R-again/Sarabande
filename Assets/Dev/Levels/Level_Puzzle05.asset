@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9c1a542ffd2fa3743a4a7f83a79a553a, type: 3}
-  m_Name: Level_Puzzle02
+  m_Name: Level_Puzzle05
   m_EditorClassIdentifier: 
   width: 8
   height: 8
