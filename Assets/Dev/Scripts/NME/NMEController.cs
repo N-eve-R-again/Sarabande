@@ -54,11 +54,22 @@ namespace Sarabande.NME
         //[SerializeField, Range(0f, 0.5f)] private float heroVacateBlockThreshold = 0.25f; // case du héros reste bloquée tant qu’il ne l’a pas assez libérée
         // paramètre plus usité au dessus.
 
+        [Header("NME Conflict")]
+        [Tooltip("Fenêtre initiale d’abandon si un autre NME vise la même case au même instant. Le plus petit InstanceID passe.")]
+        [SerializeField, Range(0f, 0.5f)] private float nmeYieldThreshold = 0.15f;
+
+        [Tooltip("Pendant un déplacement, tant que l’autre NME n’a pas quitté sa case d’origine au-delà de ce pourcentage, sa case reste considérée occupée.")]
+        [SerializeField, Range(0f, 1f)] private float nmeVacateThreshold = 0.25f;
+
         [SerializeField] private ResetManager resetManager;  // à assigner (LevelRoot)
 
         private NMEState _state = NMEState.HeroUnspotted;
 
         private GameObject _activeTelegraph;
+
+        // --- ajout pour spawn dynamique (0/1/N) ---
+        private Vector2Int? _spawnOverrideCell = null;
+        public void SetSpawnCell(Vector2Int cell) => _spawnOverrideCell = cell;
 
         // positions/logique
         private Vector2Int _gridPos;
@@ -86,6 +97,9 @@ namespace Sarabande.NME
 
         private void Start()
         {
+            if (hero == null) hero = FindFirstObjectByType<HeroController>(FindObjectsInactive.Include);
+            if (resetManager == null) resetManager = FindFirstObjectByType<ResetManager>(FindObjectsInactive.Include);
+
             if (levelData == null || hero == null)
             {
                 Debug.LogError("[NME] LevelData ou Hero manquant.");
@@ -95,12 +109,30 @@ namespace Sarabande.NME
 
             BuildCollisionSets();
 
-            _gridPos = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
+            Vector2Int spawnCell;
+            if (_spawnOverrideCell.HasValue)
+            {
+                spawnCell = _spawnOverrideCell.Value;
+            }
+            else if (levelData != null && levelData.nmeSpawns != null && levelData.nmeSpawns.Count > 0)
+            {
+                // si tu as migré tes LevelData vers la liste (0/1/N)
+                spawnCell = new Vector2Int(levelData.nmeSpawns[0].x, levelData.nmeSpawns[0].z);
+            }
+            else
+            {
+                // fallback legacy (ancien champ unique)
+                spawnCell = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
+            }
+
+            _gridPos = spawnCell;
             transform.position = Center(_gridPos, cellSize);
 
             // init exposées (si tu les as)
             FromCell = ToCell = _gridPos;
             MoveProgress = 0f;
+
+            Sarabande.NME.NMEOccupancy.Register(this, _gridPos);
 
             // cache de la dernière cible (position du héros)
             _lastGoal = hero.GridPos;
@@ -255,6 +287,28 @@ namespace Sarabande.NME
             ToCell = target;
             MoveProgress = 0f;
 
+            // --- OCCUPATION PAR D'AUTRES NME (photo à t=0) ---
+            // 1) Si un autre NME est déjà "posé" sur target -> je n'avance pas
+            if (IsCellOccupiedNowByNME(target))
+            {
+                _isMoving = false;
+                _readyAt = Time.time + interStepPause;
+                _path.Clear();
+                _nextRepathAt = 0f;   // repath asap
+                yield break;
+            }
+
+            // 2) Conflit simultané : deux NME veulent "target" au même frame
+            //    On laisse passer celui au plus petit InstanceID ; l'autre renonce tout de suite.
+            if (SomeoneSteppingTo(target, out var otherStepping)
+                && !WinsTieFor(target))
+            {
+                _isMoving = false;
+                _readyAt = Time.time + interStepPause;
+                // pas besoin de bump : on n'a pas bougé
+                yield break;
+            }
+
             // --- STOP si une gate vient de (re)se fermer entre ma case et la cible ---
             if (HasThinWallBetween(_gridPos, target))
             {
@@ -280,6 +334,24 @@ namespace Sarabande.NME
             {
                 t += Time.deltaTime / stepDuration;
                 MoveProgress = t;
+
+                if (t <= nmeYieldThreshold && SomeoneSteppingTo(ToCell, out var otherNow))
+                {
+                    // Si l'autre a priorité (InstanceID plus petit), je m'efface
+                    if (otherNow && otherNow.GetInstanceID() < this.GetInstanceID())
+                    {
+                        // annule le step proprement
+                        transform.position = start;
+                        _isMoving = false;
+                        MoveProgress = 0f;
+                        FromCell = ToCell = _gridPos;
+                        _readyAt = Time.time + interStepPause;
+                        _path.Clear();
+                        _nextRepathAt = 0f;
+                        yield break;
+                    }
+                }
+
                 // Fenêtre de cession (priorité HÉRO) : uniquement en tout début de step
                 if (checkYield && t <= heroYieldThreshold)
                 {
@@ -302,6 +374,8 @@ namespace Sarabande.NME
 
             MoveProgress = 0f;
             FromCell = ToCell = _gridPos;
+
+            Sarabande.NME.NMEOccupancy.UpdateCell(this, _gridPos);
         }
 
         private void RecomputePath(Vector2Int goal)
@@ -437,6 +511,16 @@ namespace Sarabande.NME
                 transform.rotation = Quaternion.LookRotation(fwd, Vector3.up);
         }
 
+        /// <summary>
+        /// Définit l'orientation initiale de l'NME (utilisé par le spawner),
+        /// applique immédiatement la rotation visuelle et mémorise pour les futurs resets.
+        /// </summary>
+        public void OverrideInitialFacing(EdgeDirection dir)
+        {
+            initialFacing = dir;
+            SetFacing(dir); // applique visuellement dès maintenant
+        }
+
         private void FaceDirection(Vector2Int delta)
         {
             if (delta == Vector2Int.right) SetFacing(EdgeDirection.East);
@@ -468,11 +552,27 @@ namespace Sarabande.NME
             if (gateSys != null)
                 gateSys.ReapplyBlocksTo(this);
 
-            _gridPos = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
+            Vector2Int spawnCell;
+            if (_spawnOverrideCell.HasValue)
+            {
+                spawnCell = _spawnOverrideCell.Value;
+            }
+            else if (levelData != null && levelData.nmeSpawns != null && levelData.nmeSpawns.Count > 0)
+            {
+                spawnCell = new Vector2Int(levelData.nmeSpawns[0].x, levelData.nmeSpawns[0].z);
+            }
+            else
+            {
+                spawnCell = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
+            }
+
+            _gridPos = spawnCell;
             transform.position = Center(_gridPos, cellSize);
 
             SetFacing(initialFacing);
             _state = NMEState.HeroUnspotted;
+
+            Sarabande.NME.NMEOccupancy.UpdateCell(this, _gridPos);
         }
 
         // --- Telégraphie / Attaque ---
@@ -699,6 +799,7 @@ namespace Sarabande.NME
             NoiseSystem.NoiseRaised -= OnNoiseRaised;
             DestroyTelegraphIfAny();
             DetachContext();
+            Sarabande.NME.NMEOccupancy.Unregister(this);
         }
 
         private void OnNoiseRaised(Vector2Int at)
@@ -732,6 +833,63 @@ namespace Sarabande.NME
         {
             if (levelContext != null)
                 levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
+        }
+
+        // true si un autre NME occupe "cell" maintenant (posé OU en train de quitter/arriver)
+        private bool IsCellOccupiedNowByNME(Vector2Int cell)
+        {
+            var all = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var other in all)
+            {
+                if (!other || other == this) continue;
+
+                if (!other.IsStepping)
+                {
+                    // posé
+                    if (other.GridPos == cell) return true;
+                }
+                else
+                {
+                    // OCCUPE les deux cases pendant la transition
+                    if (other.ToCell == cell) return true;                          // la destination est "réservée"
+                    if (other.FromCell == cell && other.MoveProgress < nmeVacateThreshold)
+                        return true;                                                // n'a pas assez "libéré" sa case d'origine
+                }
+            }
+            return false;
+        }
+
+        // true si au moins un autre NME est en train de viser "cell" (ToCell==cell)
+        private bool SomeoneSteppingTo(Vector2Int cell, out NMEController first)
+        {
+            first = null;
+            var all = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var other in all)
+            {
+                if (!other || other == this) continue;
+                if (other.IsStepping && other.ToCell == cell)
+                {
+                    first = other;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Je gagne la priorité pour "cell" si je suis le plus petit InstanceID parmi ceux qui la visent
+        private bool WinsTieFor(Vector2Int cell)
+        {
+            int myId = GetInstanceID();
+            var all = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var other in all)
+            {
+                if (!other || other == this) continue;
+                if (other.IsStepping && other.ToCell == cell)
+                {
+                    if (other.GetInstanceID() < myId) return false;
+                }
+            }
+            return true;
         }
 
         private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)

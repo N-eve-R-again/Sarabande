@@ -54,7 +54,6 @@ namespace Sarabande.Player
         [SerializeField, Range(0f, 0.5f)] private float overlapEarlyCheckFromT = 0.15f;
         // on commence à vérifier à partir de 15% du step (évite les faux positifs très tôt)
 
-
         [SerializeField] private Sarabande.Core.ResetManager resetManager;
 
         // caches collisions
@@ -63,7 +62,6 @@ namespace Sarabande.Player
         private HashSet<(Vector2Int a, Vector2Int b)> _dynamicEdgeBlocks
             = new HashSet<(Vector2Int, Vector2Int)>();
         private HashSet<Vector2Int> _dynamicBlockCells = new HashSet<Vector2Int>();
-
 
         private Vector2 _held;                 // dernier input maintenu (x,y)
         private bool _isMoving = false;
@@ -118,9 +116,6 @@ namespace Sarabande.Player
 
             if (_isMoving) return;
             if (Time.time < _readyAtTime) return;
-
-            // Dir cardinal depuis l'input maintenu
-            
             if (dir == Vector2Int.zero) return;
 
             // Cible dans les bornes du niveau
@@ -129,8 +124,8 @@ namespace Sarabande.Player
             // Sortie spéciale : autoriser à sortir hors-grille depuis la case/direction d'Exit
             if (IsExitMove(_gridPos, dir))
             {
-                // NEW: si une gate bloque l'arête de sortie, on bump au lieu de sortir
-                if (HasThinWallBetween(_gridPos, target))   // <= utilise 'target' existant
+                // Si une gate bloque l'arête de sortie, on bump au lieu de sortir
+                if (HasThinWallBetween(_gridPos, target))
                 {
                     StartCoroutine(Bump(dir));
                     return;
@@ -161,6 +156,7 @@ namespace Sarabande.Player
                 return;
             }
 
+            // 4) NME rules
             if (!CanEnterCellConsideringNME(target, dir))
             {
                 StartCoroutine(Bump(dir));
@@ -201,11 +197,9 @@ namespace Sarabande.Player
                 Vector3 pos = Vector3.Lerp(start, end, t);
 
                 // --- GARDE-FOU INTERMÉDIAIRE ---
-                // Dès que la case devient réellement "occupée" (au sens des seuils),
-                // on annule l’atterrissage et on revient vers la case d’origine.
                 if (enforceNoOverlap && t >= overlapEarlyCheckFromT && IsCellOccupiedNowByNME(target))
                 {
-                    // retour depuis la position courante 'pos' vers 'start'
+                    // retour depuis 'pos' vers 'start'
                     float rt = 0f;
                     while (rt < 1f)
                     {
@@ -218,7 +212,7 @@ namespace Sarabande.Player
                     transform.position = start;
                     _isMoving = false;
                     MoveProgress = 0f;
-                    FromCell = ToCell = _gridPos;      // on reste logiquement sur la case d’origine
+                    FromCell = ToCell = _gridPos;      // reste logiquement sur la case d’origine
                     _readyAtTime = Time.time + interStepPause;
                     yield break;
                 }
@@ -228,25 +222,22 @@ namespace Sarabande.Player
                 yield return null;
             }
 
-
-            // Anti-overlap final : si un NME occupe encore la case au moment d'atterrir, on rebondit
+            // Anti-overlap final
             if (enforceNoOverlap && IsCellOccupiedNowByNME(target))
             {
-                // On a déjà start = position d'origine et end = centre de la case cible
                 float rt = 0f;
                 while (rt < 1f)
                 {
                     rt += Time.deltaTime / overlapReturnDuration;
                     if (rt > 1f) rt = 1f;
-                    // Retour visuel de 'end' (cible) vers 'start' (origine)
                     transform.position = Vector3.Lerp(end, start, rt);
                     yield return null;
                 }
 
-                transform.position = start;        // verrouille pile sur la case d'origine
+                transform.position = start;
                 _isMoving = false;
                 MoveProgress = 0f;
-                FromCell = ToCell = _gridPos;      // reste sur la case d'origine côté logique
+                FromCell = ToCell = _gridPos;
                 _readyAtTime = Time.time + interStepPause;
                 yield break;
             }
@@ -320,8 +311,8 @@ namespace Sarabande.Player
         private bool HasThinWallBetween(Vector2Int from, Vector2Int to)
         {
             var key = NormalizeEdge(from, to);
-            bool thin = _thinBlockers.Contains(key);             // ton test existant
-            bool dyn = _dynamicEdgeBlocks.Contains(key);        // AJOUT
+            bool thin = _thinBlockers.Contains(key);
+            bool dyn = _dynamicEdgeBlocks.Contains(key);
             return thin || dyn;
         }
 
@@ -348,7 +339,6 @@ namespace Sarabande.Player
             EnsureSets();
             _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));
         }
-
 
         private bool CanEnterCellConsideringNME(Vector2Int target, Vector2Int dir)
         {
@@ -395,6 +385,7 @@ namespace Sarabande.Player
 
             return true; // personne ne bloque
         }
+
         private bool IsCellOccupiedNowByNME(Vector2Int target)
         {
             if (_nmes == null) return false;
@@ -426,7 +417,7 @@ namespace Sarabande.Player
             if (_isMoving) yield break;
             _isMoving = true;
 
-            // NEW: on se tourne vers la direction tentée, même si c'est bloqué
+            // on se tourne vers la direction tentée, même si c'est bloqué
             if (faceOnMove) FaceDirection(dir);
 
             Vector3 start = transform.position;
@@ -442,7 +433,7 @@ namespace Sarabande.Player
                 yield return null;
             }
 
-            // Retour (un peu plus “mou” si tu veux)
+            // Retour
             t = 0f;
             while (t < 1f)
             {
@@ -459,9 +450,9 @@ namespace Sarabande.Player
 
         private bool IsExitMove(Vector2Int from, Vector2Int dir)
         {
-            var exit = levelData.exit;
-            var exitCell = new Vector2Int(exit.fromCell.x, exit.fromCell.z);
-            return from == exitCell && dir == DirToVec(exit.direction);
+            var exit = levelData;
+            var exitCell = new Vector2Int(exit.exit.fromCell.x, exit.exit.fromCell.z);
+            return from == exitCell && dir == DirToVec(exit.exit.direction);
         }
 
         public void ResetToInitial()
@@ -490,10 +481,12 @@ namespace Sarabande.Player
             _isMoving = true;
             StartCoroutine(SpawnInFromEdge());
         }
+
         private void EnsureSets()
         {
             if (_blockedCells == null) BuildCollisionSets();
         }
+
         public void AddDynamicBlockCell(Vector2Int c)
         {
             EnsureSets();
@@ -514,6 +507,7 @@ namespace Sarabande.Player
 
             if (!isStatic) _blockedCells.Remove(c);
         }
+
         // --- LevelContext plumbing ---
         private void AttachContext()
         {
@@ -559,6 +553,5 @@ namespace Sarabande.Player
 #if UNITY_EDITOR
         private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
 #endif
-
     }
 }

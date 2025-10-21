@@ -22,7 +22,16 @@ namespace Sarabande.Levels
 
         [Header("Spawns")]
         public GridCoord heroSpawn;  // D8 = (3,7)
+
+        [System.Obsolete("Use nmeSpawns instead")]
+        [HideInInspector]
         public GridCoord nmeSpawn;   // B7 = (1,6)
+
+        [Tooltip("Liste des cellules de spawn des ennemis. Vide = 0 ennemi.")]
+        public List<GridCoord> nmeSpawns = new();
+
+        [Tooltip("Facing par NME (optionnel). Même index que nmeSpawns. Si manquant, on garde initialFacing du prefab.")]
+        public List<EdgeDirection> nmeFacings = new();
 
         [Header("Entry")]
         [Tooltip("Depuis quel bord le héros arrive pour son entry step")]

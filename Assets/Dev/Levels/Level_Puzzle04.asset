@@ -78,6 +78,9 @@ MonoBehaviour:
   nmeSpawn:
     x: 1
     z: 6
+  nmeSpawns:
+  - x: 1
+    z: 6
   heroEntry: 0
   exit:
     fromCell:
@@ -98,6 +101,7 @@ MonoBehaviour:
     arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
+    linkToDisco: 0
     emissions: []
   - triggerCell:
       x: 0
@@ -109,6 +113,7 @@ MonoBehaviour:
     arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
+    linkToDisco: 0
     emissions: []
   - triggerCell:
       x: 1
@@ -120,6 +125,7 @@ MonoBehaviour:
     arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
+    linkToDisco: 0
     emissions: []
   - triggerCell:
       x: 2
@@ -131,6 +137,7 @@ MonoBehaviour:
     arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
+    linkToDisco: 0
     emissions: []
   - triggerCell:
       x: 2
@@ -142,6 +149,7 @@ MonoBehaviour:
     arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
+    linkToDisco: 0
     emissions: []
   - triggerCell:
       x: 4
@@ -153,6 +161,7 @@ MonoBehaviour:
     arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
+    linkToDisco: 0
     emissions: []
   - triggerCell:
       x: 5
@@ -164,6 +173,7 @@ MonoBehaviour:
     arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
+    linkToDisco: 0
     emissions: []
   - triggerCell:
       x: 7
@@ -175,6 +185,7 @@ MonoBehaviour:
     arrowSpeed: 6
     canRearm: 0
     rearmDelay: 0
+    linkToDisco: 0
     emissions: []
   timedDoors:
   - cell:

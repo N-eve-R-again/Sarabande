@@ -70,6 +70,11 @@ namespace Sarabande.Triggers
             BuildFromLevelData();
         }
 
+        private void Start()
+        {
+            RefreshNMECache(); // ? nouveau : fait un 1er cache safe
+        }
+
         private void BuildFromLevelData()
         {
             _pads.Clear();
@@ -289,6 +294,16 @@ namespace Sarabande.Triggers
             return tv;
         }
 
+        public void RefreshNMECache()
+        {
+            _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+            // Optionnel: réinitialiser le suivi de position par NME si tu l’utilises
+            _lastNmeCell.Clear();
+            if (_nmes != null)
+                foreach (var n in _nmes) if (n) _lastNmeCell[n] = n.GridPos; // ou la propriété équivalente
+        }
+
         private void DetachContext()
         {
             if (levelContext != null)
@@ -307,11 +322,13 @@ namespace Sarabande.Triggers
         private void OnEnable()
         {
             AttachContext();
+            Sarabande.NME.NMESpawnSystem.AfterRebuild += RefreshNMECache;
             if (timedDoorSystem) timedDoorSystem.DoorClosed += OnAnyDoorClosed;
         }
         private void OnDisable()
         {
             if (timedDoorSystem) timedDoorSystem.DoorClosed -= OnAnyDoorClosed;
+            Sarabande.NME.NMESpawnSystem.AfterRebuild -= RefreshNMECache;
             DetachContext();
         }
 #if UNITY_EDITOR

@@ -17,17 +17,19 @@ MonoBehaviour:
   nonWalkables: []
   thinWalls: []
   heroSpawn:
-    x: 0
-    z: 0
+    x: 7
+    z: 4
   nmeSpawn:
     x: 7
     z: 7
-  heroEntry: 3
+  nmeSpawns: []
+  nmeFacings: 
+  heroEntry: 1
   exit:
     fromCell:
-      x: 0
-      z: 0
-    direction: 0
+      x: 7
+      z: 4
+    direction: 1
   passThroughWalls: []
   arrowTraps:
   - triggerCell:
@@ -40,6 +42,7 @@ MonoBehaviour:
     arrowSpeed: 0
     canRearm: 0
     rearmDelay: 0
+    linkToDisco: 0
     emissions: []
   timedDoors: []
   levers: []
@@ -58,6 +61,16 @@ MonoBehaviour:
     - 4
     startOnDoorIndex: 0
     defaultStepSeconds: 0
-  gridGates: []
+  gridGates:
+  - cell:
+      x: 0
+      z: 3
+    side: 1
+    initiallyOpen: 0
+  - cell:
+      x: 0
+      z: 5
+    side: 1
+    initiallyOpen: 0
   triggerPads: []
   triggerBindings: []

@@ -292,6 +292,27 @@ namespace Sarabande.Doors
             if (_nmes != null) foreach (var n in _nmes) if (n) n.RemoveDynamicBlockCell(cell);
         }
 
+        // --- API pour spawn dynamique de NME ---
+        // Rafraîchit les caches d’acteurs (à appeler quand des NME apparaissent/disparaissent)
+        public void RefreshActorCaches()
+        {
+            _hero = FindFirstObjectByType<HeroController>(FindObjectsInactive.Include);
+            _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        }
+
+        // Applique tous les "blocages" déjà actifs (portes fermées) à un NME fraichement spawné
+        public void ReapplyBlocksTo(NMEController nme)
+        {
+            if (nme == null) return;
+            // Pour chaque porte actuellement fermée, on pousse la cellule bloquée au NME
+            foreach (var d in _doors)
+            {
+                if (d == null) continue;
+                if (d.state == DoorState.Closed)
+                    nme.AddDynamicBlockCell(d.cell);
+            }
+        }
+
         // --- Audio via AudioHub ---
         private void PlayWooshOpen(DoorRuntime d)
         {
