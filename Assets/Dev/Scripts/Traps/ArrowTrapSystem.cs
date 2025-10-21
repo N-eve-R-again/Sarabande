@@ -99,6 +99,8 @@ namespace Sarabande.Traps
 
             _lastHeroCell = hero.GridPos;
             if (_nmes != null) foreach (var n in _nmes) if (n != null) _lastNmeCell[n] = n.GridPos;
+
+            RefreshNMECache();
         }
 
         private void Update()
@@ -440,6 +442,16 @@ namespace Sarabande.Traps
             _discoRunning = false;
         }
 
+        private void RefreshNMECache()
+        {
+            _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+            // remet à jour le suivi des cases pour éviter un “manqué” au premier tick
+            _lastNmeCell.Clear();
+            if (_nmes != null)
+                foreach (var n in _nmes) if (n) _lastNmeCell[n] = n.GridPos;
+        }
+
         private void AttachContext()
         {
             if (!useLevelContext) return;
@@ -460,8 +472,16 @@ namespace Sarabande.Traps
             if (!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(this);
 #endif
         }
-        private void OnEnable() { AttachContext(); }
-        private void OnDisable() { DetachContext(); }
+        private void OnEnable()
+        {
+            AttachContext();
+            Sarabande.NME.NMESpawnSystem.AfterRebuild += RefreshNMECache;
+        }
+        private void OnDisable() 
+        {
+            Sarabande.NME.NMESpawnSystem.AfterRebuild -= RefreshNMECache;
+            DetachContext(); 
+        }
 #if UNITY_EDITOR
         private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
 #endif

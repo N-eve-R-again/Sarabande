@@ -303,8 +303,15 @@ namespace Sarabande.Levels
             // HÉRO
             CreateDiscMarker("HeroSpawn", levelData.heroSpawn, heroMarkerMaterial, parent);
 
-            // NME
-            CreateDiscMarker("NMESpawn", levelData.nmeSpawn, nmeMarkerMaterial, parent);
+            // NME (multi)
+            if (levelData.nmeSpawns != null)
+            {
+                for (int i = 0; i < levelData.nmeSpawns.Count; i++)
+                {
+                    var c = levelData.nmeSpawns[i];
+                    CreateDiscMarker($"NME_{i}", c, nmeMarkerMaterial, parent);
+                }
+            }
 
             // Sortie
             CreateExitMarker(parent);

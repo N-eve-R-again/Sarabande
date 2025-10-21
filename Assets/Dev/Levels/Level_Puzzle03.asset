@@ -30,9 +30,12 @@ MonoBehaviour:
   thinWalls: []
   heroSpawn:
     x: 0
-    z: 0
+    z: 1
   nmeSpawn:
     x: 7
+    z: 7
+  nmeSpawns:
+  - x: 7
     z: 7
   heroEntry: 3
   exit:
