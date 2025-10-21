@@ -2112,8 +2112,6 @@ MonoBehaviour:
   overlapReturnDuration: 0.08
   overlapEarlyCheckFromT: 0.15
   resetManager: {fileID: 619786945}
-  verboseMoveTrace: 1
-  verboseWatchCell: {x: 0, y: 0}
 --- !u!114 &1116510831
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3661,83 +3659,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &5806007100351186343
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 4083821576138421657, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 1.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4083821576138421657, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4083821576138421657, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 6.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4083821576138421657, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4083821576138421657, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4083821576138421657, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4083821576138421657, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4083821576138421657, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4083821576138421657, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4083821576138421657, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5685716814006458922, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_Name
-      value: NME
-      objectReference: {fileID: 0}
-    - target: {fileID: 5685716814006458922, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5769231519997738722, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: hero
-      value: 
-      objectReference: {fileID: 1116510830}
-    - target: {fileID: 5769231519997738722, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: levelData
-      value: 
-      objectReference: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
-    - target: {fileID: 5769231519997738722, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: levelContext
-      value: 
-      objectReference: {fileID: 619786955}
-    - target: {fileID: 5769231519997738722, guid: 92119acf2c2a5204c81482408b097526, type: 3}
-      propertyPath: resetManager
-      value: 
-      objectReference: {fileID: 619786945}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 92119acf2c2a5204c81482408b097526, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -3751,7 +3672,6 @@ SceneRoots:
   - {fileID: 1563016533}
   - {fileID: 1078807562}
   - {fileID: 1116510832}
-  - {fileID: 5806007100351186343}
   - {fileID: 735958319}
   - {fileID: 511754654}
   - {fileID: 1929999199}
