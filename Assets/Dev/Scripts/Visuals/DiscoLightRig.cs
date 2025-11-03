@@ -1,4 +1,20 @@
 // FILE: Assets/Dev/Scripts/VFX/DiscoLightRig.cs
+//
+// Résumé
+// -------
+// Génère et anime un rig de spots colorés pendant une séquence Disco.
+// - S'active sur onSequenceStart et s'arrête sur Success/Fail (via DiscoSequenceSystem).
+// - Les spots orbitent au-dessus du plateau (ellipse ou Lissajous), avec un léger wobble (tangage).
+// - Le faisceau balaie le sol autour du centre (pan "yaw"), phases désynchronisées pour de la variété.
+// - Optionnel : atténue l'ambiance de la scène pendant la Disco (ambient + lights directionnelles).
+// - Aucune dépendance forte : LevelContext est facultatif (sert uniquement à dimensionner/centrer).
+//
+// Notes implémentation
+// --------------------
+// - Construction paresseuse : EnsureBuilt() crée le rig la première fois (ou au OnEnable si nécessaire).
+// - Aucun changement d’API publique. Tous les renommages ne concernent que des variables locales.
+// - Les méthodes StartRig/StopRig publiques sont conservées (helpers simples appelant OnDiscoStart/OnDiscoStop).
+
 using System.Collections.Generic;
 using UnityEngine;
 using Sarabande.Core;   // LevelContext (optionnel)
@@ -8,16 +24,13 @@ using UnityEngine.Rendering;
 namespace Sarabande.VFX
 {
     /// <summary>
-    /// Crée/Anime des spots colorés pendant une séquence disco.
-    /// - S'active sur onSequenceStart, se coupe sur Success/Fail
-    /// - Orbite douce + wobble, regarde le centre du plateau
-    /// - Zéro dépendance forte : LevelContext facultatif (sert juste pour centrer/échelle)
+    /// Crée et anime un rig de spots colorés synchronisés à une séquence Disco.
     /// </summary>
     public class DiscoLightRig : MonoBehaviour
     {
         [Header("Wiring")]
-        [SerializeField] private DiscoSequenceSystem disco;       // assigne ta DiscoSequenceSystem ici
-        [SerializeField] private LevelContext levelContext;       // facultatif (sert pour width/height)
+        [SerializeField] private DiscoSequenceSystem disco;       // Système Disco à écouter
+        [SerializeField] private LevelContext levelContext;       // Facultatif (pour width/height)
         [SerializeField, Min(0.001f)] private float cellSize = 1f;
 
         [Header("Rig")]
@@ -30,7 +43,7 @@ namespace Sarabande.VFX
             new Color(0.10f, 0.75f, 1.00f),
             new Color(0.45f, 0.35f, 1.00f),
         };
-        [SerializeField] private float height = 4.5f;        // Y des spots
+        [SerializeField] private float height = 4.5f;        // Altitude Y des spots
         [SerializeField, Range(0.4f, 1.2f)] private float radiusMul = 0.85f; // Ø orbite = boardMax * radiusMul
         [SerializeField] private Vector2 speedRange = new(0.15f, 0.45f);     // vitesse d'orbite (rev/sec)
         [SerializeField, Range(10f, 90f)] private float spotAngle = 42f;
@@ -58,15 +71,15 @@ namespace Sarabande.VFX
 
         [Header("Beam sweep (pan)")]
         [SerializeField, Range(0f, 120f)] private float yawSweepAmplitude = 65f; // ° d’écart max
-        [SerializeField] private Vector2 yawSweepSpeedRange = new(0.5f, 1.2f);   // Hz approx (rad/s divisés par 2?)
+        [SerializeField] private Vector2 yawSweepSpeedRange = new(0.5f, 1.2f);   // Hz approx
         [SerializeField] private bool desyncYawPhases = true;
 
         [Header("Aiming")]
-        [SerializeField, Range(0.2f, 1.2f)] private float sweepRadiusMul = 0.9f; // rayon de balayage sur le sol
+        [SerializeField, Range(0.2f, 1.2f)] private float sweepRadiusMul = 0.9f; // rayon de balayage au sol
         [SerializeField, Range(0.1f, 20f)] private float aimSmoothing = 8f;      // lissage du look (Slerp)
 
         [Header("Environment dimming")]
-        [SerializeField] private bool dimEnvironment = true;           // active le fade d’ambiance
+        [SerializeField] private bool dimEnvironment = true;           // fade d’ambiance pendant la Disco
         [SerializeField, Range(0f, 1f)] private float ambientMultiplier = 0.35f; // % de l’ambient initial
         [SerializeField, Range(0f, 1f)] private float directionalMultiplier = 0.5f; // % intensité Sun(s)
         [SerializeField, Min(0f)] private float envFadeSeconds = 0.35f;
@@ -83,6 +96,7 @@ namespace Sarabande.VFX
         private Vector2 _half; // demi-étendue monde (x: demi-largeur, y: demi-hauteur)
         private bool _active;
 
+        // État de l’environnement (capture + fade)
         private bool _envCaptured = false;
         private AmbientMode _ambientMode0;
         private float _ambientIntensity0;
@@ -91,6 +105,11 @@ namespace Sarabande.VFX
         private readonly List<float> _dirInt0 = new();
         private Coroutine _envCo;
 
+        // ====== Unity callbacks & wiring ======
+
+        /// <summary>
+        /// Abonne le rig aux évènements de Disco et construit éventuellement le rig hors-Disco.
+        /// </summary>
         private void OnEnable()
         {
             if (disco)
@@ -99,10 +118,13 @@ namespace Sarabande.VFX
                 disco.onSequenceSuccess.AddListener(OnDiscoStop);
                 disco.onSequenceFail.AddListener(OnDiscoStop);
             }
-            // Si on veut que ça existe hors disco, on peut construire au démarrage
+            // Si visible hors Disco, on construit dès maintenant.
             if (!onlyWhenDisco) EnsureBuilt();
         }
 
+        /// <summary>
+        /// Désabonne les évènements et détruit/masque le rig selon la config.
+        /// </summary>
         private void OnDisable()
         {
             if (disco)
@@ -115,86 +137,104 @@ namespace Sarabande.VFX
             else SetRigEnabled(false);
         }
 
+        /// <summary>
+        /// Anime en continu positions et orientations des spots quand le rig est actif.
+        /// </summary>
         private void Update()
         {
             if (!_active || _root == null) return;
 
-            float t = Time.time;
+            float timeNow = Time.time;
 
-            // Étendue pour positionner et pour cibler au sol
-            float rx = _half.x * radiusMul;
-            float rz = _half.y * radiusMul;
-            float rSweep = Mathf.Min(_half.x, _half.y) * sweepRadiusMul;
+            // Étendue utile pour trajectoires et cibles au sol
+            float orbitRadiusX = _half.x * radiusMul;
+            float orbitRadiusZ = _half.y * radiusMul;
+            float sweepRadiusGround = Mathf.Min(_half.x, _half.y) * sweepRadiusMul;
 
             for (int i = 0; i < _lights.Count; i++)
             {
-                var L = _lights[i];
-                if (!L) continue;
+                var spotLight = _lights[i];
+                if (!spotLight) continue;
 
                 // --- TRAJECTOIRE (position du projecteur) ---
-                float ang = (t * _speed[i] * Mathf.PI * 2f) + _phase[i];
+                float angle = (timeNow * _speed[i] * Mathf.PI * 2f) + _phase[i];
 
-                Vector3 pos;
+                Vector3 worldPos;
                 if (useLissajous)
                 {
-                    // Lissajous = plus riche que l’ellipse simple
-                    float x = Mathf.Sin(ang * lissaFreqX);
-                    float z = Mathf.Sin((ang + 1.234f) * lissaFreqZ); // léger décalage de phase Z
-                    pos = _center + new Vector3(x * rx, height, z * rz);
+                    // Trajectoire de Lissajous : plus riche qu'une ellipse simple.
+                    float x = Mathf.Sin(angle * lissaFreqX);
+                    float z = Mathf.Sin((angle + 1.234f) * lissaFreqZ); // petit déphasage
+                    worldPos = _center + new Vector3(x * orbitRadiusX, height, z * orbitRadiusZ);
                 }
                 else
                 {
-                    // ellipse/orbite
-                    pos = _center + new Vector3(Mathf.Cos(ang) * rx, height, Mathf.Sin(ang) * rz);
+                    // Orbite elliptique classique.
+                    worldPos = _center + new Vector3(Mathf.Cos(angle) * orbitRadiusX, height, Mathf.Sin(angle) * orbitRadiusZ);
                 }
-                L.transform.position = pos;
+                spotLight.transform.position = worldPos;
 
                 // --- BALAYAGE (orientation du faisceau) ---
-                // 1) Yaw de base = direction vers le centre (en radians)
-                Vector3 toCenter = _center - pos;
-                float baseYaw = Mathf.Atan2(toCenter.z, toCenter.x); // [-?..?]
+                // 1) Yaw de base = direction du centre (radians)
+                Vector3 toCenter = _center - worldPos;
+                float baseYawRad = Mathf.Atan2(toCenter.z, toCenter.x);
 
-                // 2) Modulation sinusoïdale (pan) pour balayer la piste
-                float yaw = baseYaw + Mathf.Sin(t * _yawSpeed[i] + _yawPhase[i]) * Mathf.Deg2Rad * yawSweepAmplitude;
+                // 2) Modulation sinusoïdale (pan)
+                float yawRad = baseYawRad + Mathf.Sin(timeNow * _yawSpeed[i] + _yawPhase[i]) * Mathf.Deg2Rad * yawSweepAmplitude;
 
-                // 3) Point-cible sur le sol : cercle de rayon rSweep
-                Vector3 target = _center + new Vector3(Mathf.Cos(yaw) * rSweep, 0f, Mathf.Sin(yaw) * rSweep);
+                // 3) Point-cible au sol sur un cercle de rayon sweepRadiusGround
+                Vector3 targetOnGround = _center + new Vector3(Mathf.Cos(yawRad) * sweepRadiusGround, 0f, Mathf.Sin(yawRad) * sweepRadiusGround);
 
-                // 4) Look vers le point-cible, avec léger wobble (tangage) + lissage
-                Vector3 fwd = (target - pos).normalized;
-                var look = Quaternion.LookRotation(fwd, Vector3.up);
+                // 4) Look vers la cible, avec wobble (tangage) + lissage
+                Vector3 forwardDir = (targetOnGround - worldPos).normalized;
+                Quaternion lookRotation = Quaternion.LookRotation(forwardDir, Vector3.up);
 
                 if (wobbleDeg > 0f)
                 {
-                    float wob = Mathf.Sin((t + i * 0.37f) * wobbleSpeed) * wobbleDeg;
-                    look *= Quaternion.Euler(wob, 0f, 0f);
+                    float wobbleDegrees = Mathf.Sin((timeNow + i * 0.37f) * wobbleSpeed) * wobbleDeg;
+                    lookRotation *= Quaternion.Euler(wobbleDegrees, 0f, 0f);
                 }
 
-                L.transform.rotation = Quaternion.Slerp(L.transform.rotation, look, 1f - Mathf.Exp(-aimSmoothing * Time.deltaTime));
+                spotLight.transform.rotation = Quaternion.Slerp(
+                    spotLight.transform.rotation,
+                    lookRotation,
+                    1f - Mathf.Exp(-aimSmoothing * Time.deltaTime)
+                );
             }
         }
 
-        // --- Disco events ---
+        // ====== Réaction aux évènements Disco ======
+
+        /// <summary>
+        /// Démarre le rig et lance l’assombrissement d’ambiance quand la Disco commence.
+        /// </summary>
         private void OnDiscoStart()
         {
             EnsureBuilt();
             SetRigEnabled(true);
-            StartFadeEnvironment(true);   // << assombrit la scène
+            StartFadeEnvironment(dim: true);
         }
 
+        /// <summary>
+        /// Rétablit l’ambiance et détruit/masque le rig quand la Disco s’arrête.
+        /// </summary>
         private void OnDiscoStop()
         {
-            StartFadeEnvironment(false);  // << rétablit la lumière
+            StartFadeEnvironment(dim: false);
             if (destroyOnStop) DestroyRig();
             else SetRigEnabled(false);
         }
 
-        // --- Build/Enable/Destroy ---
+        // ====== Construction / activation / destruction ======
+
+        /// <summary>
+        /// Construit le rig (parent + lumières) si nécessaire, positionné et dimensionné selon le plateau.
+        /// </summary>
         private void EnsureBuilt()
         {
             if (_root != null) return;
 
-            // Calcule le centre/extent depuis LevelContext si dispo, sinon fallback 8x8
+            // Centre/extent depuis LevelContext si dispo, sinon fallback 8x8.
             int w = 8, h = 8;
             if (levelContext && levelContext.LevelData)
             {
@@ -210,75 +250,82 @@ namespace Sarabande.VFX
             _lights.Clear();
             _speed.Clear();
             _phase.Clear();
+            _yawSpeed.Clear();
+            _yawPhase.Clear();
 
             for (int i = 0; i < lightCount; i++)
             {
-                var go = new GameObject($"DiscoSpot_{i}");
-                go.transform.SetParent(_root, false);
+                var lightGO = new GameObject($"DiscoSpot_{i}");
+                lightGO.transform.SetParent(_root, false);
 
-                var l = go.AddComponent<Light>();
-                l.type = LightType.Spot;
-                l.spotAngle = spotAngle;
-                l.innerSpotAngle = Mathf.Min(innerSpotAngle, spotAngle - 1f);
-                l.intensity = intensity; // <-- use serialized field
-                l.range = range;         // <-- use serialized field
-                l.shadows = LightShadows.Soft;
+                var lightComponent = lightGO.AddComponent<Light>();
+                lightComponent.type = LightType.Spot;
+                lightComponent.spotAngle = spotAngle;
+                lightComponent.innerSpotAngle = Mathf.Min(innerSpotAngle, spotAngle - 1f);
+                lightComponent.intensity = intensity;
+                lightComponent.range = range;
+                lightComponent.shadows = LightShadows.Soft;
 
                 if (useCookies)
-                    l.cookie = GenerateRadialCookie(cookieResolution, cookieHardness);
+                    lightComponent.cookie = GenerateRadialCookie(cookieResolution, cookieHardness);
 
-                // --- COLOR: pick from palette (fallback = random bright) ---
+                // Couleur depuis la palette (fallback : couleur vive aléatoire)
                 if (palette != null && palette.Length > 0)
-                    l.color = palette[i % palette.Length];
+                    lightComponent.color = palette[i % palette.Length];
                 else
-                    l.color = Color.HSVToRGB(Random.value, 1f, 1f);
+                    lightComponent.color = Color.HSVToRGB(Random.value, 1f, 1f);
 
-                _lights.Add(l);
-                // Vitesse/phase de la trajectoire (position)
+                _lights.Add(lightComponent);
+
+                // Trajectoire (position)
                 _speed.Add(Random.Range(speedRange.x, speedRange.y));
                 _phase.Add(randomizePhases ? Random.value * Mathf.PI * 2f : (i * Mathf.PI * 0.5f));
 
-                // Vitesse/phase du balayage (orientation indépendante)
+                // Balayage (orientation)
                 _yawSpeed.Add(Random.Range(yawSweepSpeedRange.x, yawSweepSpeedRange.y));
                 _yawPhase.Add(desyncYawPhases ? Random.value * Mathf.PI * 2f : 0f);
             }
 
-            // place initialement
+            // Positionnement initial propre (un tick d'Update forcé)
             _active = true;
             Update();
             _active = false;
 
-            SetRigEnabled(!onlyWhenDisco); // si on veut visible hors disco
+            // Visible d'emblée si le rig doit exister hors Disco
+            SetRigEnabled(!onlyWhenDisco);
         }
 
-        // Génération d’un cookie circulaire avec bord adouci
-        private Texture2D GenerateRadialCookie(int res, float hardness)
+        /// <summary>
+        /// Génère un cookie radial (gris 8 bits) avec bord adouci.
+        /// </summary>
+        private Texture2D GenerateRadialCookie(int resolution, float hardness01)
         {
-            var tex = new Texture2D(res, res, TextureFormat.R8, false, true);
+            var tex = new Texture2D(resolution, resolution, TextureFormat.R8, false, true);
             tex.wrapMode = TextureWrapMode.Clamp;
-            float cx = (res - 1) * 0.5f;
-            float cy = (res - 1) * 0.5f;
+
+            float cx = (resolution - 1) * 0.5f;
+            float cy = (resolution - 1) * 0.5f;
             float rMax = Mathf.Min(cx, cy);
 
-            // hardness ~ 0.0..1.0 : 0 = très doux, 1 = très dur
-            float edge0 = rMax * 0.92f;                  // rayon “plein”
-            float edge1 = Mathf.Lerp(rMax, edge0, hardness); // zone de dégradé
+            // hardness : 0 = très doux, 1 = dur
+            float edgeInner = rMax * 0.92f;                       // rayon “plein”
+            float edgeBlend = Mathf.Lerp(rMax, edgeInner, hardness01); // zone de dégradé
 
-            var pixels = new Color32[res * res];
-            for (int y = 0; y < res; y++)
+            var pixels = new Color32[resolution * resolution];
+            for (int py = 0; py < resolution; py++)
             {
-                for (int x = 0; x < res; x++)
+                for (int px = 0; px < resolution; px++)
                 {
-                    float dx = x - cx, dy = y - cy;
+                    float dx = px - cx, dy = py - cy;
                     float r = Mathf.Sqrt(dx * dx + dy * dy);
 
-                    float a = 0f;
-                    if (r <= edge1) a = 1f;                             // plein
-                    else if (r < rMax) a = Mathf.InverseLerp(rMax, edge1, r); // dégradé
-                    else a = 0f;
+                    float alpha;
+                    if (r <= edgeBlend) alpha = 1f;                              // plein
+                    else if (r < rMax) alpha = Mathf.InverseLerp(rMax, edgeBlend, r); // dégradé
+                    else alpha = 0f;
 
-                    byte b = (byte)Mathf.RoundToInt(a * 255f);
-                    pixels[y * res + x] = new Color32(b, b, b, 255);
+                    byte v = (byte)Mathf.RoundToInt(alpha * 255f);
+                    pixels[py * resolution + px] = new Color32(v, v, v, 255);
                 }
             }
             tex.SetPixels32(pixels);
@@ -286,12 +333,18 @@ namespace Sarabande.VFX
             return tex;
         }
 
-        private void SetRigEnabled(bool on)
+        /// <summary>
+        /// Active/désactive l’objet runtime du rig et son animation.
+        /// </summary>
+        private void SetRigEnabled(bool enable)
         {
-            _active = on;
-            if (_root) _root.gameObject.SetActive(on);
+            _active = enable;
+            if (_root) _root.gameObject.SetActive(enable);
         }
 
+        /// <summary>
+        /// Détruit complètement le rig runtime (GameObject parent + listes).
+        /// </summary>
         private void DestroyRig()
         {
             _active = false;
@@ -304,11 +357,19 @@ namespace Sarabande.VFX
             _lights.Clear();
             _speed.Clear();
             _phase.Clear();
+            _yawSpeed.Clear();
+            _yawPhase.Clear();
         }
 
+        // ====== Environment dimming ======
+
+        /// <summary>
+        /// Capture une fois l’état d’éclairage global (ambient + directionnelles) pour le restaurer ensuite.
+        /// </summary>
         private void CaptureEnvironmentOnce()
         {
             if (_envCaptured) return;
+
             _ambientMode0 = RenderSettings.ambientMode;
             _ambientIntensity0 = RenderSettings.ambientIntensity;
             _ambientLight0 = RenderSettings.ambientLight;
@@ -330,61 +391,74 @@ namespace Sarabande.VFX
             _envCaptured = true;
         }
 
+        /// <summary>
+        /// Coroutine de fondu d’ambiance (vers sombre ou clair).
+        /// </summary>
         private System.Collections.IEnumerator FadeEnvironment(bool dim)
         {
             if (!dimEnvironment) yield break;
             CaptureEnvironmentOnce();
 
-            // Ambient (deux cas : Skybox/Trilight -> ambientIntensity ; Flat -> ambientLight color)
-            float ambStartInt = RenderSettings.ambientIntensity;
-            float ambTargetInt = _ambientIntensity0 * (dim ? ambientMultiplier : 1f);
+            // Ambient : intensity (Skybox/Trilight) ou color (Flat)
+            float startAmbientIntensity = RenderSettings.ambientIntensity;
+            float targetAmbientIntensity = _ambientIntensity0 * (dim ? ambientMultiplier : 1f);
 
-            Color ambStartCol = RenderSettings.ambientLight;
-            Color ambTargetCol = _ambientLight0 * (dim ? ambientMultiplier : 1f);
+            Color startAmbientColor = RenderSettings.ambientLight;
+            Color targetAmbientColor = _ambientLight0 * (dim ? ambientMultiplier : 1f);
 
-            // Directional(s)
-            var dirStart = new float[_dir0.Count];
-            var dirTarget = new float[_dir0.Count];
+            // Directionnelles
+            var startDirIntensities = new float[_dir0.Count];
+            var targetDirIntensities = new float[_dir0.Count];
             for (int i = 0; i < _dir0.Count; i++)
             {
-                dirStart[i] = _dir0[i] ? _dir0[i].intensity : 0f;
-                dirTarget[i] = _dirInt0[i] * (dim ? directionalMultiplier : 1f);
+                startDirIntensities[i] = _dir0[i] ? _dir0[i].intensity : 0f;
+                targetDirIntensities[i] = _dirInt0[i] * (dim ? directionalMultiplier : 1f);
             }
 
-            float t = 0f, dur = Mathf.Max(0.0001f, envFadeSeconds);
+            float t = 0f;
+            float duration = Mathf.Max(0.0001f, envFadeSeconds);
             while (t < 1f)
             {
-                t += Time.deltaTime / dur;
+                t += Time.deltaTime / duration;
                 float k = Mathf.Clamp01(t);
 
                 if (_ambientMode0 == AmbientMode.Skybox || _ambientMode0 == AmbientMode.Trilight)
-                    RenderSettings.ambientIntensity = Mathf.Lerp(ambStartInt, ambTargetInt, k);
+                    RenderSettings.ambientIntensity = Mathf.Lerp(startAmbientIntensity, targetAmbientIntensity, k);
                 else
-                    RenderSettings.ambientLight = Color.Lerp(ambStartCol, ambTargetCol, k);
+                    RenderSettings.ambientLight = Color.Lerp(startAmbientColor, targetAmbientColor, k);
 
                 for (int i = 0; i < _dir0.Count; i++)
-                    if (_dir0[i]) _dir0[i].intensity = Mathf.Lerp(dirStart[i], dirTarget[i], k);
+                    if (_dir0[i]) _dir0[i].intensity = Mathf.Lerp(startDirIntensities[i], targetDirIntensities[i], k);
 
                 yield return null;
             }
 
-            // snap final
+            // Snap final
             if (_ambientMode0 == AmbientMode.Skybox || _ambientMode0 == AmbientMode.Trilight)
-                RenderSettings.ambientIntensity = ambTargetInt;
+                RenderSettings.ambientIntensity = targetAmbientIntensity;
             else
-                RenderSettings.ambientLight = ambTargetCol;
+                RenderSettings.ambientLight = targetAmbientColor;
 
             for (int i = 0; i < _dir0.Count; i++)
-                if (_dir0[i]) _dir0[i].intensity = dirTarget[i];
+                if (_dir0[i]) _dir0[i].intensity = targetDirIntensities[i];
         }
 
+        /// <summary>
+        /// Lance/relance la coroutine de fondu d’ambiance.
+        /// </summary>
         private void StartFadeEnvironment(bool dim)
         {
             if (!dimEnvironment) return;
             if (_envCo != null) StopCoroutine(_envCo);
             _envCo = StartCoroutine(FadeEnvironment(dim));
         }
+
+        // ====== Helpers publics conservés ======
+
+        /// <summary>Alias pratique pour démarrer le rig (équivaut à l’évènement de début Disco).</summary>
         public void StartRig() { OnDiscoStart(); }
+
+        /// <summary>Alias pratique pour arrêter le rig (équivaut à l’évènement de fin Disco).</summary>
         public void StopRig() { OnDiscoStop(); }
     }
 }

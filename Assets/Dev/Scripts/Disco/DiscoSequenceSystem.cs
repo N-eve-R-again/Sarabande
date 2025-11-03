@@ -1,4 +1,18 @@
 // FILE: Assets/DEV/Scripts/Disco/DiscoSequenceSystem.cs
+//
+// Rôle (résumé)
+// - Orchestration d’une séquence "Disco" (jeu de dalles à valider dans le timing).
+// - Lit une séquence (liste de cellules + durées) depuis LevelData.discoSequences[sequenceIndex].
+// - États visuels par cellule (Off/On/Next) via DiscoTilesVisuals, avec remplissage progressif du "core" de la NEXT.
+// - Échec si le Héros marche sur une tuile future (index > step courant) ou s’il n’est pas sur la tuile On au tick.
+// - Succès lorsque toutes les étapes ont été validées dans les temps.
+// - Audio : son “progress” calé pour finir au tick, ding par step et jingle de succès.
+// - Émet des UnityEvents (start / success / fail).
+//
+// Invariants
+// - AUCUN renommage de champs sérialisés, ni de méthodes publiques, ni de signatures.
+// - Logique strictement identique ; uniquement documentation, ordre plus lisible et menues améliorations locales (noms _locaux_).
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -9,8 +23,16 @@ using Sarabande.Audio;
 
 namespace Sarabande.Disco
 {
+    /// <summary>
+    /// Pilote la séquence "Disco" : chaque étape impose au joueur d’être sur la bonne tuile
+    /// au moment du tick. Affiche l’état visuel et gère la progression audio calée sur la deadline.
+    /// </summary>
     public class DiscoSequenceSystem : MonoBehaviour, IResettable
     {
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Data & Refs
+        // ?????????????????????????????????????????????????????????????????????????????
+
         [Header("Data & Refs")]
         [SerializeField] private HeroController hero;
         [SerializeField] private DiscoTilesVisuals visuals; // si null, on prend GetComponent<DiscoTilesVisuals>()
@@ -26,7 +48,7 @@ namespace Sarabande.Disco
         public UnityEvent onSequenceStart;
         public UnityEvent onSequenceSuccess;
         public UnityEvent onSequenceFail;
-      
+
         [Header("Audio")]
         [Tooltip("Son montant qui doit finir pile au tick. On démarre à (clip.length - tempsRestant).")]
         [SerializeField] private AudioClip progressClip;
@@ -40,17 +62,18 @@ namespace Sarabande.Disco
         [SerializeField] private float maxDistance = 15f;
 
         [Header("Next-core growth")]
-        // 0.20 = 20% de la dalle ; 0.80 = 80% de la dalle
-        [SerializeField, Range(0f, 1f)] private float nextCoreMinScale = 0.20f;
-        [SerializeField, Range(0f, 1f)] private float nextCoreMaxScale = 0.80f;
-        // Petite pause avant le tick : pendant ces X secondes, le core n’augmente plus (reste à 80%)
+        [SerializeField, Range(0f, 1f)] private float nextCoreMinScale = 0.20f; // 20% de la dalle
+        [SerializeField, Range(0f, 1f)] private float nextCoreMaxScale = 0.80f; // 80% de la dalle
+        [Tooltip("Petite pause avant le tick : pendant ces X secondes, le core n’augmente plus (reste à maxScale).")]
         [SerializeField, Min(0f)] private float nextCoreSnapLeadSeconds = 0.08f;
 
         // Debug
         [SerializeField] private bool debugDisco = true;
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Runtime state
+        // ?????????????????????????????????????????????????????????????????????????????
 
-        // --- runtime ---
         private List<Vector2Int> _cells;    // cellules de la séquence active
         private List<float> _durations;     // secondes par étape (alignée à _cells)
         private int _step = -1;             // index de l’étape en cours (0..N-1)
@@ -62,13 +85,14 @@ namespace Sarabande.Disco
         private int _progressForStep = -1;  // garde-fou pour ne (re)lancer que quand on entre sur la tuile ON
         private bool _progressPlaying = false;
 
-        // ----------
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Unity lifecycle
+        // ?????????????????????????????????????????????????????????????????????????????
+
         private void Awake()
         {
             if (!visuals) visuals = GetComponent<DiscoTilesVisuals>();
-
             // NOTE: le LevelData est injecté via LevelContext en OnEnable/OnValidate.
-            // On NE valide donc pas levelData ici.
         }
 
         private void Start()
@@ -77,7 +101,8 @@ namespace Sarabande.Disco
             if (!hero || !visuals || (!levelData && useLevelContext))
             {
                 Debug.LogError("[DiscoSequenceSystem] Références manquantes (LevelData/Hero/Visuals).");
-                enabled = false; return;
+                enabled = false;
+                return;
             }
 
             if (autoStartOnPlay)
@@ -87,10 +112,11 @@ namespace Sarabande.Disco
         private void Update()
         {
             if (!_running) return;
+
             UpdateNextCoreGrowth();
 
-            // 1) échec immédiat si Hero marche sur une tuile future (index > _step)
-            var heroIdx = IndexOfCell(hero.GridPos);
+            // 1) Échec si Héros marche sur une tuile FUTURE (index > _step)
+            int heroIdx = IndexOfCell(hero.GridPos);
             if (heroIdx >= 0 && heroIdx > _step)
             {
                 if (debugDisco) Debug.Log($"[Disco][FAIL] future tile: step={_step} heroIdx={heroIdx} hero={hero.GridPos}");
@@ -98,24 +124,25 @@ namespace Sarabande.Disco
                 return;
             }
 
-            // 1.b) gestion du son “progress” (joué SEULEMENT si on est sur la tuile ON courante)
+            // 1.b) Gestion du son “progress” : joué SEULEMENT si le héros est sur la tuile ON courante
             if (_step >= 0 && _step < _cells.Count)
             {
                 bool heroOnCurrent = (hero.GridPos == _cells[_step]);
+
                 if (heroOnCurrent)
                 {
-                    // Si on vient d'entrer sur la tuile ON pour CETTE étape -> on lance/recale le progress
+                    // Si on vient d'entrer sur la tuile ON pour CETTE étape -> lance/recale le progress
                     if (_progressForStep != _step)
                         StartProgressForCurrentStep();
                 }
                 else
                 {
-                    // Hors tuile ON -> on coupe le progress
+                    // Hors tuile ON -> coupe le progress
                     StopProgress();
                 }
             }
 
-            // 2) tick de fin d’étape
+            // 2) Tick de fin d’étape
             if (Time.time >= _deadline)
             {
                 if (hero.GridPos == _cells[_step])
@@ -130,10 +157,17 @@ namespace Sarabande.Disco
             }
         }
 
-        // --- API ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // API publique
+        // ?????????????????????????????????????????????????????????????????????????????
+
         [ContextMenu("Disco: Start sequence (sequenceIndex)")]
         public void StartSequenceContext() => StartSequence(sequenceIndex);
 
+        /// <summary>
+        /// Démarre la séquence <paramref name="index"/> depuis LevelData.discoSequences.
+        /// Initialise l’état visuel et arme la première deadline.
+        /// </summary>
         public void StartSequence(int index)
         {
             if (levelData == null || levelData.discoSequences == null ||
@@ -150,7 +184,7 @@ namespace Sarabande.Disco
                 return;
             }
 
-            // prépare cellules & durées
+            // Prépare cellules & durées
             _cells = new List<Vector2Int>(spec.cells.Count);
             foreach (var v in spec.cells) _cells.Add(new Vector2Int(v.x, v.z));
 
@@ -158,19 +192,19 @@ namespace Sarabande.Disco
             for (int i = 0; i < _cells.Count; i++)
             {
                 float s = (spec.stepSeconds != null && i < spec.stepSeconds.Count && spec.stepSeconds[i] > 0f)
-                        ? spec.stepSeconds[i]
-                        : Mathf.Max(0.05f, spec.defaultStepSeconds);
+                    ? spec.stepSeconds[i]
+                    : Mathf.Max(0.05f, spec.defaultStepSeconds);
                 _durations.Add(s);
             }
 
-            // reset visuel & état
+            // Reset visuel & état
             visuals.SetAllOff();
             _step = 0;
             _running = true;
             _progressForStep = -1;
             StopProgress();
 
-            // État initial : 0 = ON, 1 = NEXT, le reste OFF (mais visibles)
+            // État initial : 0 = ON, 1 = NEXT, le reste = OFF (visibles)
             visuals.SetState(_cells[0], DiscoTilesVisuals.State.On, PickBright());
             if (_cells.Count >= 2)
             {
@@ -182,11 +216,12 @@ namespace Sarabande.Disco
 
             onSequenceStart?.Invoke();
 
-            // Si le héros est DÉJÀ sur la première tuile, on peut lancer le progress immédiatement
+            // Si le héros est DÉJÀ sur la première tuile, lance le progress immédiatement
             if (hero && hero.GridPos == _cells[0])
                 StartProgressForCurrentStep();
         }
 
+        /// <summary>Arrête proprement la séquence (sons/caches/flags).</summary>
         public void StopSequence()
         {
             _running = false;
@@ -194,24 +229,27 @@ namespace Sarabande.Disco
             StopProgress();
         }
 
-        // --- progression ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Progression interne
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>Valide l’étape courante et prépare la suivante (ou le succès final).</summary>
         private void AdvanceStep()
         {
-            // Étape _step vient d’être validée
             _step++;
             _progressForStep = -1;
             StopProgress();
 
             if (_step >= _cells.Count)
             {
-                // tout validé
+                // Séquence entièrement validée
                 _running = false;
                 PlaySuccessJingle();
                 onSequenceSuccess?.Invoke();
                 return;
             }
 
-            // Nouvelle étape en cours = _step
+            // Nouvelle étape ON
             visuals.SetState(_cells[_step], DiscoTilesVisuals.State.On, PickBright());
 
             int nextIdx = _step + 1;
@@ -223,11 +261,12 @@ namespace Sarabande.Disco
 
             _deadline = Time.time + _durations[_step];
 
-            // si le héros est déjà dessus, relance progress immédiatement
+            // Si le héros est déjà dessus, relance le progress immédiatement
             if (hero && hero.GridPos == _cells[_step])
                 StartProgressForCurrentStep();
         }
 
+        /// <summary>Échec : coupe la séquence, nettoie les visuels, émet l’événement de fail.</summary>
         private void FailSequence()
         {
             _running = false;
@@ -235,10 +274,15 @@ namespace Sarabande.Disco
             StopProgress();
 
             if (visuals) visuals.ClearAllNextCores();
-
             visuals.SetAllOff();
+
             onSequenceFail?.Invoke();
         }
+
+        /// <summary>
+        /// Fait croître le “core” de la tuile NEXT pendant l’étape courante,
+        /// puis le fige pendant <see cref="nextCoreSnapLeadSeconds"/> avant le tick.
+        /// </summary>
         private void UpdateNextCoreGrowth()
         {
             if (!_running || _step < 0 || _step >= _cells.Count) return;
@@ -249,7 +293,7 @@ namespace Sarabande.Disco
             float stepTotal = _durations[_step];
             float growthDuration = Mathf.Max(0.01f, stepTotal - nextCoreSnapLeadSeconds);
 
-            // temps écoulé dans l’étape en cours
+            // Temps écoulé dans l’étape en cours
             float elapsed = Mathf.Clamp(stepTotal - Mathf.Max(0f, _deadline - Time.time), 0f, growthDuration);
             float u = Mathf.Clamp01(elapsed / growthDuration);
 
@@ -257,7 +301,11 @@ namespace Sarabande.Disco
             if (visuals) visuals.SetNextCoreFill(_cells[nextIdx], frac);      // fraction de dalle
         }
 
-        // --- util ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Utilitaires
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>Retourne l’index de la cellule <paramref name="c"/> dans la séquence, ou -1 si absente.</summary>
         private int IndexOfCell(Vector2Int c)
         {
             if (_cells == null) return -1;
@@ -266,16 +314,24 @@ namespace Sarabande.Disco
             return -1;
         }
 
+        /// <summary>Couleur pétante “au hasard”.</summary>
         private static Color PickBright()
         {
             float h = Random.value;
             return Color.HSVToRGB(h, 1f, 1f);
         }
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Reset & LevelContext
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>
+        /// Réinitialise l’état : arrête la séquence, éteint les visuels.
+        /// Si la séquence était en cours, notifie un *fail* (utile lors d’un Reset global).
+        /// </summary>
         public void ResetToInitial()
         {
-            // On capture si on était réellement en cours pour ne pas spammer l’event au boot
-            bool wasRunning = _running;
+            bool wasRunning = _running;     // évite de spammer onSequenceFail au boot
 
             StopSequence();                 // coupe l’état interne + sons de progression
             if (visuals)                    // nettoie le visuel
@@ -284,12 +340,10 @@ namespace Sarabande.Disco
                 visuals.SetAllOff();
             }
 
-            // IMPORTANT : prévenir tout le monde que la disco s’arrête suite à un fail (reset)
             if (wasRunning)
                 onSequenceFail?.Invoke();
         }
 
-        // --- LevelContext wiring ---
         private void AttachContext()
         {
             if (!useLevelContext) return;
@@ -322,7 +376,7 @@ namespace Sarabande.Disco
             if (!Application.isPlaying)
                 UnityEditor.EditorUtility.SetDirty(this);
 #endif
-            // Si besoin: re-init en live, ex: StopSequence(); visuals.SetAllOff();
+            // Si besoin: re-init en live (ex.: StopSequence(); visuals.SetAllOff();)
         }
 
         private void OnEnable() { AttachContext(); }
@@ -331,8 +385,13 @@ namespace Sarabande.Disco
         private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
 #endif
 
-        // ------------------ AUDIO HELPERS ------------------
+        // ?????????????????????????????????????????????????????????????????????????????
+        // AUDIO HELPERS (inchangés fonctionnellement)
+        // ?????????????????????????????????????????????????????????????????????????????
 
+        /// <summary>
+        /// Démarre/recale le son “progress” pour l’étape courante afin qu’il se termine au tick (deadline).
+        /// </summary>
         private void StartProgressForCurrentStep()
         {
             if (!_running || _step < 0 || _step >= _cells.Count) return;
@@ -344,8 +403,12 @@ namespace Sarabande.Disco
             // Source (créée/positionnée sur la tuile ON courante)
             EnsureProgressSourceAt(CellCenterWorld(_cells[_step]) + Vector3.up * 0.05f);
 
-            // Calage temporel: on démarre "comme si" les premières secondes étaient déjà passées
-            float startTime = Mathf.Clamp(progressClip.length - remaining, 0f, Mathf.Max(0f, progressClip.length - 0.01f));
+            // Calage temporel: on démarre “comme si” le début du clip était déjà (clip.length - remaining)
+            float startTime = Mathf.Clamp(
+                progressClip.length - remaining,
+                0f,
+                Mathf.Max(0f, progressClip.length - 0.01f)
+            );
 
             _progressSrc.clip = progressClip;
             _progressSrc.volume = progressVolume;
@@ -359,19 +422,22 @@ namespace Sarabande.Disco
             _progressPlaying = true;
         }
 
+        /// <summary>Coupe le son “progress” si en cours.</summary>
         private void StopProgress()
         {
             if (_progressSrc && _progressSrc.isPlaying) _progressSrc.Stop();
             _progressPlaying = false;
         }
 
+        /// <summary>Joue le “ding” d’étape (utilise AudioHub pour le routing/mixage).</summary>
         private void PlayStepDing()
         {
             if (!stepDingClip) return;
-            var pos = CellCenterWorld(_cells[Mathf.Clamp(_step, 0, _cells.Count - 1)]);
+            Vector3 pos = CellCenterWorld(_cells[Mathf.Clamp(_step, 0, _cells.Count - 1)]);
             AudioHub.I?.PlaySFXAt(stepDingClip, pos, dingVolume, spatialBlend, minDistance, maxDistance);
         }
 
+        /// <summary>Joue le jingle de succès (positionné côté héros si possible).</summary>
         private void PlaySuccessJingle()
         {
             if (!successJingleClip) return;
@@ -379,22 +445,26 @@ namespace Sarabande.Disco
             AudioHub.I?.PlaySFXAt(successJingleClip, pos, successVolume, spatialBlend, minDistance, maxDistance);
         }
 
+        /// <summary>
+        /// Garantit l’existence d’une AudioSource pour le “progress” et la place à <paramref name="worldPos"/>.
+        /// </summary>
         private void EnsureProgressSourceAt(Vector3 worldPos)
         {
             if (_progressSrc == null)
             {
-                var go = new GameObject("SFX_DiscoProgress");
-                go.transform.SetParent(transform, false);
-                _progressSrc = go.AddComponent<AudioSource>();
+                var progressGO = new GameObject("SFX_DiscoProgress");
+                progressGO.transform.SetParent(transform, false);
+                _progressSrc = progressGO.AddComponent<AudioSource>();
                 _progressSrc.playOnAwake = false;
                 _progressSrc.loop = false;
 
-                // NEW: router vers le groupe SFX du mixer via le hub
+                // Router vers le bus SFX du mixer via l’audio hub (si dispo)
                 Sarabande.Audio.AudioHub.I?.RouteToSFX(_progressSrc);
             }
             _progressSrc.transform.position = worldPos;
         }
 
+        /// <summary>One-shot via AudioHub à une position donnée.</summary>
         private void PlayOneShotAt(AudioClip clip, Vector3 pos, float volume)
         {
             Sarabande.Audio.AudioHub.I?.PlaySFXAt(
@@ -403,13 +473,14 @@ namespace Sarabande.Disco
             );
         }
 
+        /// <summary>
+        /// Centre monde d’une tuile (si visuals fournit le Transform exact, on l’utilise ; sinon fallback cellSize=1).
+        /// </summary>
         private Vector3 CellCenterWorld(Vector2Int cell)
         {
-            // On demande la position au visuel si dispo (c’est précisément le centre monde).
-            var t = visuals ? visuals.GetTile(cell) : null;
-            if (t != null) return t.transform.position;
-            // fallback approximatif (cellSize=1) si jamais :
-            return new Vector3(cell.x + 0.5f, 0f, cell.y + 0.5f);
+            var tile = visuals ? visuals.GetTile(cell) : null;
+            if (tile != null) return tile.transform.position;
+            return new Vector3(cell.x + 0.5f, 0f, cell.y + 0.5f); // fallback
         }
     }
 }

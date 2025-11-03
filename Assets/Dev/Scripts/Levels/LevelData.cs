@@ -1,3 +1,22 @@
+// FILE: Assets/Dev/Scripts/Levels/LevelData.cs
+//
+// Rôle du script (résumé)
+// - ScriptableObject qui décrit intégralement un puzzle/niveau : dimensions, murs pleins,
+//   murs fins (arêtes), spawns Héros/NME, entrée/sortie, décors traversables,
+//   spécifications des systèmes (flèches, portes temporisées + leviers, messages,
+//   dalles de départ Disco, séquences Disco, grilles/gates, pads de triggers génériques).
+// - Sert de "source de vérité" lue par LevelContext et par tous les systèmes.
+//
+// Invariants (ne pas casser)
+// - Aucun renommage de champs publics/sérialisés, classes internes ou enums.
+// - Aucune modification de types, attributs [SerializeField], valeurs par défaut, ni logique.
+// - Les listes sont utilisées par index dans d’autres systèmes : l’ordre doit rester géré côté design.
+//
+// Dépendances
+// - Sarabande.Core : GridCoord, EdgeBlocker, EdgeDirection, EdgeExit
+// - Utilisé par : HeroController, NMESpawnSystem, GridGateSystem, TimedDoorSystem, LeverSystem,
+//                 PressurePadSystem/TriggerRouter, ArrowTrapSystem, DiscoSequenceSystem, MessageSystem, etc.
+
 using System.Collections.Generic;
 using UnityEngine;
 using Sarabande.Core;
@@ -6,26 +25,35 @@ using UnityEngine.Serialization;
 namespace Sarabande.Levels
 {
     /// <summary>
-    /// Données d'un niveau (proto) : dimensions, murs, murs fins, spawns, sortie.
-    /// On étendra plus tard pour les leviers, pièges, etc.
+    /// Données d'un niveau : dimensions, murs, murs fins, spawns, entrée/sortie, décor traversable,
+    /// et specs des systèmes (traps, portes/leviers, triggers, messages, disco, gates).
     /// </summary>
     [CreateAssetMenu(menuName = "Sarabande/Level Data", fileName = "LevelData")]
     public class LevelData : ScriptableObject
     {
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Grille & obstacles statiques
+        // ?????????????????????????????????????????????????????????????????????????????
+
         [Min(1)] public int width = 8;     // colonnes (A..H)
         [Min(1)] public int height = 8;    // rangées  (1..8)
-        [Tooltip("Cases non walkable (murs)")]
+
+        [Tooltip("Cases non-walkable (murs pleins). Coordonnées sur la grille (x,z).")]
         public List<GridCoord> nonWalkables = new();
 
-        [Tooltip("Murs fins entre deux cases adjacentes")]
+        [Tooltip("Murs fins entre deux cases adjacentes (arêtes bloquantes).")]
         public List<EdgeBlocker> thinWalls = new();
+
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Spawns & entrée/sortie
+        // ?????????????????????????????????????????????????????????????????????????????
 
         [Header("Spawns")]
         public GridCoord heroSpawn;  // D8 = (3,7)
 
         [System.Obsolete("Use nmeSpawns instead")]
         [HideInInspector]
-        public GridCoord nmeSpawn;   // B7 = (1,6)
+        public GridCoord nmeSpawn;   // B7 = (1,6) — legacy non utilisé
 
         [Tooltip("Liste des cellules de spawn des ennemis. Vide = 0 ennemi.")]
         public List<GridCoord> nmeSpawns = new();
@@ -34,85 +62,97 @@ namespace Sarabande.Levels
         public List<EdgeDirection> nmeFacings = new();
 
         [Header("Entry")]
-        [Tooltip("Depuis quel bord le héros arrive pour son entry step")]
+        [Tooltip("Depuis quel bord le héros arrive pour son entry step.")]
         public EdgeDirection heroEntry = EdgeDirection.North;
 
         [Header("Sortie")]
-        public EdgeExit exit;        // H1 vers East
+        public EdgeExit exit;        // Exemple : fromCell = H1, direction = East
+
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Décor (visuel traversable)
+        // ?????????????????????????????????????????????????????????????????????????????
 
         [Header("Décor (murs traversables)")]
+        [Tooltip("Décor purement visuel : n'arrête ni le Héros/NME ni les flèches, ni la LOS.")]
         public List<GridCoord> passThroughWalls = new();  // ex: A6, etc.
 
-
-
-        // --- Arrow Traps (proto) -----------------------------------------------------
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Arrow Traps (proto)
+        // ?????????????????????????????????????????????????????????????????????????????
 
         [System.Serializable]
         public struct ArrowTrapSpec
         {
-            public GridCoord triggerCell;    // case walkable à fouler (HERO ou NME)
-            public GridCoord startCell;      // première case "dedans la map" que la flèche traverse
-            public EdgeDirection travelDir;  // direction de déplacement de la flèche (N/E/S/W)
-            [Min(0.1f)] public float arrowSpeed; // vitesse en unités monde / sec (à tweaker dans l'Inspector)
+            [Header("Déclencheur & Origine")]
+            public GridCoord triggerCell;           // case walkable à fouler (Héros ou NME)
+            public GridCoord startCell;             // première case dans la map que la flèche traverse
+            public EdgeDirection travelDir;         // direction de déplacement (N/E/S/W)
+            [Min(0.1f)] public float arrowSpeed;   // vitesse (unités monde / seconde)
 
             // --- options de réarmement ---
-            public bool canRearm;             // si true, le piège se réarme
-            [Min(0f)] public float rearmDelay; // temps avant réarmement (secondes)
+            public bool canRearm;                   // si true, le piège se réarme
+            [Min(0f)] public float rearmDelay;      // délai avant réarmement (secondes)
 
-            // NOUVEAU : lier l’activation du piège à la Disco
+            // --- Lien facultatif à la Disco ---
             [Header("Disco Link")]
-            public bool linkToDisco;   // si true : ce trap ne peut s’activer que pendant la Disco, et se réarme à chaque start
+            [Tooltip("Si true : ce trap ne peut s’activer que pendant la Disco, et se réarme à chaque start.")]
+            public bool linkToDisco;
 
-            // --- NOUVEAU : liste d'émissions avancées ---
-            public List<ArrowEmission> emissions;  // si null/empty => fallback sur le comportement legacy 1 flèche
+            // --- Émissions avancées ---
+            [Tooltip("Liste d’émissions ; si vide => fallback legacy (1 flèche).")]
+            public List<ArrowEmission> emissions;   // null/empty = comportement historique
         }
 
         [System.Serializable]
         public class ArrowEmission
         {
-            [Header("Origin & Direction")]
-            public GridCoord startCell;                          // origine (peut différer du spec.startCell legacy)
-            public Sarabande.Core.EdgeDirection travelDir;      // direction de cette emission
-            [UnityEngine.Min(0.05f)] public float arrowSpeed = 6f;
+            [Header("Origine & Direction")]
+            public GridCoord startCell;                          // origine (peut différer de spec.startCell legacy)
+            public Sarabande.Core.EdgeDirection travelDir;       // direction de CETTE émission
+            [Min(0.05f)] public float arrowSpeed = 6f;
 
-            [Header("Fixed times (absolute, after trigger)")]
-            public List<float> shotTimes;                       // ex: [0, 2, 8] => 3 flèches à 0s, 2s, 8s
+            [Header("Déclenchements fixes (après le trigger)")]
+            public List<float> shotTimes;                        // ex: [0, 2, 8] => 3 flèches à 0s, 2s, 8s
 
-            [Header("Repeating schedule")]
-            public bool repeat = false;                         // si true, on déclenche un pattern répétitif
-            [UnityEngine.Min(0f)] public float repeatStartDelay = 0f;
-            [UnityEngine.Min(0.01f)] public float repeatInterval = 0.2f;
+            [Header("Pattern répétitif")]
+            public bool repeat = false;
+            [Min(0f)] public float repeatStartDelay = 0f;
+            [Min(0.01f)] public float repeatInterval = 0.2f;
 
             [Tooltip("Si > 0, répète pendant cette durée (en s). Ignoré si repeatCount > 0.")]
-            [UnityEngine.Min(0f)] public float repeatDuration = 0f;
+            [Min(0f)] public float repeatDuration = 0f;
 
             [Tooltip("Si > 0, tire exactement N fois (intervalle constant). Prend le pas sur repeatDuration.")]
-            [UnityEngine.Min(0)] public int repeatCount = 0;
+            [Min(0)] public int repeatCount = 0;
         }
 
         [Tooltip("Pièges à flèche : quand on marche sur 'triggerCell', une flèche part de 'startCell' dans 'travelDir'.")]
         public List<ArrowTrapSpec> arrowTraps = new();
 
-        // --- Timed Doors & Levers ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Timed Doors & Levers
+        // ?????????????????????????????????????????????????????????????????????????????
 
         [System.Serializable]
         public class TimedDoorSpec
         {
-            public GridCoord cell;                  // ex: B5
-            [Min(0.1f)] public float openSeconds = 3f;  // durée d'ouverture de base
+            public GridCoord cell;                        // ex: B5
+            [Min(0.1f)] public float openSeconds = 3f;    // durée d'ouverture de base
         }
         public List<TimedDoorSpec> timedDoors = new();
 
         [System.Serializable]
         public class LeverSpec
         {
-            public GridCoord cell;                     // ex: E7
+            public GridCoord cell;                        // ex: E7
             public EdgeDirection requireFacing = EdgeDirection.North; // direction à pousser
-            [Min(0)] public int linkedDoorIndex = 0;   // index dans la liste 'timedDoors'
+            [Min(0)] public int linkedDoorIndex = 0;     // index dans la liste 'timedDoors'
         }
         public List<LeverSpec> levers = new();
 
-        // --- Messages ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Messages
+        // ?????????????????????????????????????????????????????????????????????????????
 
         [Header("Messages")]
         public List<MessageSpec> messages = new();
@@ -120,39 +160,42 @@ namespace Sarabande.Levels
         [System.Serializable]
         public class MessageSpec
         {
-            // ?? NOUVEAU champ cohérent avec le reste du projet
-            public GridCoord cell;        // utilise x / z comme partout
-
+            public GridCoord cell;        // coordonnées (utilise x/z comme partout)
             [TextArea(2, 5)] public string text;
             [Min(0.1f)] public float displaySeconds = 3f;
             public AudioClip voiceClip;
         }
 
-        // --- Dalles Disco ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Dalles Disco & Séquences
+        // ?????????????????????????????????????????????????????????????????????????????
 
         [Header("Disco Start")]
-        [Tooltip("Cases qui déclenchent la séquence disco quand le HÉRO y entre.")]
+        [Tooltip("Cases qui déclenchent la séquence Disco quand le Héros y entre.")]
         public List<GridCoord> discoStartTiles = new();
 
         [System.Serializable]
         public class DiscoSequenceSpec
         {
-            // Strict order of tiles to step on
+            [Header("Chemin à fouler (ordre strict)")]
             public List<GridCoord> cells = new List<GridCoord>();
 
-            // Per-step timers; if length mismatches, use defaultStepSeconds
-            public List<float> stepSeconds = new List<float>();
+            [Header("Timers par étape (optionnel)")]
+            public List<float> stepSeconds = new List<float>(); // si la taille ne match pas, utiliser defaultStepSeconds
 
-            // Auto-start when this timed door opens; -1 = no auto-start
-            public int startOnDoorIndex = -1;
+            [Header("Démarrage automatique")]
+            public int startOnDoorIndex = -1; // -1 = pas d’auto-start ; sinon index d’une TimedDoor qui, en s’ouvrant, lance la Disco
 
-            // Default if stepSeconds[i] missing
+            [Header("Fallback timing")]
             public float defaultStepSeconds = 0.8f;
         }
 
         public List<DiscoSequenceSpec> discoSequences = new List<DiscoSequenceSpec>();
 
-        // --- Grid Gates (barreaux sur une ARÊTE, bloquent le passage mais pas la LOS / flèches) ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Grid Gates (barreaux sur une ARÊTE -> bloquent le passage, pas la LOS/flèches)
+        // ?????????????????????????????????????????????????????????????????????????????
+
         [System.Serializable]
         public class GridGateSpec
         {
@@ -162,13 +205,16 @@ namespace Sarabande.Levels
         }
         public List<GridGateSpec> gridGates = new();
 
-        // --- TRIGGERS GÉNÉRIQUES (Dalles + Table de routage) ---------------------------
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Triggers génériques (Pads + Routage)
+        // ?????????????????????????????????????????????????????????????????????????????
+
         [System.Serializable]
         public class TriggerPadSpec
         {
-            public GridCoord cell;              // case de la dalle
-            public bool canBeTriggeredByNME = true; // le NME peut l'activer ?
-            public string triggerId;            // identifiant logique (ex: "OPEN_EXIT_DOOR")
+            public GridCoord cell;                      // case de la dalle
+            public bool canBeTriggeredByNME = true;     // le NME peut l'activer 
+            public string triggerId;                    // identifiant logique (ex: "OPEN_EXIT_DOOR")
         }
         public List<TriggerPadSpec> triggerPads = new();
 
@@ -181,10 +227,10 @@ namespace Sarabande.Levels
         [System.Serializable]
         public class TriggerBinding
         {
-            public string id;                   // doit matcher TriggerPadSpec.triggerId (et/ou un levier si tu veux)
+            public string id;                   // doit matcher TriggerPadSpec.triggerId (ou un levier, si voulu)
             public TriggerActionKind action;    // pour l’instant : TimedDoorOpen
-            public int targetIndex = -1;        // index de la porte (TimedDoorSpec) si action=TimedDoorOpen
-            public float secondsOverride = -1f; // <0 => utilise la durée du LevelData.timedDoors[targetIndex]
+            public int targetIndex = -1;        // index de la porte (TimedDoorSpec) si action = TimedDoorOpen
+            public float secondsOverride = -1f; // < 0 => utilise la durée de la porte; sinon override
         }
         public List<TriggerBinding> triggerBindings = new();
     }

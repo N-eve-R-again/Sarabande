@@ -1,16 +1,34 @@
+// FILE: Assets/Dev/Scripts/Traps/ArrowTrapSystem.cs
+//
+// Rôle (résumé)
+// - Gère les pièges à flèches décrits dans LevelData.arrowTraps.
+// - Déclenche lorsqu’un acteur (Héros ou NME) entre sur la cellule “trigger”.
+// - Chaque piège peut lancer une ou plusieurs émissions de flèches (fixes et/ou répétitives).
+// - Option de liaison à une DiscoSequence (les pièges liés ne se déclenchent que pendant la Disco).
+// - Gère l’audio, un visuel de dalle pressée (TrapTileVisual) et le reset complet.
+// - Expose SpawnArrow(startCell, travelDir, speed) pour instancier un projectile ArrowProjectile.
+//
+// Invariants
+// - AUCUN renommage de champs sérialisés / méthodes publiques / signatures.
+// - Logique identique à l’originale ; uniquement commentaires et renommages **locaux** pour clarté.
+
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using Sarabande.Levels;
 using Sarabande.Player;
 using Sarabande.NME;
-using Sarabande.Core;   // <-- pour EdgeDirection
+using Sarabande.Core;   // EdgeDirection
 using Sarabande.Traps;
 using static Sarabande.Core.GridUtils;
 using ArrowEmission = Sarabande.Levels.LevelData.ArrowEmission;
 
 namespace Sarabande.Traps
 {
+    /// <summary>
+    /// Système de dalles qui déclenchent des flèches selon des émissions (timers fixes et/ou répétitifs),
+    /// avec réarmement optionnel, audio/FX et intégration LevelContext.
+    /// </summary>
     public class ArrowTrapSystem : MonoBehaviour, Sarabande.Core.IResettable
     {
         [Header("Data & Refs")]
@@ -60,18 +78,30 @@ namespace Sarabande.Traps
         [SerializeField] private Sarabande.Disco.DiscoSequenceSystem disco; // assigner dans l’Inspector (ou auto-find)
         private bool _discoRunning = false;
 
+        // ????????????? Runtime caches ?????????????
+
         private NMEController[] _nmes;
         private Dictionary<Vector2Int, TrapTileVisual> _tileVisuals;
-        private struct TrapRuntime { public bool armed; public float nextReadyTime; }
+
+        private struct TrapRuntime
+        {
+            public bool armed;           // true = prêt à tirer
+            public float nextReadyTime;  // time à partir duquel on redevient 'armed'
+        }
         private TrapRuntime[] _runtime;
 
         private Vector2Int _lastHeroCell;
         private readonly Dictionary<NMEController, Vector2Int> _lastNmeCell = new();
 
+        // index de trap ? liste des coroutines d’émission actives (pour pouvoir les stopper)
         private readonly Dictionary<int, List<Coroutine>> _trapCo = new();
 
-        // Parent propre pour retrouver tous les FX rapidement dans la hiérarchie
+        // Parent pour ranger les FX runtime dans la hiérarchie
         private Transform _fxParent;
+
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Unity lifecycle
+        // ?????????????????????????????????????????????????????????????????????????????
 
         private void Start()
         {
@@ -82,7 +112,7 @@ namespace Sarabande.Traps
                 return;
             }
 
-            // Dossier pour FX runtime (pour “où le trouver après”)
+            // Racine pour les FX
             var fxRoot = new GameObject("FX_Runtime");
             _fxParent = fxRoot.transform;
             _fxParent.SetParent(transform, false);
@@ -91,29 +121,50 @@ namespace Sarabande.Traps
 
             int count = levelData.arrowTraps?.Count ?? 0;
             _runtime = new TrapRuntime[count];
+
+            // Cache des dalles visuelles (si présentes dans la scène)
             _tileVisuals = new Dictionary<Vector2Int, TrapTileVisual>();
-            var tiles = FindObjectsByType<TrapTileVisual>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var tv in tiles) if (tv != null) _tileVisuals[tv.Cell] = tv;
+            var foundTileVisuals = FindObjectsByType<TrapTileVisual>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var trapTileVisual in foundTileVisuals)
+                if (trapTileVisual != null) _tileVisuals[trapTileVisual.Cell] = trapTileVisual;
 
-            for (int i = 0; i < count; i++) { _runtime[i].armed = true; _runtime[i].nextReadyTime = 0f; }
+            // Init armement
+            for (int i = 0; i < count; i++)
+            {
+                _runtime[i].armed = true;
+                _runtime[i].nextReadyTime = 0f;
+            }
 
+            // Mémoires de cellule pour déclenchement “à l’entrée”
             _lastHeroCell = hero.GridPos;
-            if (_nmes != null) foreach (var n in _nmes) if (n != null) _lastNmeCell[n] = n.GridPos;
+            if (_nmes != null)
+                foreach (var n in _nmes)
+                    if (n != null) _lastNmeCell[n] = n.GridPos;
 
-            RefreshNMECache();
+            RefreshNMECache(); // première passe sûre
         }
 
         private void Update()
         {
+            // Réarmement différé
             for (int i = 0; i < _runtime.Length; i++)
             {
                 if (!_runtime[i].armed && Time.time >= _runtime[i].nextReadyTime)
-                { var spec = levelData.arrowTraps[i]; if (spec.canRearm) _runtime[i].armed = true; }
+                {
+                    var spec = levelData.arrowTraps[i];
+                    if (spec.canRearm) _runtime[i].armed = true;
+                }
             }
 
+            // Héros : déclenche sur changement de cellule
             var heroCell = hero.GridPos;
-            if (heroCell != _lastHeroCell) { TryTriggerAtCell(heroCell); _lastHeroCell = heroCell; }
+            if (heroCell != _lastHeroCell)
+            {
+                TryTriggerAtCell(heroCell);
+                _lastHeroCell = heroCell;
+            }
 
+            // NME : idem
             if (_nmes != null)
             {
                 foreach (var n in _nmes)
@@ -122,33 +173,54 @@ namespace Sarabande.Traps
                     var cell = n.GridPos;
                     if (_lastNmeCell.TryGetValue(n, out var prev))
                     {
-                        if (cell != prev) { TryTriggerAtCell(cell); _lastNmeCell[n] = cell; }
+                        if (cell != prev)
+                        {
+                            TryTriggerAtCell(cell);
+                            _lastNmeCell[n] = cell;
+                        }
                     }
-                    else _lastNmeCell[n] = cell;
+                    else
+                    {
+                        _lastNmeCell[n] = cell;
+                    }
                 }
             }
         }
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Déclenchements & émissions
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>
+        /// Tente de déclencher tous les pièges qui ont <paramref name="enteredCell"/> pour cellule trigger.
+        /// Respecte l’état d’armement et la liaison Disco.
+        /// </summary>
         private void TryTriggerAtCell(Vector2Int enteredCell)
         {
             for (int i = 0; i < _runtime.Length; i++)
             {
                 if (!_runtime[i].armed) continue;
+
                 var spec = levelData.arrowTraps[i];
 
-                if (spec.linkToDisco && !_discoRunning)
-                    continue;
+                // Si lié à la Disco, seulement quand la Disco tourne
+                if (spec.linkToDisco && !_discoRunning) continue;
 
                 if (enteredCell.x == spec.triggerCell.x && enteredCell.y == spec.triggerCell.z)
                     FireTrap(i, spec);
             }
         }
 
+        /// <summary>
+        /// Déclenche un piège : armement ? visuel ? audio ? planification des émissions.
+        /// </summary>
         private void FireTrap(int index, LevelData.ArrowTrapSpec spec)
         {
+            // Armement (désarmé + éventuel réarmement programmé)
             _runtime[index].armed = false;
             if (spec.canRearm) _runtime[index].nextReadyTime = Time.time + spec.rearmDelay;
 
+            // Visuel de la dalle
             var triggerCell = new Vector2Int(spec.triggerCell.x, spec.triggerCell.z);
             if (_tileVisuals != null && _tileVisuals.TryGetValue(triggerCell, out var tile))
             {
@@ -156,65 +228,72 @@ namespace Sarabande.Traps
                 if (spec.canRearm) StartCoroutine(RearmTile(tile, spec.rearmDelay));
             }
 
-            var posTrig = Center(triggerCell, cellSize) + Vector3.up * 0.02f;
-
+            // SFX “clic”
+            var triggerPosWorld = Center(triggerCell, cellSize) + Vector3.up * 0.02f;
             Sarabande.Audio.AudioHub.I?.PlaySFXAt(
-    clickTriggerClip,
-    posTrig,
-    clickVolume,
-    spatialBlend,
-    minDistance,
-    maxDistance
-);
+                clickTriggerClip,
+                triggerPosWorld,
+                clickVolume,
+                spatialBlend,
+                minDistance,
+                maxDistance
+            );
+
+            // Bruit de gameplay (pour NME etc.)
             Sarabande.Core.NoiseSystem.Emit(triggerCell);
 
-            // NEW: stoppe toute émission encore en cours pour CE trap
+            // On arrête toute émission encore en cours pour CE trap
             StopTrapEmissions(index);
 
-            // NEW: résout la/les émissions à partir du spec (fallback si liste vide)
+            // Résout la liste d’émissions effective (fallback si vide)
             var emissions = ResolveEmissions(spec);
 
-            // NEW: lance les coroutines d’émission pour chaque entrée
+            // Lance les routines d’émission pour chaque entrée
             for (int e = 0; e < emissions.Count; e++)
             {
                 var em = emissions[e];
                 if (!ValidateEmission(em, index, e))
-                    continue; // on SKIP cette émission si elle est invalide
+                    continue; // skip propre si la spec est invalide
 
-                // Tir(s) à horaires fixes
+                // Timings fixes
                 if (em.shotTimes != null && em.shotTimes.Any(t => t >= 0f))
                 {
-                    var coA = StartCoroutine(EmitFixedTimesRoutine(em));
-                    RegisterTrapCo(index, coA);
+                    var coFixed = StartCoroutine(EmitFixedTimesRoutine(em));
+                    RegisterTrapCo(index, coFixed);
                 }
 
-                // Pattern répétitif seulement si repeat est correctement paramétré
+                // Pattern répétitif
                 if (em.repeat && (em.repeatCount > 0 || em.repeatDuration > 0f))
                 {
-                    var coB = StartCoroutine(EmitRepeatRoutine(em));
-                    RegisterTrapCo(index, coB);
+                    var coRepeat = StartCoroutine(EmitRepeatRoutine(em));
+                    RegisterTrapCo(index, coRepeat);
                 }
             }
         }
 
+        /// <summary>
+        /// Construit la liste des émissions à partir du spec, avec fallback si 'emissions' est vide.
+        /// </summary>
         private List<ArrowEmission> ResolveEmissions(LevelData.ArrowTrapSpec spec)
         {
             if (spec.emissions != null && spec.emissions.Count > 0)
                 return spec.emissions;
 
+            // Fallback : une émission immédiate avec params de base
             return new List<ArrowEmission>
-    {
-        new ArrowEmission
-        {
-            startCell  = spec.startCell,
-            travelDir  = spec.travelDir,
-            arrowSpeed = (spec.arrowSpeed > 0f ? spec.arrowSpeed : 6f),
-            shotTimes  = new List<float> { 0f },
-            repeat     = false
-        }
-    };
+            {
+                new ArrowEmission
+                {
+                    startCell  = spec.startCell,
+                    travelDir  = spec.travelDir,
+                    arrowSpeed = (spec.arrowSpeed > 0f ? spec.arrowSpeed : 6f),
+                    shotTimes  = new List<float> { 0f },
+                    repeat     = false
+                }
+            };
         }
 
+        /// <summary>Enregistre une coroutine d’émission pour pouvoir la stopper à la volée.</summary>
         private void RegisterTrapCo(int index, Coroutine co)
         {
             if (co == null) return;
@@ -226,6 +305,7 @@ namespace Sarabande.Traps
             list.Add(co);
         }
 
+        /// <summary>Stoppe et purge toutes les émissions en cours pour un piège donné.</summary>
         private void StopTrapEmissions(int index)
         {
             if (_trapCo.TryGetValue(index, out var list))
@@ -235,18 +315,22 @@ namespace Sarabande.Traps
             }
         }
 
+        /// <summary>
+        /// Valide qu’une émission possède des paramètres exploitables (cellule, vitesse, planning).
+        /// En cas d’erreur, log explicite avec indices (trap, emission).
+        /// </summary>
         private bool ValidateEmission(ArrowEmission em, int trapIndex, int emissionIndex)
         {
             if (levelData == null) return false;
 
             int w = levelData.width;
             int h = levelData.height;
-            var sc = new Vector2Int(em.startCell.x, em.startCell.z);
+            var startCell = new Vector2Int(em.startCell.x, em.startCell.z);
 
             // 1) startCell dans la grille
-            if (sc.x < 0 || sc.x >= w || sc.y < 0 || sc.y >= h)
+            if (startCell.x < 0 || startCell.x >= w || startCell.y < 0 || startCell.y >= h)
             {
-                Debug.LogError($"[ArrowTrapSystem] Missing spec for arrowtrap emission (trap {trapIndex}, emission {emissionIndex}): startCell {sc} out of bounds.");
+                Debug.LogError($"[ArrowTrapSystem] Missing spec for arrowtrap emission (trap {trapIndex}, emission {emissionIndex}): startCell {startCell} out of bounds.");
                 return false;
             }
 
@@ -270,28 +354,31 @@ namespace Sarabande.Traps
             return true;
         }
 
-
+        /// <summary>Émet des tirs aux instants absolus fournis dans <c>shotTimes</c> (en secondes).</summary>
         private System.Collections.IEnumerator EmitFixedTimesRoutine(ArrowEmission em)
         {
             if (em.shotTimes == null || em.shotTimes.Count == 0) yield break;
 
-            // trier & convertir en deltas
+            // Trier & convertir en deltas d’attente
             var times = em.shotTimes.Where(t => t >= 0f).OrderBy(t => t).ToList();
             if (times.Count == 0) yield break;
 
-            float prev = 0f;
-            foreach (var t in times)
+            float previousTime = 0f;
+            foreach (var absolute in times)
             {
-                float wait = Mathf.Max(0f, t - prev);
+                float wait = Mathf.Max(0f, absolute - previousTime);
                 if (wait > 0f) yield return new WaitForSeconds(wait);
+
                 SpawnArrow(new Vector2Int(em.startCell.x, em.startCell.z), em.travelDir, (em.arrowSpeed > 0f ? em.arrowSpeed : 6f));
-                prev = t;
+                previousTime = absolute;
             }
         }
 
+        /// <summary>Émet un pattern répétitif (par compte ou par durée).</summary>
         private System.Collections.IEnumerator EmitRepeatRoutine(ArrowEmission em)
         {
-            if (em.repeatStartDelay > 0f) yield return new WaitForSeconds(em.repeatStartDelay);
+            if (em.repeatStartDelay > 0f)
+                yield return new WaitForSeconds(em.repeatStartDelay);
 
             var startCell = new Vector2Int(em.startCell.x, em.startCell.z);
             float speed = (em.arrowSpeed > 0f ? em.arrowSpeed : 6f);
@@ -309,28 +396,43 @@ namespace Sarabande.Traps
 
             if (em.repeatDuration > 0f)
             {
-                float tEnd = Time.time + em.repeatDuration;
-                while (Time.time < tEnd)
+                float endTime = Time.time + em.repeatDuration;
+                while (Time.time < endTime)
                 {
                     SpawnArrow(startCell, em.travelDir, speed);
                     yield return new WaitForSeconds(Mathf.Max(0.01f, em.repeatInterval));
                 }
-                yield break;
             }
-
-            yield break;
         }
 
-        // --- ResetToInitial : ajouter l’arrêt des émissions programmées ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Reset
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>
+        /// Réinitialise l’armement, l’état des dalles, les caches de positions et **stoppe toutes** les émissions planifiées.
+        /// </summary>
         public void ResetToInitial()
         {
-            // (logique existante)
-            for (int i = 0; i < _runtime.Length; i++) { _runtime[i].armed = true; _runtime[i].nextReadyTime = 0f; }
-            _lastHeroCell = hero.GridPos;
-            if (_nmes != null) foreach (var n in _nmes) if (n != null) _lastNmeCell[n] = n.GridPos;
-            if (_tileVisuals != null) foreach (var kv in _tileVisuals) if (kv.Value != null) kv.Value.ResetVisual();
+            // Armement & timers
+            for (int i = 0; i < _runtime.Length; i++)
+            {
+                _runtime[i].armed = true;
+                _runtime[i].nextReadyTime = 0f;
+            }
 
-            // NEW: stoppe toutes les planifications en cours
+            // Suivi des cellules (évite les “manqués” sur la première frame post-reset)
+            _lastHeroCell = hero.GridPos;
+            if (_nmes != null)
+                foreach (var n in _nmes)
+                    if (n != null) _lastNmeCell[n] = n.GridPos;
+
+            // Dalles visuelles
+            if (_tileVisuals != null)
+                foreach (var kv in _tileVisuals)
+                    if (kv.Value != null) kv.Value.ResetVisual();
+
+            // Stoppe toutes les planifications en cours pour tous les pièges
             foreach (var kv in _trapCo)
             {
                 var list = kv.Value;
@@ -340,84 +442,105 @@ namespace Sarabande.Traps
             }
         }
 
+        /// <summary>Réarme une dalle après délai (si le piège peut se réarmer).</summary>
         private System.Collections.IEnumerator RearmTile(TrapTileVisual tile, float delay)
-        { yield return new WaitForSeconds(delay); if (tile != null) tile.ShowThenRelease(); }
+        {
+            yield return new WaitForSeconds(delay);
+            if (tile != null) tile.ShowThenRelease();
+        }
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Instanciation d’un projectile
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>
+        /// Crée un projectile flèche sur <paramref name="startCell"/> qui se déplace vers
+        /// <paramref name="travelDir"/> à la vitesse <paramref name="speed"/>.
+        /// Gère sprite/cube fallback, SFX de départ et injection des dépendances dans ArrowProjectile.
+        /// </summary>
         public void SpawnArrow(Vector2Int startCell, Sarabande.Core.EdgeDirection travelDir, float speed)
         {
-            Vector3 startPos = Center(startCell, cellSize) + Vector3.up * 0.02f;
-            Vector3 dir = DirToWorld(travelDir);
+            Vector3 startPosWorld = Center(startCell, cellSize) + Vector3.up * 0.02f;
+            Vector3 worldDir = DirToWorld(travelDir);
 
-            var go = new GameObject($"Arrow_{startCell.x}_{startCell.y}_{travelDir}");
-            go.transform.position = startPos;
-            go.transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
+            var arrowGO = new GameObject($"Arrow_{startCell.x}_{startCell.y}_{travelDir}");
+            arrowGO.transform.position = startPosWorld;
+            arrowGO.transform.rotation = Quaternion.LookRotation(worldDir, Vector3.up);
 
-            int projLayer = LayerMask.NameToLayer(projectilesLayerName);
-            if (projLayer != -1) go.layer = projLayer;
+            int projectilesLayer = LayerMask.NameToLayer(projectilesLayerName);
+            if (projectilesLayer != -1) arrowGO.layer = projectilesLayer;
 
             if (arrowSprite != null)
             {
-                var child = new GameObject("Sprite");
-                child.transform.SetParent(go.transform, false);
-                child.transform.localPosition = new Vector3(0f, spriteYOffset, 0f);
-                child.transform.localRotation = Quaternion.Euler(-90f, 180f, 0f);
+                // Affichage sprite billboard (Z vers l’avant)
+                var spriteGO = new GameObject("Sprite");
+                spriteGO.transform.SetParent(arrowGO.transform, false);
+                spriteGO.transform.localPosition = new Vector3(0f, spriteYOffset, 0f);
+                spriteGO.transform.localRotation = Quaternion.Euler(-90f, 180f, 0f);
 
-                var sr = child.AddComponent<SpriteRenderer>();
-                sr.sprite = arrowSprite;
-                sr.sortingLayerName = spriteSortingLayer;
-                sr.sortingOrder = spriteOrderInLayer;
-                sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                sr.receiveShadows = false;
+                var spriteRenderer = spriteGO.AddComponent<SpriteRenderer>();
+                spriteRenderer.sprite = arrowSprite;
+                spriteRenderer.sortingLayerName = spriteSortingLayer;
+                spriteRenderer.sortingOrder = spriteOrderInLayer;
+                spriteRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                spriteRenderer.receiveShadows = false;
 
-                float w = sr.sprite != null ? sr.sprite.bounds.size.x : 1f;
-                if (w <= 0f) w = 1f;
-                float s = (cellSize * spriteScale) / w;
-                child.transform.localScale = new Vector3(s, s, 1f);
+                // Mise à l’échelle en fonction de la taille de cellule
+                float spriteWidth = (spriteRenderer.sprite != null) ? spriteRenderer.sprite.bounds.size.x : 1f;
+                if (spriteWidth <= 0f) spriteWidth = 1f;
+                float s = (cellSize * spriteScale) / spriteWidth;
+                spriteGO.transform.localScale = new Vector3(s, s, 1f);
 
-                if (projLayer != -1) child.layer = projLayer;
+                if (projectilesLayer != -1) spriteGO.layer = projectilesLayer;
             }
             else
             {
-                var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                cube.name = "FallbackCube";
-                cube.transform.SetParent(go.transform, false);
-                cube.transform.localPosition = Vector3.zero;
+                // Fallback cube si pas de sprite
+                var fallbackCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                fallbackCube.name = "FallbackCube";
+                fallbackCube.transform.SetParent(arrowGO.transform, false);
+                fallbackCube.transform.localPosition = Vector3.zero;
 
                 float sx = arrowThickness * cellSize;
                 float sy = arrowThickness * cellSize;
                 float sz = arrowLengthInCell * cellSize;
-                cube.transform.localScale = new Vector3(sx, sy, sz);
+                fallbackCube.transform.localScale = new Vector3(sx, sy, sz);
 
-                var col = cube.GetComponent<Collider>(); if (col) Destroy(col);
-                var mr = cube.GetComponent<MeshRenderer>();
-                if (mr)
+                var colliderComponent = fallbackCube.GetComponent<Collider>();
+                if (colliderComponent) Destroy(colliderComponent);
+
+                var meshRenderer = fallbackCube.GetComponent<MeshRenderer>();
+                if (meshRenderer)
                 {
-                    mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    mr.receiveShadows = false;
-                    if (arrowMaterial) mr.sharedMaterial = arrowMaterial;
+                    meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    meshRenderer.receiveShadows = false;
+                    if (arrowMaterial) meshRenderer.sharedMaterial = arrowMaterial;
                 }
-                if (projLayer != -1) cube.layer = projLayer;
+                if (projectilesLayer != -1) fallbackCube.layer = projectilesLayer;
             }
-
-
 
             // SFX de départ
             Sarabande.Audio.AudioHub.I?.PlaySFXAt(
-    bowReleaseClip,
-    startPos,
-    releaseVolume,
-    spatialBlend,
-    minDistance,
-    maxDistance
-);
+                bowReleaseClip,
+                startPosWorld,
+                releaseVolume,
+                spatialBlend,
+                minDistance,
+                maxDistance
+            );
 
-            // Projectile
-            var ap = go.AddComponent<Sarabande.Traps.ArrowProjectile>();
-            ap.Init(dir, speed, cellSize, obstaclesMask, levelData, hero, _nmes, resetManager);
+            // Projectile (composant runtime)
+            var ap = arrowGO.AddComponent<Sarabande.Traps.ArrowProjectile>();
+            ap.Init(worldDir, speed, cellSize, obstaclesMask, levelData, hero, _nmes, resetManager);
             ap.InitAudio(hitLoveClip, hitVolume, spatialBlend, minDistance, maxDistance);
             ap.InitFx(hitLoveFxPrefab, _fxParent, fxLifetime, fxYOffset);
         }
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Disco linkage (optionnel)
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>Appelé à la mise en route de la DiscoSequence (réarme les traps liés).</summary>
         public void OnDiscoStart()
         {
             _discoRunning = true;
@@ -431,27 +554,33 @@ namespace Sarabande.Traps
                 {
                     _runtime[i].armed = true;
                     _runtime[i].nextReadyTime = 0f;
-                    // sécurité : si ce trap avait des émissions programmées qui traînent (après un restart), on purge
+                    // purge de sécurité : si ce trap avait des émissions encore actives (après restart)
                     StopTrapEmissions(i);
                 }
             }
         }
 
+        /// <summary>Appelé à l’arrêt de la DiscoSequence.</summary>
         public void OnDiscoStop()
         {
             _discoRunning = false;
         }
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Caches NME & LevelContext
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>Reconstruit le cache des NME et réinitialise le suivi de leur cellule.</summary>
         private void RefreshNMECache()
         {
             _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
-            // remet à jour le suivi des cases pour éviter un “manqué” au premier tick
             _lastNmeCell.Clear();
             if (_nmes != null)
                 foreach (var n in _nmes) if (n) _lastNmeCell[n] = n.GridPos;
         }
 
+        /// <summary>Abonnement au LevelContext (si présent) + init immédiate.</summary>
         private void AttachContext()
         {
             if (!useLevelContext) return;
@@ -461,9 +590,18 @@ namespace Sarabande.Traps
                 levelContext.LevelDataChanged += HandleContextLevelDataChanged;
                 HandleContextLevelDataChanged(levelContext.LevelData);
             }
-            else Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
+            else
+            {
+                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
+            }
         }
-        private void DetachContext() { if (levelContext != null) levelContext.LevelDataChanged -= HandleContextLevelDataChanged; }
+
+        private void DetachContext()
+        {
+            if (levelContext != null)
+                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
+        }
+
         private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
         {
             if (levelData == ld) return;
@@ -472,16 +610,19 @@ namespace Sarabande.Traps
             if (!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(this);
 #endif
         }
+
         private void OnEnable()
         {
             AttachContext();
             Sarabande.NME.NMESpawnSystem.AfterRebuild += RefreshNMECache;
         }
-        private void OnDisable() 
+
+        private void OnDisable()
         {
             Sarabande.NME.NMESpawnSystem.AfterRebuild -= RefreshNMECache;
-            DetachContext(); 
+            DetachContext();
         }
+
 #if UNITY_EDITOR
         private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
 #endif

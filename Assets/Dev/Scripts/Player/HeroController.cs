@@ -1,4 +1,22 @@
 // FILE: Assets/DEV/Scripts/Player/HeroController.cs
+//
+// Rôle du script (résumé pour la passation)
+// - Contrôle du déplacement case par case du héros sur une grille, en “temps réel court” (step + courte pause).
+// - Lit l'action "Move" (Vector2) via le New Input System (PlayerInput en mode "Send Messages").
+// - Gère : limites de niveau, murs pleins (nonWalkables), murs fins (thin walls / grid gates), conflits avec NME.
+// - Déclenche la sortie uniquement si l'on part depuis la cellule et l'arête d’Exit définies dans LevelData.
+// - S’intègre au cycle de Reset (IResettable) : le reset vient des systèmes externes (NME/ResetManager).
+//
+// Invariants (ne pas casser)
+// - Aucun renommage de champs sérialisés, propriétés, événements, ni méthodes publiques.
+// - Aucune modification de la logique métier ou des appels utilitaires existants.
+// - Les quelques renommages de **variables locales** sont purement lisibles (portée limitée au bloc concerné).
+//
+// Dépendances
+// - Sarabande.Core.GridUtils : utilitaires grille (InsideBounds, Center, DirToVec, NormalizeEdge, etc.)
+// - Sarabande.Levels.LevelData : données de niveau (spawn, walls, thin walls, exit, etc.)
+// - Sarabande.NME.NMEController : informations de progression NME pour éviter chevauchements et conflits.
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Sarabande.Core;
@@ -20,6 +38,10 @@ namespace Sarabande.Player
     [RequireComponent(typeof(PlayerInput))]
     public class HeroController : MonoBehaviour, Sarabande.Core.IResettable
     {
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Serialized fields (groupés par thème) — NOMS CONSERVÉS (NE PAS RENOMMER)
+        // ?????????????????????????????????????????????????????????????????????????????
+
         [Header("Data")]
         [SerializeField] private bool useLevelContext = true;
         [SerializeField] private Sarabande.Core.LevelContext levelContext;
@@ -37,8 +59,8 @@ namespace Sarabande.Player
         [SerializeField, Min(0.01f)] private float bumpReturnDuration = 0.08f;
 
         [Header("NME Conflict")]
-        [SerializeField, Range(0f, 0.5f)] private float nmeYieldThreshold = 0.15f;   // priorité Héro si NME.t ? seuil
-        [SerializeField, Range(0f, 0.5f)] private float nmeVacateThreshold = 0.25f;  // case NME quittée reste “occupée” tant que t < seuil
+        [SerializeField, Range(0f, 0.5f)] private float nmeYieldThreshold = 0.15f;   // priorité Héro si NME pas assez avancé sur son step
+        [SerializeField, Range(0f, 0.5f)] private float nmeVacateThreshold = 0.25f;  // une case quittée par le NME reste occupée jusqu’au seuil
         private NMEController[] _nmes;
 
         [Header("Exit")]
@@ -56,11 +78,14 @@ namespace Sarabande.Player
 
         [SerializeField] private Sarabande.Core.ResetManager resetManager;
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Runtime caches / état (NOMS CONSERVÉS)
+        // ?????????????????????????????????????????????????????????????????????????????
+
         // caches collisions
         private HashSet<Vector2Int> _blockedCells; // non-walkables
         private HashSet<(Vector2Int a, Vector2Int b)> _thinBlockers; // murs fins normalisés
-        private HashSet<(Vector2Int a, Vector2Int b)> _dynamicEdgeBlocks
-            = new HashSet<(Vector2Int, Vector2Int)>();
+        private HashSet<(Vector2Int a, Vector2Int b)> _dynamicEdgeBlocks = new HashSet<(Vector2Int, Vector2Int)>();
         private HashSet<Vector2Int> _dynamicBlockCells = new HashSet<Vector2Int>();
 
         private Vector2 _held;                 // dernier input maintenu (x,y)
@@ -76,9 +101,18 @@ namespace Sarabande.Player
         private Vector2Int _gridPos;
         public Vector2Int GridPos => _gridPos;
         public Vector3 WorldPos => transform.position;
-        // pour notifier un seul input lors de l'activation d'un levier par exemple
+
+        // Dernière direction d’intention (ex. activation unique d’un levier)
         public Vector2Int CurrentIntentDir { get; private set; } = Vector2Int.zero;
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Unity lifecycle
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>
+        /// Initialisation au démarrage : construit les sets de collisions, positionne le héros
+        /// juste "hors" de la grille en fonction de l'entrée choisie, puis lance un step d’entrée.
+        /// </summary>
         private void Start()
         {
             if (levelData == null)
@@ -96,84 +130,120 @@ namespace Sarabande.Player
             _gridPos = new Vector2Int(levelData.heroSpawn.x, levelData.heroSpawn.z);
 
             // Centre monde de la case de spawn
-            Vector3 spawnCenter = Center(_gridPos, cellSize);
+            Vector3 spawnCenterWorld = Center(_gridPos, cellSize);
 
             // Position initiale : une case "à l'extérieur" depuis la direction choisie
-            Vector3 outside = spawnCenter + EntryOffset(levelData.heroEntry);
-            transform.position = outside;
+            Vector3 outsideWorldPosition = spawnCenterWorld + EntryOffset(levelData.heroEntry);
+            transform.position = outsideWorldPosition;
 
-            // Lancer l'entry step
+            // Lancer l'entry step (jusqu’au centre de la cellule de spawn)
             _isMoving = true;
-            StartCoroutine(SpawnInFromEdge()); // joue un step jusqu'au spawn
+            StartCoroutine(SpawnInFromEdge());
         }
 
+        /// <summary>
+        /// Boucle par frame : lit l’input, applique tempo (pause), gère collisions & conflits NME,
+        /// lance soit un bump, soit un step de déplacement, soit la sortie.
+        /// </summary>
         private void Update()
         {
             if (resetManager != null && resetManager.IsResetInProgress) return;
 
-            Vector2Int dir = HeldToCardinal(_held, inputDeadzone);
-            CurrentIntentDir = dir;
+            Vector2Int intendedDir = HeldToCardinal(_held, inputDeadzone);
+            CurrentIntentDir = intendedDir;
 
             if (_isMoving) return;
             if (Time.time < _readyAtTime) return;
-            if (dir == Vector2Int.zero) return;
+            if (intendedDir == Vector2Int.zero) return;
 
-            // Cible dans les bornes du niveau
-            Vector2Int target = _gridPos + dir;
+            // Case cible dans la grille
+            Vector2Int targetCell = _gridPos + intendedDir;
 
-            // Sortie spéciale : autoriser à sortir hors-grille depuis la case/direction d'Exit
-            if (IsExitMove(_gridPos, dir))
+            // Tentative de sortie : autorisée depuis la case/direction d'Exit
+            if (IsExitMove(_gridPos, intendedDir))
             {
                 // Si une gate bloque l'arête de sortie, on bump au lieu de sortir
-                if (HasThinWallBetween(_gridPos, target))
+                if (HasThinWallBetween(_gridPos, targetCell))
                 {
-                    StartCoroutine(Bump(dir));
+                    StartCoroutine(Bump(intendedDir));
                     return;
                 }
 
-                StartCoroutine(StepTo(target, isExitMove: true));
+                if (faceOnMove) FaceDirection(intendedDir);
+                StartCoroutine(StepTo(targetCell, isExitMove: true));
                 return;
             }
 
             // 1) hors-grille -> bump
-            if (!InsideBounds(target, levelData.width, levelData.height))
+            if (!InsideBounds(targetCell, levelData.width, levelData.height))
             {
-                StartCoroutine(Bump(dir));
+                StartCoroutine(Bump(intendedDir));
                 return;
             }
 
             // 2) case mur -> bump
-            if (_blockedCells.Contains(target))
+            if (_blockedCells.Contains(targetCell))
             {
-                StartCoroutine(Bump(dir));
+                StartCoroutine(Bump(intendedDir));
                 return;
             }
 
             // 3) mur fin entre les deux cases -> bump
-            if (HasThinWallBetween(_gridPos, target))
+            if (HasThinWallBetween(_gridPos, targetCell))
             {
-                StartCoroutine(Bump(dir));
+                StartCoroutine(Bump(intendedDir));
                 return;
             }
 
-            // 4) NME rules
-            if (!CanEnterCellConsideringNME(target, dir))
+            // 4) règles NME (réservations/chevauchements)
+            if (!CanEnterCellConsideringNME(targetCell, intendedDir))
             {
-                StartCoroutine(Bump(dir));
+                StartCoroutine(Bump(intendedDir));
                 return;
             }
 
-            if (faceOnMove) FaceDirection(dir);
-            StartCoroutine(StepTo(target));
+            if (faceOnMove) FaceDirection(intendedDir);
+            StartCoroutine(StepTo(targetCell));
         }
 
+        /// <summary>
+        /// Lorsqu’une action "Move" est reçue (Input System / Send Messages),
+        /// on stocke la valeur analogique pour décision ultérieure.
+        /// </summary>
+        private void OnMove(InputValue value)
+        {
+            _held = value.Get<Vector2>();
+            CurrentIntentDir = HeldToCardinal(_held, inputDeadzone);
+        }
+
+        private void OnEnable() { AttachContext(); }
+        private void OnDisable() { DetachContext(); }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // En édition on (ré)attache le contexte pour garder les refs à jour
+            if (!Application.isPlaying) AttachContext();
+        }
+#endif
+
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Mouvement & collisions
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>
+        /// Oriente le transform dans la direction de déplacement (visuel/facing).
+        /// </summary>
         private void FaceDirection(Vector2Int dir)
         {
             if (dir == Vector2Int.zero) return;
-            Vector3 fwd = new Vector3(dir.x, 0f, dir.y);
-            transform.rotation = Quaternion.LookRotation(fwd, Vector3.up);
+            Vector3 forward = new Vector3(dir.x, 0f, dir.y);
+            transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
         }
 
+        /// <summary>
+        /// Coroutine d’un step vers une cellule cible. Gère l’anti-overlap en cours et en fin de step.
+        /// </summary>
         private System.Collections.IEnumerator StepTo(Vector2Int target, bool isExitMove = false)
         {
             _isMoving = true;
@@ -182,59 +252,59 @@ namespace Sarabande.Player
             ToCell = target;
             MoveProgress = 0f;
 
-            Vector3 start = transform.position;
-            Vector3 end = Center(target, cellSize);
+            Vector3 worldStart = transform.position;
+            Vector3 worldEnd = Center(target, cellSize);
 
-            float t = 0f;
-            while (t < 1f)
+            float lerpT = 0f;
+            while (lerpT < 1f)
             {
                 // progression anim
-                t += Time.deltaTime / stepDuration;
-                if (t > 1f) t = 1f;
-                MoveProgress = t;
+                lerpT += Time.deltaTime / stepDuration;
+                if (lerpT > 1f) lerpT = 1f;
+                MoveProgress = lerpT;
 
                 // position prévue à cette frame
-                Vector3 pos = Vector3.Lerp(start, end, t);
+                Vector3 worldPosAtThisFrame = Vector3.Lerp(worldStart, worldEnd, lerpT);
 
                 // --- GARDE-FOU INTERMÉDIAIRE ---
-                if (enforceNoOverlap && t >= overlapEarlyCheckFromT && IsCellOccupiedNowByNME(target))
+                // si on détecte une superposition en cours de step, on “revient” rapidement
+                if (enforceNoOverlap && lerpT >= overlapEarlyCheckFromT && IsCellOccupiedNowByNME(target))
                 {
-                    // retour depuis 'pos' vers 'start'
-                    float rt = 0f;
-                    while (rt < 1f)
+                    float returnLerpT = 0f;
+                    while (returnLerpT < 1f)
                     {
-                        rt += Time.deltaTime / overlapReturnDuration;
-                        if (rt > 1f) rt = 1f;
-                        transform.position = Vector3.Lerp(pos, start, rt);
+                        returnLerpT += Time.deltaTime / overlapReturnDuration;
+                        if (returnLerpT > 1f) returnLerpT = 1f;
+                        transform.position = Vector3.Lerp(worldPosAtThisFrame, worldStart, returnLerpT);
                         yield return null;
                     }
 
-                    transform.position = start;
+                    transform.position = worldStart;
                     _isMoving = false;
                     MoveProgress = 0f;
-                    FromCell = ToCell = _gridPos;      // reste logiquement sur la case d’origine
+                    FromCell = ToCell = _gridPos;      // on reste logiquement sur la case d’origine
                     _readyAtTime = Time.time + interStepPause;
                     yield break;
                 }
 
                 // pas de conflit : on applique la position prévue
-                transform.position = pos;
+                transform.position = worldPosAtThisFrame;
                 yield return null;
             }
 
-            // Anti-overlap final
+            // Anti-overlap final (cas limites)
             if (enforceNoOverlap && IsCellOccupiedNowByNME(target))
             {
-                float rt = 0f;
-                while (rt < 1f)
+                float returnLerpT = 0f;
+                while (returnLerpT < 1f)
                 {
-                    rt += Time.deltaTime / overlapReturnDuration;
-                    if (rt > 1f) rt = 1f;
-                    transform.position = Vector3.Lerp(end, start, rt);
+                    returnLerpT += Time.deltaTime / overlapReturnDuration;
+                    if (returnLerpT > 1f) returnLerpT = 1f;
+                    transform.position = Vector3.Lerp(worldEnd, worldStart, returnLerpT);
                     yield return null;
                 }
 
-                transform.position = start;
+                transform.position = worldStart;
                 _isMoving = false;
                 MoveProgress = 0f;
                 FromCell = ToCell = _gridPos;
@@ -242,6 +312,7 @@ namespace Sarabande.Player
                 yield break;
             }
 
+            // Step validé
             _gridPos = target;
             _isMoving = false;
 
@@ -250,42 +321,89 @@ namespace Sarabande.Player
 
             _readyAtTime = Time.time + interStepPause;
 
+            // Gestion de la sortie si ce step correspond à un “exit move”
             if (isExitMove)
             {
                 onExit?.Invoke();
-                if (disableOnExit) enabled = false;
+                if (disableOnExit) enabled = false; // coupe ce contrôleur pour éviter tout input post-sortie
             }
         }
 
-        private void OnMove(InputValue value)
+        /// <summary>
+        /// Petit aller-retour visuel en cas de blocage (mur/limite/conflit NME).
+        /// </summary>
+        private System.Collections.IEnumerator Bump(Vector2Int dir)
         {
-            _held = value.Get<Vector2>();
-            CurrentIntentDir = HeldToCardinal(_held, inputDeadzone);
+            if (_isMoving) yield break;
+            _isMoving = true;
+
+            // on se tourne vers la direction tentée, même si c'est bloqué
+            if (faceOnMove) FaceDirection(dir);
+
+            Vector3 start = transform.position;
+            Vector3 bumpVector = new Vector3(dir.x, 0f, dir.y).normalized * bumpDistance;
+
+            // Aller (rapide)
+            float lerpT = 0f;
+            while (lerpT < 1f)
+            {
+                lerpT += Time.deltaTime / bumpOutDuration;
+                if (lerpT > 1f) lerpT = 1f;
+                transform.position = Vector3.Lerp(start, start + bumpVector, lerpT);
+                yield return null;
+            }
+
+            // Retour
+            lerpT = 0f;
+            while (lerpT < 1f)
+            {
+                lerpT += Time.deltaTime / bumpReturnDuration;
+                if (lerpT > 1f) lerpT = 1f;
+                transform.position = Vector3.Lerp(start + bumpVector, start, lerpT);
+                yield return null;
+            }
+
+            transform.position = start;
+            _isMoving = false;
+            _readyAtTime = Time.time + interStepPause;
         }
 
-        // --- Utilitaires ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Logique utilitaire
+        // ?????????????????????????????????????????????????????????????????????????????
 
-        private static Vector2Int HeldToCardinal(Vector2 v, float deadzone)
+        /// <summary>
+        /// Convertit une entrée analogique (Vector2) en direction cardinale (droite/gauche/haut/bas).
+        /// </summary>
+        private static Vector2Int HeldToCardinal(Vector2 inputVector, float deadzone)
         {
-            if (v.sqrMagnitude < deadzone * deadzone) return Vector2Int.zero;
+            if (inputVector.sqrMagnitude < deadzone * deadzone) return Vector2Int.zero;
 
-            float ax = Mathf.Abs(v.x);
-            float ay = Mathf.Abs(v.y);
+            float absX = Mathf.Abs(inputVector.x);
+            float absY = Mathf.Abs(inputVector.y);
 
-            if (ax > ay)
-                return v.x > 0f ? Vector2Int.right : Vector2Int.left;
+            if (absX > absY)
+                return inputVector.x > 0f ? Vector2Int.right : Vector2Int.left;
             else
-                return v.y > 0f ? Vector2Int.up : Vector2Int.down;
+                return inputVector.y > 0f ? Vector2Int.up : Vector2Int.down;
         }
 
-        private Vector3 EntryOffset(EdgeDirection dir)
-            => DirToWorld(dir) * cellSize;
+        /// <summary>
+        /// Décale d’une cellule vers l’extérieur de la grille selon l’edge d’entrée choisi.
+        /// </summary>
+        private Vector3 EntryOffset(EdgeDirection dir) => DirToWorld(dir) * cellSize;
 
+        /// <summary>
+        /// Step d’entrée depuis l’extérieur jusqu’à la cellule de spawn.
+        /// </summary>
         private System.Collections.IEnumerator SpawnInFromEdge()
         {
             yield return StepTo(_gridPos);
         }
 
+        /// <summary>
+        /// Construit les sets de collisions : cellules bloquées et arêtes fines normalisées.
+        /// </summary>
         private void BuildCollisionSets()
         {
             _blockedCells = new HashSet<Vector2Int>();
@@ -308,6 +426,9 @@ namespace Sarabande.Player
             }
         }
 
+        /// <summary>
+        /// Vrai si une arête fine (statique ou dynamique) bloque le passage entre deux cellules.
+        /// </summary>
         private bool HasThinWallBetween(Vector2Int from, Vector2Int to)
         {
             var key = NormalizeEdge(from, to);
@@ -316,30 +437,45 @@ namespace Sarabande.Player
             return thin || dyn;
         }
 
+        /// <summary>
+        /// Applique un blocage d’arête dynamique (par coordonnées exactes).
+        /// </summary>
         public void AddDynamicEdgeBlock(Vector2Int a, Vector2Int b)
         {
             EnsureSets();
             _dynamicEdgeBlocks.Add(NormalizeEdge(a, b));
         }
 
+        /// <summary>
+        /// Applique un blocage d’arête dynamique (par côté depuis une cellule).
+        /// </summary>
         public void AddDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
         {
             EnsureSets();
             _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec(side)));
         }
 
+        /// <summary>
+        /// Retire un blocage d’arête dynamique (par coordonnées exactes).
+        /// </summary>
         public void RemoveDynamicEdgeBlock(Vector2Int a, Vector2Int b)
         {
             EnsureSets();
             _dynamicEdgeBlocks.Remove(NormalizeEdge(a, b));
         }
 
+        /// <summary>
+        /// Retire un blocage d’arête dynamique (par côté depuis une cellule).
+        /// </summary>
         public void RemoveDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
         {
             EnsureSets();
             _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));
         }
 
+        /// <summary>
+        /// Autorisation d’entrer dans la cellule cible selon l’état des NME (réservations/chevauchements).
+        /// </summary>
         private bool CanEnterCellConsideringNME(Vector2Int target, Vector2Int dir)
         {
             if (_nmes == null) return true;
@@ -386,6 +522,9 @@ namespace Sarabande.Player
             return true; // personne ne bloque
         }
 
+        /// <summary>
+        /// Vrai si la cellule cible est actuellement occupée par un NME (immobile ou suffisamment engagé/sortant).
+        /// </summary>
         private bool IsCellOccupiedNowByNME(Vector2Int target)
         {
             if (_nmes == null) return false;
@@ -412,42 +551,9 @@ namespace Sarabande.Player
             return false;
         }
 
-        private System.Collections.IEnumerator Bump(Vector2Int dir)
-        {
-            if (_isMoving) yield break;
-            _isMoving = true;
-
-            // on se tourne vers la direction tentée, même si c'est bloqué
-            if (faceOnMove) FaceDirection(dir);
-
-            Vector3 start = transform.position;
-            Vector3 push = new Vector3(dir.x, 0f, dir.y).normalized * bumpDistance;
-
-            // Aller (rapide)
-            float t = 0f;
-            while (t < 1f)
-            {
-                t += Time.deltaTime / bumpOutDuration;
-                if (t > 1f) t = 1f;
-                transform.position = Vector3.Lerp(start, start + push, t);
-                yield return null;
-            }
-
-            // Retour
-            t = 0f;
-            while (t < 1f)
-            {
-                t += Time.deltaTime / bumpReturnDuration;
-                if (t > 1f) t = 1f;
-                transform.position = Vector3.Lerp(start + push, start, t);
-                yield return null;
-            }
-
-            transform.position = start;
-            _isMoving = false;
-            _readyAtTime = Time.time + interStepPause;
-        }
-
+        /// <summary>
+        /// Détermine si le mouvement tenté correspond à une sortie valide (cellule + direction d’Exit).
+        /// </summary>
         private bool IsExitMove(Vector2Int from, Vector2Int dir)
         {
             var exit = levelData;
@@ -455,6 +561,47 @@ namespace Sarabande.Player
             return from == exitCell && dir == DirToVec(exit.exit.direction);
         }
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Gestion des blocs dynamiques (cellules)
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>Assure l’existence des set de collisions (si appelés très tôt).</summary>
+        private void EnsureSets()
+        {
+            if (_blockedCells == null) BuildCollisionSets();
+        }
+
+        /// <summary>Ajoute une cellule bloquante dynamique.</summary>
+        public void AddDynamicBlockCell(Vector2Int c)
+        {
+            EnsureSets();
+            _dynamicBlockCells.Add(c);
+            _blockedCells.Add(c); // utile immédiatement sans rebuild complet
+        }
+
+        /// <summary>Retire une cellule bloquante dynamique (ne retire pas un blocage statique).</summary>
+        public void RemoveDynamicBlockCell(Vector2Int c)
+        {
+            EnsureSets();
+            _dynamicBlockCells.Remove(c);
+
+            // Si c'était un blocage purement dynamique, on le retire de _blockedCells.
+            // S'il existe aussi en nonWalkables, on le laisse.
+            bool isStatic = false;
+            foreach (var gc in levelData.nonWalkables)
+                if (gc.x == c.x && gc.z == c.y) { isStatic = true; break; }
+
+            if (!isStatic) _blockedCells.Remove(c);
+        }
+
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Reset (IResettable)
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>
+        /// Réinitialise l’état du héros pour le LevelData courant et relance le step d’entrée.
+        /// Appelé par le ResetManager dans son cycle de reset.
+        /// </summary>
         public void ResetToInitial()
         {
             StopAllCoroutines();
@@ -472,7 +619,7 @@ namespace Sarabande.Player
             // 2) Puis reconstruire les sets statiques à partir du LevelData
             BuildCollisionSets();
 
-            // 3) (la GridGateSystem & TimedDoorSystem vont réinjecter leurs verrous tout de suite après leur propre Reset)
+            // 3) (la GridGateSystem & TimedDoorSystem vont réinjecter leurs verrous juste après leur propre Reset)
             _gridPos = new Vector2Int(levelData.heroSpawn.x, levelData.heroSpawn.z);
             var spawnCenter = Center(_gridPos, cellSize);
             var outside = spawnCenter + EntryOffset(levelData.heroEntry);
@@ -482,33 +629,13 @@ namespace Sarabande.Player
             StartCoroutine(SpawnInFromEdge());
         }
 
-        private void EnsureSets()
-        {
-            if (_blockedCells == null) BuildCollisionSets();
-        }
+        // ?????????????????????????????????????????????????????????????????????????????
+        // LevelContext wiring
+        // ?????????????????????????????????????????????????????????????????????????????
 
-        public void AddDynamicBlockCell(Vector2Int c)
-        {
-            EnsureSets();
-            _dynamicBlockCells.Add(c);
-            _blockedCells.Add(c); // utile immédiatement, même si on ne rebuild pas
-        }
-
-        public void RemoveDynamicBlockCell(Vector2Int c)
-        {
-            EnsureSets();
-            _dynamicBlockCells.Remove(c);
-
-            // Si c'était un blocage purement dynamique, on le retire de _blockedCells.
-            // S'il existe aussi en nonWalkables, on le laisse.
-            bool isStatic = false;
-            foreach (var gc in levelData.nonWalkables)
-                if (gc.x == c.x && gc.z == c.y) { isStatic = true; break; }
-
-            if (!isStatic) _blockedCells.Remove(c);
-        }
-
-        // --- LevelContext plumbing ---
+        /// <summary>
+        /// S’abonne au LevelContext (si utilisé) pour suivre les changements de LevelData.
+        /// </summary>
         private void AttachContext()
         {
             if (!useLevelContext) return;
@@ -527,12 +654,16 @@ namespace Sarabande.Player
             }
         }
 
+        /// <summary>Se désabonne du LevelContext.</summary>
         private void DetachContext()
         {
             if (levelContext != null)
                 levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
         }
 
+        /// <summary>
+        /// Callback déclenchée lors d’un changement de LevelData dans le LevelContext.
+        /// </summary>
         private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
         {
             if (levelData == ld) return;
@@ -547,11 +678,5 @@ namespace Sarabande.Player
             if (Application.isPlaying && isActiveAndEnabled && levelData != null)
                 ResetToInitial();
         }
-
-        private void OnEnable() { AttachContext(); }
-        private void OnDisable() { DetachContext(); }
-#if UNITY_EDITOR
-        private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
-#endif
     }
 }
