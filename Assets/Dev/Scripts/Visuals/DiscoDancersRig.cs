@@ -1,4 +1,12 @@
 // FILE: Assets/Dev/Scripts/VFX/DiscoDancersRig.cs
+//
+// Rôle (résumé)
+// - Gère le système des danseurs animés sur la scène Disco : chaque danseur suit un chemin défini sur le bord du plateau, 
+//   et effectue des mouvements de type "avancer" et "pivoter" de manière coordonnée.
+// - La logique est basée sur des étapes d'animation qui se déroulent suivant la séquence Disco définie par le système DiscoSequenceSystem.
+// - Lors du démarrage de la Disco, les danseurs se déplacent selon un mouvement coordonné et un comportement visuel basé sur des sprites (4 orientations).
+// - Possibilité de jouer le système de danse uniquement pendant la séquence Disco (option configurable).
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,57 +15,66 @@ using Sarabande.Disco;
 
 namespace Sarabande.VFX
 {
+    /// <summary>
+    /// Contrôle le rig des danseurs disco, leurs positions et animations sur la grille du niveau.
+    /// </summary>
     public class DiscoDancersRig : MonoBehaviour
     {
         [Header("Wiring")]
-        [SerializeField] private DiscoSequenceSystem disco;
-        [SerializeField] private LevelContext levelContext;
-        [SerializeField, Min(0.001f)] private float cellSize = 1f;
+        [SerializeField] private DiscoSequenceSystem disco;  // Référence au DiscoSequenceSystem pour les contrôles
+        [SerializeField] private LevelContext levelContext; // Contexte du niveau pour obtenir les données de niveau
+        [SerializeField, Min(0.001f)] private float cellSize = 1f; // Taille des cellules du niveau
 
         [System.Serializable]
         public class DancerSpriteSet
         {
-            public Sprite north, east, south, west;
+            public Sprite north, east, south, west; // Sprites pour les 4 orientations du danseur
         }
 
         [Header("Sprites (4 orientations)")]
-        [SerializeField] private DancerSpriteSet sprites;
+        [SerializeField] private DancerSpriteSet sprites; // Ensemble des sprites pour chaque orientation
 
         [Header("Look & placement")]
-        [SerializeField] private float yOffset = 0.02f;
-        [SerializeField, Min(0.1f)] private float spriteScale = 1.0f;
-        [SerializeField] private string sortingLayer = "Default";
-        [SerializeField] private int sortingOrder = 250;
+        [SerializeField] private float yOffset = 0.02f; // Décalage vertical du danseur
+        [SerializeField, Min(0.1f)] private float spriteScale = 1.0f; // Échelle des sprites
+        [SerializeField] private string sortingLayer = "Default"; // Layer de tri des sprites
+        [SerializeField] private int sortingOrder = 250; // Ordre de tri des sprites
 
         [Header("Timing (seconds)")]
-        [SerializeField, Min(0.01f)] private float moveSeconds = 0.25f;
-        [SerializeField, Min(0f)] private float pauseSeconds = 0.10f;
-        [SerializeField, Min(0.05f)] private float spinSeconds = 0.30f;
+        [SerializeField, Min(0.01f)] private float moveSeconds = 0.25f; // Durée du déplacement
+        [SerializeField, Min(0f)] private float pauseSeconds = 0.10f; // Durée de la pause entre les étapes
+        [SerializeField, Min(0.05f)] private float spinSeconds = 0.30f; // Durée du spin des danseurs
 
         [Header("Lifecycle")]
-        [SerializeField] private bool onlyWhenDisco = true;
-        [SerializeField] private bool destroyOnStop = true;
+        [SerializeField] private bool onlyWhenDisco = true; // Si true, les danseurs n'apparaissent que pendant la séquence disco
+        [SerializeField] private bool destroyOnStop = true; // Si true, les danseurs sont détruits lorsque la disco est terminée
 
-        // --- runtime ---
-        private Transform _root;
+        // Variables runtime
+        private Transform _root; // Parent des danseurs
+        private readonly List<Transform> _trs = new(); // Transform des danseurs
+        private readonly List<SpriteRenderer> _srs = new(); // SpriteRenderer des danseurs
+        private readonly List<Vector2Int> _baseCell = new(); // Cellules de départ des danseurs
+        private readonly List<Vector2Int> _ccwDir = new(); // Direction anti-horaire des danseurs
+        private readonly List<bool> _atOffset = new(); // Si le danseur est déplacé à l'offset ou non
+        private List<Vector2Int> _ring; // Anneau des positions des danseurs sur la grille
 
-        // par danseur
-        private readonly List<Transform> _trs = new();
-        private readonly List<SpriteRenderer> _srs = new();
-        private readonly List<Vector2Int> _baseCell = new();
-        private readonly List<Vector2Int> _ccwDir = new();   // direction anti-horaire le long du bord
-        private readonly List<bool> _atOffset = new();       // false = sur base, true = sur base+ccw
+        private Coroutine _loopCo; // Coroutine du cycle de danse
+        private bool _active; // Indicateur de l'état des danseurs
+        private int _lastStepDir = +1; // Dernière direction de déplacement des danseurs (horaire ou anti-horaire)
 
-        // anneau des positions de base (espacées d’une case)
-        private List<Vector2Int> _ring;
-
-        private Coroutine _loopCo;
-        private bool _active;
-        private int _lastStepDir = +1; // +1 = anti-horaire, -1 = horaire (pour l’orientation des spins)
-
+        /// <summary>
+        /// Active le système de danseurs quand la Disco commence.
+        /// </summary>
         public void OnDiscoStart() { EnsureBuilt(); StartRig(); }
+
+        /// <summary>
+        /// Désactive le système de danseurs quand la Disco s'arrête.
+        /// </summary>
         public void OnDiscoStop() { StopRig(); if (destroyOnStop) DestroyRig(); }
 
+        /// <summary>
+        /// S'abonne aux événements du système Disco.
+        /// </summary>
         private void OnEnable()
         {
             if (disco)
@@ -69,6 +86,9 @@ namespace Sarabande.VFX
             if (!onlyWhenDisco) { EnsureBuilt(); StartRig(); }
         }
 
+        /// <summary>
+        /// Se désabonne des événements du système Disco et nettoie le rig des danseurs.
+        /// </summary>
         private void OnDisable()
         {
             if (disco)
@@ -81,10 +101,14 @@ namespace Sarabande.VFX
             if (destroyOnStop) DestroyRig();
         }
 
+        /// <summary>
+        /// Assure que le rig des danseurs est bien construit avant de commencer.
+        /// </summary>
         private void EnsureBuilt()
         {
             if (_root != null) return;
 
+            // Récupère les dimensions du niveau
             int w = 8, h = 8;
             if (levelContext && levelContext.LevelData)
             {
@@ -92,12 +116,12 @@ namespace Sarabande.VFX
                 h = Mathf.Max(1, levelContext.LevelData.height);
             }
 
-            // 1) Construit l’anneau d’ancrage (positions de base)
+            // Crée l'anneau des positions de départ des danseurs
             _ring = new List<Vector2Int>();
-            for (int y = 1; y < h; y += 2) _ring.Add(new Vector2Int(-1, y));        // gauche
-            for (int x = 1; x < w; x += 2) _ring.Add(new Vector2Int(x, h));         // haut
-            for (int y = h - 2; y >= 0; y -= 2) _ring.Add(new Vector2Int(w, y));    // droite
-            for (int x = w - 2; x >= 0; x -= 2) _ring.Add(new Vector2Int(x, -1));   // bas
+            for (int y = 1; y < h; y += 2) _ring.Add(new Vector2Int(-1, y));        // côté gauche
+            for (int x = 1; x < w; x += 2) _ring.Add(new Vector2Int(x, h));         // côté haut
+            for (int y = h - 2; y >= 0; y -= 2) _ring.Add(new Vector2Int(w, y));    // côté droit
+            for (int x = w - 2; x >= 0; x -= 2) _ring.Add(new Vector2Int(x, -1));   // côté bas
 
             if (_ring.Count == 0)
             {
@@ -105,30 +129,31 @@ namespace Sarabande.VFX
                 return;
             }
 
+            // Crée le parent des danseurs
             _root = new GameObject("DiscoDancersRig_Runtime").transform;
             _root.SetParent(transform, false);
 
             _trs.Clear(); _srs.Clear(); _baseCell.Clear(); _ccwDir.Clear(); _atOffset.Clear();
 
-            // 2) Spawn des danseurs : chacun garde son bord + une direction CCW propre
+            // Spawn des danseurs sur l'anneau
             foreach (var baseC in _ring)
             {
                 var go = new GameObject($"Dancer_{_trs.Count}");
                 go.transform.SetParent(_root, false);
                 go.transform.position = CellCenterWorld(baseC);
 
-                // COUCHÉ AU SOL + image non à l’envers
+                // Assure que le danseur est orienté correctement (horizontal et pas à l'envers)
                 go.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sortingLayerName = sortingLayer;
                 sr.sortingOrder = sortingOrder;
                 sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 sr.receiveShadows = false;
-                sr.flipY = true; // <-- corrige les sprites "tête en bas"
+                sr.flipY = true; // Corrige l'orientation du sprite
 
                 Vector2Int ccw = CCWDirForEdge(baseC, w, h);
 
-                // orientation initiale = direction du prochain pas anti-horaire
+                // Orientation initiale
                 sr.sprite = GetSprite(FacingFromDelta(ccw));
 
                 go.transform.localScale = Vector3.one * spriteScale;
@@ -137,10 +162,13 @@ namespace Sarabande.VFX
                 _srs.Add(sr);
                 _baseCell.Add(baseC);
                 _ccwDir.Add(ccw);
-                _atOffset.Add(false); // démarre sur la case de base
+                _atOffset.Add(false); // Le danseur commence sur la base
             }
         }
 
+        /// <summary>
+        /// Détruit le rig des danseurs.
+        /// </summary>
         private void DestroyRig()
         {
             if (_root)
@@ -154,11 +182,14 @@ namespace Sarabande.VFX
             _ring = null;
         }
 
+        /// <summary>
+        /// Lance le mouvement des danseurs.
+        /// </summary>
         private void StartRig()
         {
             if (_active || _root == null || _ring == null || _ring.Count == 0) return;
 
-            // Snap tout le monde sur sa case de base
+            // Réinitialise la position de tous les danseurs
             for (int i = 0; i < _trs.Count; i++)
             {
                 _trs[i].position = CellCenterWorld(_baseCell[i]);
@@ -171,31 +202,43 @@ namespace Sarabande.VFX
             _loopCo = StartCoroutine(DanceLoop());
         }
 
+        /// <summary>
+        /// Arrête le mouvement des danseurs.
+        /// </summary>
         private void StopRig()
         {
             _active = false;
             if (_loopCo != null) { StopCoroutine(_loopCo); _loopCo = null; }
         }
 
+        /// <summary>
+        /// Coroutine qui anime les danseurs à travers un cycle de danse.
+        /// </summary>
         private IEnumerator DanceLoop()
         {
             var waitPause = (pauseSeconds > 0f) ? new WaitForSeconds(pauseSeconds) : null;
 
             while (_active)
             {
-                // anti-horaire : aller vers base+ccw
+                // Mouvement anti-horaire
                 yield return MoveAll(toOffset: true);
                 if (waitPause != null) yield return waitPause;
+
+                // Rotation (spin)
                 yield return SpinAllOnce(+1);
 
-                // horaire : revenir à la base
+                // Mouvement horaire
                 yield return MoveAll(toOffset: false);
                 if (waitPause != null) yield return waitPause;
+
+                // Rotation (spin inverse)
                 yield return SpinAllOnce(-1);
             }
         }
 
-        // Déplace d’une case : soit vers base+ccw (toOffset=true), soit vers base (toOffset=false)
+        /// <summary>
+        /// Déplace tous les danseurs d'une case, soit vers l'offset (base+ccw), soit vers la base.
+        /// </summary>
         private IEnumerator MoveAll(bool toOffset)
         {
             float dur = Mathf.Max(0.01f, moveSeconds);
@@ -204,7 +247,7 @@ namespace Sarabande.VFX
             var startPos = new Vector3[_trs.Count];
             var endPos = new Vector3[_trs.Count];
 
-            // Fixe destinations + sprites d’orientation pendant le step
+            // Fixe les destinations et les sprites d'orientation pendant le mouvement
             for (int i = 0; i < _trs.Count; i++)
             {
                 startPos[i] = _trs[i].position;
@@ -234,7 +277,10 @@ namespace Sarabande.VFX
             _lastStepDir = toOffset ? +1 : -1;
         }
 
-        private IEnumerator SpinAllOnce(int dirSign /* +1 = comme CCW, -1 = inverse */)
+        /// <summary>
+        /// Fait tourner tous les danseurs d'un tour complet.
+        /// </summary>
+        private IEnumerator SpinAllOnce(int dirSign /* +1 = anti-horaire, -1 = horaire */)
         {
             float total = Mathf.Max(0.05f, spinSeconds);
             float seg = total / 4f;
@@ -243,7 +289,7 @@ namespace Sarabande.VFX
             {
                 for (int i = 0; i < _trs.Count; i++)
                 {
-                    // base facing = sens du dernier pas
+                    // Orientation de base = direction du dernier pas
                     Vector2Int baseDelta = (dirSign >= 0) ? _ccwDir[i] : -_ccwDir[i];
                     var baseFacing = FacingFromDelta(baseDelta);
                     var spinFacing = (Facing)(((int)baseFacing + step) & 3);
@@ -253,7 +299,7 @@ namespace Sarabande.VFX
             }
         }
 
-        // --- util ---
+        // --- Utilitaires ---
 
         private enum Facing { North = 0, East = 1, South = 2, West = 3 }
 

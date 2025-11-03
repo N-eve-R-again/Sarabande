@@ -678,7 +678,7 @@ MonoBehaviour:
   obstaclesLayerName: Obstacles
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
 --- !u!114 &619786944
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -723,7 +723,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   cellSize: 1
   hero: {fileID: 1116510830}
   resetManager: {fileID: 619786945}
@@ -768,7 +768,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   tileMaterial: {fileID: 2100000, guid: 7c12ca4230d5b064e90a0e3983fd21c9, type: 2}
   tileSizeScale: 0.88
   tileThickness: 0.02
@@ -798,7 +798,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   doorMaterial: {fileID: 2100000, guid: 1e9535572be16514a8fb9a41dfab99d8, type: 2}
   obstaclesLayerName: Obstacles
   enterHoldThreshold: 0.25
@@ -829,7 +829,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   leverBaseMaterial: {fileID: 2100000, guid: a5d83b4d705e713448fac4a7efd8d890, type: 2}
   leverHandleMaterial: {fileID: 2100000, guid: 57c00c2267d1a544b80b5cc4b6f2c9f4, type: 2}
   wallInset: -0.1
@@ -862,7 +862,7 @@ MonoBehaviour:
   hero: {fileID: 1116510830}
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   popupUI: {fileID: 1561477412}
   messagesUI: {fileID: 726012885}
   counterIcon: {fileID: 21300000, guid: d039e12f80705d14dbac75824581a56c, type: 3}
@@ -889,7 +889,7 @@ MonoBehaviour:
   cellSize: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   baseMaterial: {fileID: 0}
   coreMaterial: {fileID: 0}
   tileSizeScale: 0.9
@@ -932,7 +932,7 @@ MonoBehaviour:
   visuals: {fileID: 619786951}
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   sequenceIndex: 0
   autoStartOnPlay: 0
   onSequenceStart:
@@ -1117,7 +1117,7 @@ MonoBehaviour:
   wallHeight: 1
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   gateMaterial: {fileID: 2100000, guid: f8551db646f5c4a4e823ffa9105c5725, type: 2}
   gateLayerName: Default
 --- !u!114 &619786954
@@ -1138,7 +1138,7 @@ MonoBehaviour:
   sequenceIndex: 0
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   readyMaterial: {fileID: 2100000, guid: 8ec4a79a5fb2fe94d9dc1d0de82ecf57, type: 2}
   activeMaterial: {fileID: 2100000, guid: 34d2daf413916db4aabe22be19f745ce, type: 2}
   tileSizeScale: 0.9
@@ -1157,7 +1157,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cd0e652d4439774f976f77782bdadc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
 --- !u!114 &619786956
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1172,7 +1172,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   timedDoorSystem: {fileID: 619786948}
 --- !u!114 &619786957
 MonoBehaviour:
@@ -1188,7 +1188,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   cellSize: 1
   hero: {fileID: 1116510830}
   timedDoorSystem: {fileID: 619786948}
@@ -2069,7 +2069,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: ca3d96f6f34467e4d9403a42ca928225, type: 2}
+  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   cellSize: 1
   stepDuration: 0.35
   interStepPause: 0.1
@@ -2094,7 +2094,7 @@ MonoBehaviour:
           m_StringArgument: 'EXIT : Puzzle_01 complete'
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1306587276}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Sarabande.Levels.PuzzleChainController, Assembly-CSharp
         m_MethodName: OnHeroExit
         m_Mode: 1
@@ -2732,58 +2732,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1 &1306587274
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1306587275}
-  - component: {fileID: 1306587276}
-  m_Layer: 0
-  m_Name: PuzzleFLow
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &1306587275
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1306587274}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.655892, y: 3.927788, z: 7.1199384}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1306587276
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1306587274}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4d46c4106b001643ac3615761c85615, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  levelContext: {fileID: 619786955}
-  resetManager: {fileID: 619786945}
-  puzzleList: {fileID: 11400000, guid: d98dbb0219fdc354694a3b710fb4f495, type: 2}
-  fadeCanvas: {fileID: 1182809346}
-  fadeDuration: 0.35
-  blackHold: 0.1
-  rewindUIRoot: {fileID: 0}
-  messageSystem: {fileID: 0}
 --- !u!1 &1369825142
 GameObject:
   m_ObjectHideFlags: 0
@@ -3676,4 +3624,3 @@ SceneRoots:
   - {fileID: 511754654}
   - {fileID: 1929999199}
   - {fileID: 1369825146}
-  - {fileID: 1306587275}

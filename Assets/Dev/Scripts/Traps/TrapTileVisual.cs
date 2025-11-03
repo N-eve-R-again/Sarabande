@@ -1,3 +1,14 @@
+// FILE: Assets/Dev/Scripts/Traps/TrapTileVisual.cs
+//
+// Rôle (résumé)
+// - Représentation visuelle d’une dalle “pressable” : léger relief qui peut s’enfoncer et remonter.
+// - Porte l’animation en déplaçant le centre Y du GameObject (cube fin).
+// - Fournit des helpers pour : presser, relâcher, presser + cacher, réafficher + relâcher, reset.
+//
+// Invariants
+// - AUCUN renommage de champs sérialisés (ex: 'mr') ni de signatures publiques.
+// - Logique strictement identique, uniquement commentaires et renommages **locaux** pour lisibilité.
+
 using UnityEngine;
 
 namespace Sarabande.Traps
@@ -8,25 +19,40 @@ namespace Sarabande.Traps
     /// </summary>
     public class TrapTileVisual : MonoBehaviour
     {
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Data
+        // ?????????????????????????????????????????????????????????????????????????????
+
         [Header("Cell (auto)")]
+        /// <summary>Coordonnée logique de la dalle (grille).</summary>
         public Vector2Int Cell { get; private set; }
 
         [Header("Animation (centres Y en unités monde)")]
-        [SerializeField] private float yUp = 0.02f;      // centre Y de la dalle “au repos”
-        [SerializeField] private float yDown = 0.0f;     // centre Y de la dalle enfoncée (affleurant le sol)
+        [SerializeField] private float yUp = 0.02f;      // centre Y “au repos”
+        [SerializeField] private float yDown = 0.00f;    // centre Y enfoncé (affleure le sol)
         [SerializeField, Min(0.01f)] private float pressDuration = 0.06f;
         [SerializeField, Min(0.01f)] private float releaseDuration = 0.15f;
-        [SerializeField] private MeshRenderer mr;
+        [SerializeField] private MeshRenderer mr;        // ? ne pas renommer (références Inspector)
 
         private Coroutine _anim;
+
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Unity lifecycle
+        // ?????????????????????????????????????????????????????????????????????????????
 
         private void Awake()
         {
             if (!mr) mr = GetComponent<MeshRenderer>();
         }
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Configuration
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>Assigne la cellule logique associée à ce visuel.</summary>
         public void SetupCell(Vector2Int cell) => Cell = cell;
 
+        /// <summary>Configure les hauteurs (centres Y) pour l’état haut/bas et applique immédiatement l’état haut.</summary>
         public void ConfigureHeights(float upCenterY, float downCenterY)
         {
             yUp = upCenterY;
@@ -34,23 +60,32 @@ namespace Sarabande.Traps
             SetY(yUp);
         }
 
+        /// <summary>Configure les durées d’animation press/release.</summary>
         public void ConfigureDurations(float press, float release)
         {
             pressDuration = press;
             releaseDuration = release;
         }
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Commandes (API)
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>Lance l’animation d’enfoncement (vers yDown).</summary>
         public void Press()
         {
             if (_anim != null) StopCoroutine(_anim);
             _anim = StartCoroutine(AnimateTo(yDown, pressDuration));
         }
 
+        /// <summary>Lance l’animation de remontée (vers yUp).</summary>
         public void Release()
         {
             if (_anim != null) StopCoroutine(_anim);
             _anim = StartCoroutine(AnimateTo(yUp, releaseDuration));
         }
+
+        /// <summary>Réinitialise l’état visuel : stop anim, visible, position en yUp.</summary>
         public void ResetVisual()
         {
             if (_anim != null) { StopCoroutine(_anim); _anim = null; }
@@ -58,60 +93,91 @@ namespace Sarabande.Traps
             SetY(yUp);
         }
 
-        private System.Collections.IEnumerator AnimateTo(float targetY, float duration)
-        {
-            float startY = transform.position.y;
-            float t = 0f;
-            duration = Mathf.Max(0.0001f, duration);
-            while (t < 1f)
-            {
-                t += Time.deltaTime / duration;
-                if (t > 1f) t = 1f;
-                var p = transform.position; p.y = Mathf.Lerp(startY, targetY, t); transform.position = p;
-                yield return null;
-            }
-            _anim = null;
-        }
-
-        private void SetY(float y)
-        {
-            var p = transform.position; p.y = y; transform.position = p;
-        }
-
-        // nouveau: enfonce puis cache la dalle
+        /// <summary>Enfonce la dalle puis la rend invisible (utilisé par certaines mécaniques de piège).</summary>
         public void PressAndHide()
         {
             if (_anim != null) StopCoroutine(_anim);
             _anim = StartCoroutine(PressThenHide());
         }
-        public void SetVisible(bool v)
+
+        /// <summary>Montre ou cache le MeshRenderer tel quel (sans mouvoir la dalle).</summary>
+        public void SetVisible(bool visible)
         {
-            if (mr) mr.enabled = v;
+            if (mr) mr.enabled = visible;
         }
-        private System.Collections.IEnumerator PressThenHide()
-        {
-            // anim d’enfoncement (même logique que Press())
-            float startY = transform.position.y;
-            float targetY = yDown;
-            float t = 0f;
-            float dur = Mathf.Max(0.0001f, pressDuration);
-            while (t < 1f)
-            {
-                t += Time.deltaTime / dur;
-                if (t > 1f) t = 1f;
-                var p = transform.position; p.y = Mathf.Lerp(startY, targetY, t); transform.position = p;
-                yield return null;
-            }
-            // puis on “disparaît”
-            if (mr) mr.enabled = false;
-            _anim = null;
-        }
-        // nouveau: réapparaît puis remonte
+
+        /// <summary>Réapparaît puis remonte (release) avec la durée de remontée configurée.</summary>
         public void ShowThenRelease()
         {
             if (_anim != null) StopCoroutine(_anim);
             if (mr) mr.enabled = true;     // ré-apparition visuelle
             _anim = StartCoroutine(AnimateTo(yUp, releaseDuration));
         }
+
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Internes (animations)
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>
+        /// Interpole linéairement la position Y du transform jusqu’à <paramref name="targetY"/>
+        /// sur <paramref name="duration"/> (seconds). Clamp et cleanup en fin.
+        /// </summary>
+        private System.Collections.IEnumerator AnimateTo(float targetY, float duration)
+        {
+            float startY = transform.position.y;
+            float t = 0f;
+            duration = Mathf.Max(0.0001f, duration);
+
+            while (t < 1f)
+            {
+                t += Time.deltaTime / duration;
+                if (t > 1f) t = 1f;
+
+                Vector3 currentPosition = transform.position;
+                currentPosition.y = Mathf.Lerp(startY, targetY, t);
+                transform.position = currentPosition;
+
+                yield return null;
+            }
+            _anim = null;
+        }
+
+        /// <summary>Place immédiatement la dalle à une hauteur Y monde précise.</summary>
+        private void SetY(float y)
+        {
+            Vector3 currentPosition = transform.position;
+            currentPosition.y = y;
+            transform.position = currentPosition;
+        }
+
+        /// <summary>
+        /// Séquence : enfonce (comme <see cref="Press"/>) puis désactive l’affichage du MeshRenderer.
+        /// Utilisée pour “faire disparaître” la dalle après pression.
+        /// </summary>
+        private System.Collections.IEnumerator PressThenHide()
+        {
+            // Enfoncement
+            float startY = transform.position.y;
+            float targetY = yDown;
+            float t = 0f;
+            float dur = Mathf.Max(0.0001f, pressDuration);
+
+            while (t < 1f)
+            {
+                t += Time.deltaTime / dur;
+                if (t > 1f) t = 1f;
+
+                Vector3 currentPosition = transform.position;
+                currentPosition.y = Mathf.Lerp(startY, targetY, t);
+                transform.position = currentPosition;
+
+                yield return null;
+            }
+
+            // Disparition
+            if (mr) mr.enabled = false;
+            _anim = null;
+        }
     }
 }
+

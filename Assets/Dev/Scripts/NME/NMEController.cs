@@ -1,3 +1,20 @@
+// FILE: Assets/Dev/Scripts/NME/NMEController.cs
+//
+// Rôle (résumé)
+// - Ennemi à grille : patrouille passive (HeroUnspotted) ? passe en poursuite (HeroSpotted) si FOV/LOS voit le Héros
+//   ou en cas de bruit (NoiseSystem).
+// - En poursuite : recalcule un chemin (BFS) vers la position du héros en respectant murs + “thin walls”,
+//   avance step par step (lerp), rotation instantanée vers la prochaine direction.
+// - Conflits : cède au Héros sur concurrence de case en début de step (heroYieldThreshold) ; arbitre
+//   les conflits NME?NME via priorité InstanceID et fenêtres nmeYieldThreshold / nmeVacateThreshold.
+// - Attaque télégrafiée quand adjacent : pré-délai, télégraphe visuel, impact ? déclenche Reset via ResetManager.
+// - Implémente IResettable : reconstruit ses caches, réapplique les grilles fermées, se replace au spawn.
+//
+// Invariants
+// - AUCUN renommage de champs sérialisés / propriétés publiques / méthodes publiques / signatures.
+// - Logique strictement inchangée. On n’ajoute que des commentaires et des renommages **locaux** plus explicites.
+// - Les appels externes (GridUtils, ResetManager, NoiseSystem, Gate/Door systems) restent identiques.
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,14 +28,15 @@ namespace Sarabande.NME
     public enum NMEState { HeroUnspotted, HeroSpotted }
 
     /// <summary>
-    /// NME qui :
-    /// - attend en HeroUnspotted, surveille avec un FOV (90-180°, portée illimitée, bloqué par 'Obstacles')
-    /// - passe en HeroSpotted s'il voit HÉRO (ou entend un bruit), puis le poursuit (BFS) en respectant murs + murs fins
-    /// - rotation instantanée vers la direction du prochain step
-    /// - attaque télégrafiée quand adjacent (pré-delay -> telegraph -> impact)
+    /// Ennemi case-par-case : vision cône + LOS, poursuite BFS, gestion de conflits multi-acteurs
+    /// et attaque télégrafiée au contact.
     /// </summary>
     public class NMEController : MonoBehaviour, IResettable
     {
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Data & Refs (noms conservés)
+        // ?????????????????????????????????????????????????????????????????????????????
+
         [Header("Data & Refs")]
         [SerializeField] private bool useLevelContext = true;
         [SerializeField] private Sarabande.Core.LevelContext levelContext;
@@ -50,9 +68,7 @@ namespace Sarabande.NME
         [SerializeField, Min(1f)] private float gizmoFovRadius = 20f;
 
         [Header("Hero Conflict")]
-        [SerializeField, Range(0f, 0.5f)] private float heroYieldThreshold = 0.15f;     // t max pour que l’NME cède
-        //[SerializeField, Range(0f, 0.5f)] private float heroVacateBlockThreshold = 0.25f; // case du héros reste bloquée tant qu’il ne l’a pas assez libérée
-        // paramètre plus usité au dessus.
+        [SerializeField, Range(0f, 0.5f)] private float heroYieldThreshold = 0.15f;
 
         [Header("NME Conflict")]
         [Tooltip("Fenêtre initiale d’abandon si un autre NME vise la même case au même instant. Le plus petit InstanceID passe.")]
@@ -63,12 +79,17 @@ namespace Sarabande.NME
 
         [SerializeField] private ResetManager resetManager;  // à assigner (LevelRoot)
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Runtime state (noms conservés)
+        // ?????????????????????????????????????????????????????????????????????????????
+
         private NMEState _state = NMEState.HeroUnspotted;
 
         private GameObject _activeTelegraph;
 
-        // --- ajout pour spawn dynamique (0/1/N) ---
+        // spawn dynamique (0/1/N)
         private Vector2Int? _spawnOverrideCell = null;
+        /// <summary>Fixe la cellule de spawn (utilisée à Start/Reset).</summary>
         public void SetSpawnCell(Vector2Int cell) => _spawnOverrideCell = cell;
 
         // positions/logique
@@ -78,23 +99,35 @@ namespace Sarabande.NME
         private float _readyAt = 0f;
         private float _nextRepathAt = 0f;
 
-        private Vector2Int _lastGoal; // dernière case Héros connue pour laquelle on a calculé un chemin (évite d'attendre le recalcul du pathfinding pour bouger)
+        private Vector2Int _lastGoal; // dernière case héros connue utilisée pour le path
 
+        /// <summary>Vrai pendant l’interpolation d’un step.</summary>
         public bool IsStepping => _isMoving;
+        /// <summary>Case de départ du step courant.</summary>
         public Vector2Int FromCell { get; private set; }
+        /// <summary>Case d’arrivée du step courant.</summary>
         public Vector2Int ToCell { get; private set; }
+        /// <summary>Progression du step 0..1.</summary>
         public float MoveProgress { get; private set; } // 0..1 pendant un step
+        /// <summary>Position logique (grille).</summary>
+        public Vector2Int GridPos => _gridPos;
 
         // collisions (murs / murs fins)
         private HashSet<Vector2Int> _blockedCells;
         private HashSet<(Vector2Int a, Vector2Int b)> _thinBlockers;
-        private HashSet<(Vector2Int a, Vector2Int b)> _dynamicEdgeBlocks
-            = new HashSet<(Vector2Int, Vector2Int)>();
-        private HashSet<Vector2Int> _dynamicBlockCells = new HashSet<Vector2Int>();
+        private readonly HashSet<(Vector2Int a, Vector2Int b)> _dynamicEdgeBlocks = new();
+        private readonly HashSet<Vector2Int> _dynamicBlockCells = new();
 
         // path courant (séquence de cases à suivre, exclut la case actuelle)
         private readonly List<Vector2Int> _path = new();
 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Unity lifecycle
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>
+        /// Prépare collisions, spawn, facing et état initial.
+        /// </summary>
         private void Start()
         {
             if (hero == null) hero = FindFirstObjectByType<HeroController>(FindObjectsInactive.Include);
@@ -116,25 +149,25 @@ namespace Sarabande.NME
             }
             else if (levelData != null && levelData.nmeSpawns != null && levelData.nmeSpawns.Count > 0)
             {
-                // si tu as migré tes LevelData vers la liste (0/1/N)
+                // migration vers 0/1/N spawns
                 spawnCell = new Vector2Int(levelData.nmeSpawns[0].x, levelData.nmeSpawns[0].z);
             }
             else
             {
-                // fallback legacy (ancien champ unique)
+                // fallback legacy (champ unique)
                 spawnCell = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
             }
 
             _gridPos = spawnCell;
             transform.position = Center(_gridPos, cellSize);
 
-            // init exposées (si tu les as)
+            // init exposées
             FromCell = ToCell = _gridPos;
             MoveProgress = 0f;
 
             Sarabande.NME.NMEOccupancy.Register(this, _gridPos);
 
-            // cache de la dernière cible (position du héros)
+            // cache de la dernière cible
             _lastGoal = hero.GridPos;
 
             SetFacing(initialFacing);
@@ -143,7 +176,9 @@ namespace Sarabande.NME
             _nextRepathAt = Time.time;
         }
 
-
+        /// <summary>
+        /// FSM de l’ennemi : scan FOV/LOS en Unspotted ; poursuite + attaque en Spotted.
+        /// </summary>
         private void Update()
         {
             if (resetManager != null && resetManager.IsResetInProgress) return;
@@ -152,7 +187,7 @@ namespace Sarabande.NME
             {
                 case NMEState.HeroUnspotted:
                     {
-                        // reste immobile, scrute le cône
+                        // immobile, scrute le cône
                         if (CanSeeHero())
                         {
                             _state = NMEState.HeroSpotted;
@@ -173,16 +208,13 @@ namespace Sarabande.NME
                         {
                             if (!_isAttacking)
                             {
-                                Vector2Int dir = heroPos - _gridPos;   // forcément cardinal ici
-                                StartCoroutine(AttackRoutine(heroPos, dir));
+                                Vector2Int delta = heroPos - _gridPos;   // forcément cardinal
+                                StartCoroutine(AttackRoutine(heroPos, delta));
                             }
                             return; // pas de déplacement pendant l’attaque
                         }
 
-                        // Repath périodique
-                        // Repath "juste-à-temps" : si le chemin est vide OU si la cible a changé,
-                        // on recalcule tout de suite (peu coûteux sur 8x8)
-                        // Sinon, on ne recalculera que périodiquement (suivi fluide d’un chemin déjà trouvé)
+                        // Repath périodique / à la demande
                         bool goalChanged = heroPos != _lastGoal;
                         bool needRepath = (_path.Count == 0) || goalChanged;
 
@@ -193,16 +225,16 @@ namespace Sarabande.NME
                             _nextRepathAt = Time.time + repathInterval;
                         }
 
-                        // Avancer d'une case si on a un chemin
+                        // Avancer d'une case si chemin
                         if (_path.Count > 0)
                         {
                             var next = _path[0];
 
-                            // petite ceinture : s'assurer que 'next' est adjacent à la position actuelle
-                            int md = Mathf.Abs(next.x - _gridPos.x) + Mathf.Abs(next.y - _gridPos.y);
-                            if (md != 1)
+                            // s’assurer que 'next' est adjacent à la position actuelle
+                            int manhattan = Mathf.Abs(next.x - _gridPos.x) + Mathf.Abs(next.y - _gridPos.y);
+                            if (manhattan != 1)
                             {
-                                // le chemin est obsolète (par ex. après un reset/annulation) : on recalcule
+                                // chemin obsolète (ex: reset) : recalcule
                                 RecomputePath(heroPos);
                                 if (_path.Count == 0)
                                 {
@@ -214,19 +246,21 @@ namespace Sarabande.NME
 
                             _path.RemoveAt(0);
                             FaceDirection(next - _gridPos);
-                            // Si une gate est fermée pile entre la case actuelle et 'next', on annule et on repath.
+
+                            // Gate fermée sur l’arête -> on annule et on repath
                             if (HasThinWallBetween(_gridPos, next))
                             {
                                 _readyAt = Time.time + interStepPause;
                                 _path.Clear();
-                                _nextRepathAt = 0f;     // repath immédiat
+                                _nextRepathAt = 0f; // repath immédiat
                                 return;
                             }
+
                             StartCoroutine(StepTo(next));
                         }
                         else
                         {
-                            // Aucun chemin possible (bouché) -> on attend proprement
+                            // Aucun chemin possible (bouché)
                             _readyAt = Time.time + interStepPause;
                         }
                         return;
@@ -234,11 +268,15 @@ namespace Sarabande.NME
             }
         }
 
-        // --- Détection ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Détection (FOV/LOS) & bruit
+        // ?????????????????????????????????????????????????????????????????????????????
 
+        /// <summary>
+        /// Retourne vrai si le Héros est dans le cône FOV et en ligne de vue non bloquée (layer Obstacles).
+        /// </summary>
         private bool CanSeeHero()
         {
-            // angle (FOV) + raycast bloqué par Obstacles
             Vector3 origin = transform.position + Vector3.up * losHeight;
             Vector3 target = hero.WorldPos + Vector3.up * losHeight;
 
@@ -251,7 +289,7 @@ namespace Sarabande.NME
             float angle = Vector3.Angle(fwdXZ, toHeroXZ.normalized);
             if (angle > (fovDegrees * 0.5f)) return false;
 
-            // Test LOS (murs + murs fins)
+            // Test LOS (murs + murs fins via obstaclesMask)
             float dist = toHero.magnitude;
             if (Physics.Raycast(origin, toHero / dist, dist, obstaclesMask))
                 return false;
@@ -259,12 +297,14 @@ namespace Sarabande.NME
             return true;
         }
 
+        /// <summary>Passage en poursuite après un bruit entendu.</summary>
         public void HeardNoise()
         {
             if (_state == NMEState.HeroUnspotted)
                 _state = NMEState.HeroSpotted;
         }
 
+        /// <summary>Vrai si le Héros se trouve “dans” la cellule (en coordonnées monde).</summary>
         private bool IsHeroInsideCell(Vector2Int cell)
         {
             Vector3 center = Center(cell, cellSize);
@@ -277,8 +317,14 @@ namespace Sarabande.NME
             return insideX && insideZ;
         }
 
-        // --- Steps & path ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Déplacements & pathfinding
+        // ?????????????????????????????????????????????????????????????????????????????
 
+        /// <summary>
+        /// Step interpolé vers <paramref name="target"/> (avec fenêtres de cession Héros/NME
+        /// et vérifs de “thin walls” pendant la transition).
+        /// </summary>
         private IEnumerator StepTo(Vector2Int target)
         {
             _isMoving = true;
@@ -288,7 +334,7 @@ namespace Sarabande.NME
             MoveProgress = 0f;
 
             // --- OCCUPATION PAR D'AUTRES NME (photo à t=0) ---
-            // 1) Si un autre NME est déjà "posé" sur target -> je n'avance pas
+            // 1) Si un autre NME est déjà "posé" sur target -> on n'avance pas
             if (IsCellOccupiedNowByNME(target))
             {
                 _isMoving = false;
@@ -299,35 +345,28 @@ namespace Sarabande.NME
             }
 
             // 2) Conflit simultané : deux NME veulent "target" au même frame
-            //    On laisse passer celui au plus petit InstanceID ; l'autre renonce tout de suite.
-            if (SomeoneSteppingTo(target, out var otherStepping)
-                && !WinsTieFor(target))
+            if (SomeoneSteppingTo(target, out var otherStepping) && !WinsTieFor(target))
             {
                 _isMoving = false;
                 _readyAt = Time.time + interStepPause;
-                // pas besoin de bump : on n'a pas bougé
                 yield break;
             }
 
-            // --- STOP si une gate vient de (re)se fermer entre ma case et la cible ---
+            // --- Gate fermée entre ma case et la cible ---
             if (HasThinWallBetween(_gridPos, target))
             {
                 _isMoving = false;
                 _readyAt = Time.time + interStepPause;
-                _path.Clear();          // évite de garder un noeud devenu invalide
-                _nextRepathAt = 0f;     // repath immédiat au prochain Update
+                _path.Clear();
+                _nextRepathAt = 0f;
                 yield break;
             }
 
             Vector3 start = transform.position;
             Vector3 end = Center(target, cellSize);
 
-            // Si conflit direct sur la même target au démarrage du step : l'NME cède si sa progression reste <= seuil
-            bool checkYield = false;
-            if (hero != null && hero.IsStepping && target == hero.ToCell)
-            {
-                checkYield = true;
-            }
+            // Héros vise la même case ? fenêtre de cession Héros
+            bool checkYieldToHero = (hero != null && hero.IsStepping && target == hero.ToCell);
 
             float t = 0f;
             while (t < 1f)
@@ -335,9 +374,9 @@ namespace Sarabande.NME
                 t += Time.deltaTime / stepDuration;
                 MoveProgress = t;
 
+                // fenêtre de cession inter-NME
                 if (t <= nmeYieldThreshold && SomeoneSteppingTo(ToCell, out var otherNow))
                 {
-                    // Si l'autre a priorité (InstanceID plus petit), je m'efface
                     if (otherNow && otherNow.GetInstanceID() < this.GetInstanceID())
                     {
                         // annule le step proprement
@@ -352,17 +391,17 @@ namespace Sarabande.NME
                     }
                 }
 
-                // Fenêtre de cession (priorité HÉRO) : uniquement en tout début de step
-                if (checkYield && t <= heroYieldThreshold)
+                // fenêtre de cession au Héros (tout début de step)
+                if (checkYieldToHero && t <= heroYieldThreshold)
                 {
-                    // le héros vise la même case ; l'NME s'efface
                     transform.position = start;        // snap back immédiat
                     _isMoving = false;
                     _readyAt = Time.time + interStepPause;
-                    _path.Clear();                     // évite un "prochain nœud" obsolète
-                    _nextRepathAt = 0f;                // repath immédiat au prochain Update
+                    _path.Clear();
+                    _nextRepathAt = 0f;
                     yield break;
                 }
+
                 if (t > 1f) t = 1f;
                 transform.position = Vector3.Lerp(start, end, t);
                 yield return null;
@@ -378,46 +417,47 @@ namespace Sarabande.NME
             Sarabande.NME.NMEOccupancy.UpdateCell(this, _gridPos);
         }
 
+        /// <summary>Recalcule un chemin BFS vers <paramref name="goal"/> (respecte murs & thin walls).</summary>
         private void RecomputePath(Vector2Int goal)
         {
             _path.Clear();
 
             var cameFrom = new Dictionary<Vector2Int, Vector2Int>();
-            var q = new Queue<Vector2Int>();
+            var frontier = new Queue<Vector2Int>();
             var visited = new HashSet<Vector2Int>();
 
-            q.Enqueue(_gridPos);
+            frontier.Enqueue(_gridPos);
             visited.Add(_gridPos);
 
             bool found = false;
 
-            while (q.Count > 0)
+            while (frontier.Count > 0)
             {
-                var cur = q.Dequeue();
+                var current = frontier.Dequeue();
 
-                if (cur == goal)
+                if (current == goal)
                 {
                     found = true;
                     break;
                 }
 
-                foreach (var nb in NeighborsTowardGoal(cur, goal))
+                foreach (var neighbor in NeighborsTowardGoal(current, goal))
                 {
-                    if (visited.Contains(nb)) continue;
-                    visited.Add(nb);
-                    cameFrom[nb] = cur;
-                    q.Enqueue(nb);
+                    if (visited.Contains(neighbor)) continue;
+                    visited.Add(neighbor);
+                    cameFrom[neighbor] = current;
+                    frontier.Enqueue(neighbor);
                 }
             }
 
             if (!found) return;
 
-            var cur2 = goal;
+            var cur = goal;
             var stack = new Stack<Vector2Int>();
-            while (cur2 != _gridPos)
+            while (cur != _gridPos)
             {
-                stack.Push(cur2);
-                if (!cameFrom.TryGetValue(cur2, out cur2))
+                stack.Push(cur);
+                if (!cameFrom.TryGetValue(cur, out cur))
                 {
                     _path.Clear();
                     return;
@@ -427,17 +467,20 @@ namespace Sarabande.NME
                 _path.Add(stack.Pop());
         }
 
+        /// <summary>
+        /// Renvoie les voisins franchissables depuis <paramref name="c"/>, triés pour tendre vers <paramref name="goal"/>.
+        /// </summary>
         private IEnumerable<Vector2Int> NeighborsTowardGoal(Vector2Int c, Vector2Int goal)
         {
             var dirs = new[]
             {
-        Vector2Int.right, // tie-breaker stable: Est d'abord
-        Vector2Int.left,
-        Vector2Int.up,
-        Vector2Int.down
-    };
+                Vector2Int.right, // tie-breaker stable: Est d'abord
+                Vector2Int.left,
+                Vector2Int.up,
+                Vector2Int.down
+            };
 
-            var cand = new List<(Vector2Int n, int dist, int tie)>(4);
+            var candidates = new List<(Vector2Int n, int dist, int tie)>(4);
 
             for (int i = 0; i < dirs.Length; i++)
             {
@@ -448,21 +491,24 @@ namespace Sarabande.NME
                 if (HasThinWallBetween(c, n)) continue;
 
                 int dist = Mathf.Abs(n.x - goal.x) + Mathf.Abs(n.y - goal.y);
-                cand.Add((n, dist, i));
+                candidates.Add((n, dist, i));
             }
 
-            cand.Sort((a, b) =>
+            candidates.Sort((a, b) =>
             {
                 int cmp = a.dist.CompareTo(b.dist);
                 if (cmp != 0) return cmp;
                 return a.tie.CompareTo(b.tie); // ordre stable Est>Ouest>Nord>Sud
             });
 
-            foreach (var p in cand) yield return p.n;
+            foreach (var p in candidates) yield return p.n;
         }
 
-        // --- Collisions / util ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Collisions / utilitaires
+        // ?????????????????????????????????????????????????????????????????????????????
 
+        /// <summary>Reconstruit les caches de collision à partir du LevelData + dynamiques.</summary>
         private void BuildCollisionSets()
         {
             _blockedCells = new HashSet<Vector2Int>();
@@ -484,16 +530,14 @@ namespace Sarabande.NME
             }
         }
 
+        /// <summary>Vrai s’il existe un “thin wall” (statique ou dynamique) entre from et to.</summary>
         private bool HasThinWallBetween(Vector2Int from, Vector2Int to)
         {
             var key = NormalizeEdge(from, to);
             return _thinBlockers.Contains(key) || _dynamicEdgeBlocks.Contains(key);
         }
 
-        /// <summary>
-        /// Deux cases sont "directement adjacentes" si elles sont cardinales ET
-        /// qu'aucun mur fin ne les sépare.
-        /// </summary>
+        /// <summary>Vrai si deux cases sont cardinalement adjacentes et non séparées par un thin wall.</summary>
         private bool IsDirectlyAdjacent(Vector2Int a, Vector2Int b)
         {
             var d = a - b;
@@ -502,7 +546,76 @@ namespace Sarabande.NME
             return !HasThinWallBetween(a, b);          // adjacent oui, mais pas à travers un thin wall
         }
 
-        // --- Facing / rotation ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Multi-NME occupancy helpers (REMIS)
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        /// <summary>
+        /// Vrai si un autre NME occupe déjà <paramref name="cell"/> maintenant
+        /// (posé, ou en transition n’ayant pas assez libéré/quitté).
+        /// </summary>
+        private bool IsCellOccupiedNowByNME(Vector2Int cell)
+        {
+            var all = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var other in all)
+            {
+                if (!other || other == this) continue;
+
+                if (!other.IsStepping)
+                {
+                    // posé
+                    if (other.GridPos == cell) return true;
+                }
+                else
+                {
+                    // OCCUPE les deux cases pendant la transition
+                    if (other.ToCell == cell) return true;                          // destination “réservée”
+                    if (other.FromCell == cell && other.MoveProgress < nmeVacateThreshold)
+                        return true;                                                // pas assez “libéré” sa case d'origine
+                }
+            }
+            return false;
+        }
+
+        /// <summary>Vrai si au moins un autre NME vise actuellement <paramref name="cell"/> (ToCell==cell).</summary>
+        private bool SomeoneSteppingTo(Vector2Int cell, out NMEController first)
+        {
+            first = null;
+            var all = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var other in all)
+            {
+                if (!other || other == this) continue;
+                if (other.IsStepping && other.ToCell == cell)
+                {
+                    first = other;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Priorité sur <paramref name="cell"/> : gagne si l’InstanceID de cet objet
+        /// est le plus petit parmi ceux qui la visent.
+        /// </summary>
+        private bool WinsTieFor(Vector2Int cell)
+        {
+            int myId = GetInstanceID();
+            var all = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var other in all)
+            {
+                if (!other || other == this) continue;
+                if (other.IsStepping && other.ToCell == cell)
+                {
+                    if (other.GetInstanceID() < myId) return false;
+                }
+            }
+            return true;
+        }
+
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Facing / rotation
+        // ?????????????????????????????????????????????????????????????????????????????
 
         private void SetFacing(EdgeDirection dir)
         {
@@ -511,10 +624,7 @@ namespace Sarabande.NME
                 transform.rotation = Quaternion.LookRotation(fwd, Vector3.up);
         }
 
-        /// <summary>
-        /// Définit l'orientation initiale de l'NME (utilisé par le spawner),
-        /// applique immédiatement la rotation visuelle et mémorise pour les futurs resets.
-        /// </summary>
+        /// <summary>Applique une orientation initiale (utilisée par le spawner) et mémorise pour les resets.</summary>
         public void OverrideInitialFacing(EdgeDirection dir)
         {
             initialFacing = dir;
@@ -529,8 +639,14 @@ namespace Sarabande.NME
             else if (delta == Vector2Int.down) SetFacing(EdgeDirection.South);
         }
 
-        // --- Reset ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Reset (IResettable)
+        // ?????????????????????????????????????????????????????????????????????????????
 
+        /// <summary>
+        /// Annule toute coroutine/attaque, réinitialise les caches et la position,
+        /// réapplique les grilles fermées au NME et repasse en HeroUnspotted.
+        /// </summary>
         public void ResetToInitial()
         {
             StopAllCoroutines();
@@ -575,42 +691,50 @@ namespace Sarabande.NME
             Sarabande.NME.NMEOccupancy.UpdateCell(this, _gridPos);
         }
 
-        // --- Telégraphie / Attaque ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Telégraphie / Attaque
+        // ?????????????????????????????????????????????????????????????????????????????
 
+        /// <summary>Crée (et mémorise) un disque de télégraphe sur la cellule visée.</summary>
         private GameObject CreateTelegraphMarker(Vector2Int cell)
         {
             // Sécurité : jamais deux marqueurs en même temps
             DestroyTelegraphIfAny();
 
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            go.name = "AttackTelegraph";
-            var col = go.GetComponent<Collider>(); if (col) Destroy(col);
+            var telegraphGO = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            telegraphGO.name = "AttackTelegraph";
 
-            var center = Center(cell, cellSize);
+            var colliderComponent = telegraphGO.GetComponent<Collider>();
+            if (colliderComponent) Destroy(colliderComponent);
+
+            var cellCenterWorld = Center(cell, cellSize);
             float halfHeight = 0.01f;
-            go.transform.position = new Vector3(center.x, telegraphY + halfHeight, center.z);
-            go.transform.localScale = new Vector3(telegraphDiameter, 0.01f, telegraphDiameter);
-            go.transform.SetParent(transform, true); // position monde
+            telegraphGO.transform.position = new Vector3(cellCenterWorld.x, telegraphY + halfHeight, cellCenterWorld.z);
+            telegraphGO.transform.localScale = new Vector3(telegraphDiameter, 0.01f, telegraphDiameter);
+            telegraphGO.transform.SetParent(transform, true); // position monde
 
-            var mr = go.GetComponent<MeshRenderer>();
-            if (mr)
+            var meshRenderer = telegraphGO.GetComponent<MeshRenderer>();
+            if (meshRenderer)
             {
-                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                mr.receiveShadows = false;
-                if (telegraphMaterial) mr.sharedMaterial = telegraphMaterial;
+                meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                meshRenderer.receiveShadows = false;
+                if (telegraphMaterial) meshRenderer.sharedMaterial = telegraphMaterial;
             }
 
-            _activeTelegraph = go; // <-- on mémorise
-            return go;
+            _activeTelegraph = telegraphGO;
+            return telegraphGO;
         }
 
+        /// <summary>
+        /// Séquence d’attaque : pré-délai ? télégraphe ? impact (reset) ou recover si raté.
+        /// </summary>
         private IEnumerator AttackRoutine(Vector2Int targetCell, Vector2Int dir)
         {
             _isAttacking = true;
             _path.Clear();          // on gèle la poursuite pendant l'attaque
             FaceDirection(dir);     // verrouille la direction dès le début
 
-            // 1) Pré-délai (avant de lever le bras / télégraphe)
+            // 1) Pré-délai
             float t = 0f;
             while (t < attackPreDelay)
             {
@@ -626,7 +750,7 @@ namespace Sarabande.NME
                 yield break;
             }
 
-            // 2) Télégrafie (disque rouge sur la case visée)
+            // 2) Télégrafie (disque sur la case visée)
             var marker = CreateTelegraphMarker(targetCell);
 
             t = 0f;
@@ -659,6 +783,7 @@ namespace Sarabande.NME
             _readyAt = Time.time + interStepPause;
         }
 
+        /// <summary>Détruit le marqueur de télégraphe actif s’il existe.</summary>
         private void DestroyTelegraphIfAny()
         {
             if (_activeTelegraph)
@@ -668,27 +793,25 @@ namespace Sarabande.NME
             }
         }
 
-        // Optionnel, pratique pour clarifier l’intention
+        /// <summary>Annule immédiatement une attaque en cours (flag + télégraphe).</summary>
         private void CancelAttackImmediate()
         {
             _isAttacking = false;
             DestroyTelegraphIfAny();
         }
 
-
-        // exposer la position logique si besoin ailleurs
-        public Vector2Int GridPos => _gridPos;
-
-        // --- GIZMOS (FOV & LOS) ---
+        // ?????????????????????????????????????????????????????????????????????????????
+        // GIZMOS (FOV & LOS)
+        // ?????????????????????????????????????????????????????????????????????????????
 
         private void OnDrawGizmosSelected()
         {
             if (!drawFovGizmos) return;
 
             // Couleurs
-            Color colFov = new Color(1f, 0.92f, 0.016f, 0.6f); // jaune
-            Color colLosOk = new Color(0.2f, 1f, 0.2f, 0.9f);    // vert
-            Color colLosHit = new Color(1f, 0.2f, 0.2f, 0.9f);    // rouge
+            Color colFov = new Color(1f, 0.92f, 0.016f, 0.6f);  // jaune
+            Color colLosOk = new Color(0.2f, 1f, 0.2f, 0.9f);   // vert
+            Color colLosHit = new Color(1f, 0.2f, 0.2f, 0.9f);  // rouge
 
             // Rayon FOV (adapter à la grille si LevelData dispo)
             float radius = gizmoFovRadius;
@@ -745,10 +868,16 @@ namespace Sarabande.NME
                 }
             }
         }
+
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Blocs dynamiques (API identique)
+        // ?????????????????????????????????????????????????????????????????????????????
+
         private void EnsureSets()
         {
             if (_blockedCells == null) BuildCollisionSets();
         }
+
         public void AddDynamicBlockCell(Vector2Int c)
         {
             EnsureSets();
@@ -767,6 +896,7 @@ namespace Sarabande.NME
 
             if (!isStatic) _blockedCells.Remove(c);
         }
+
         public void AddDynamicEdgeBlock(Vector2Int a, Vector2Int b)
         {
             EnsureSets();
@@ -788,12 +918,16 @@ namespace Sarabande.NME
             _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));
         }
 
-        //--- Ear Noise ---
-        private void OnEnable() 
-        { 
+        // ?????????????????????????????????????????????????????????????????????????????
+        // Events & LevelContext wiring
+        // ?????????????????????????????????????????????????????????????????????????????
+
+        private void OnEnable()
+        {
             NoiseSystem.NoiseRaised += OnNoiseRaised;
             AttachContext();
         }
+
         private void OnDisable()
         {
             NoiseSystem.NoiseRaised -= OnNoiseRaised;
@@ -810,11 +944,11 @@ namespace Sarabande.NME
                 _nextRepathAt = 0f;   // repath immédiat
             }
         }
-        // --- LevelContext plumbing ---
+
+        /// <summary>Abonnement au LevelContext (si présent) + init immédiate.</summary>
         private void AttachContext()
         {
-            // si tu veux pouvoir désactiver, garde ce bool
-            // if (!useLevelContext) return;
+            // if (!useLevelContext) return;  // laissé commenté comme dans la version source
             if (!levelContext)
                 levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
 
@@ -829,69 +963,14 @@ namespace Sarabande.NME
             }
         }
 
+        /// <summary>Se désabonne du LevelContext.</summary>
         private void DetachContext()
         {
             if (levelContext != null)
                 levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
         }
 
-        // true si un autre NME occupe "cell" maintenant (posé OU en train de quitter/arriver)
-        private bool IsCellOccupiedNowByNME(Vector2Int cell)
-        {
-            var all = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var other in all)
-            {
-                if (!other || other == this) continue;
-
-                if (!other.IsStepping)
-                {
-                    // posé
-                    if (other.GridPos == cell) return true;
-                }
-                else
-                {
-                    // OCCUPE les deux cases pendant la transition
-                    if (other.ToCell == cell) return true;                          // la destination est "réservée"
-                    if (other.FromCell == cell && other.MoveProgress < nmeVacateThreshold)
-                        return true;                                                // n'a pas assez "libéré" sa case d'origine
-                }
-            }
-            return false;
-        }
-
-        // true si au moins un autre NME est en train de viser "cell" (ToCell==cell)
-        private bool SomeoneSteppingTo(Vector2Int cell, out NMEController first)
-        {
-            first = null;
-            var all = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var other in all)
-            {
-                if (!other || other == this) continue;
-                if (other.IsStepping && other.ToCell == cell)
-                {
-                    first = other;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // Je gagne la priorité pour "cell" si je suis le plus petit InstanceID parmi ceux qui la visent
-        private bool WinsTieFor(Vector2Int cell)
-        {
-            int myId = GetInstanceID();
-            var all = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var other in all)
-            {
-                if (!other || other == this) continue;
-                if (other.IsStepping && other.ToCell == cell)
-                {
-                    if (other.GetInstanceID() < myId) return false;
-                }
-            }
-            return true;
-        }
-
+        /// <summary>Réagit au changement de LevelData : en jeu, reset complet.</summary>
         private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
         {
             if (levelData == ld) return;
@@ -906,9 +985,9 @@ namespace Sarabande.NME
             if (Application.isPlaying && isActiveAndEnabled && levelData != null)
                 ResetToInitial();
         }
+
 #if UNITY_EDITOR
         private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
 #endif
-
     }
 }
