@@ -1,17 +1,30 @@
+using Sarabande.Core;
 using System.Collections.Generic;
 using UnityEngine;
-using Sarabande.Core;
+using static UnityEditor.PlayerSettings;
 
 namespace Sarabande.Levels
 {
+    public static class LevelGlobalSettings
+    {
+        [Header("Cells")]
+        [SerializeField, Min(0.001f)] public static float cellSize = 1f;
+
+        [Header("Layers")]
+        [SerializeField] public static string obstaclesLayerName = "Obstacles";
+    }
+
     /// <summary>
     /// Construit la grille visible, les murs (non-walkables) et les murs fins à partir d'un LevelData.
     /// À attacher sur LevelRoot dans la scène.
     /// </summary>
     public class LevelLoader : MonoBehaviour
     {
+        
+        [SerializeField] public PrefabLibrary library;
+
         [Header("Grid Visuals")]
-        [SerializeField, Min(0.001f)] private float cellSize = 1f;
+        
         [SerializeField, Min(0.001f)] private float lineWidth = 0.03f;
         [SerializeField] private float lineY = 0.01f; // décoller un peu du sol pour éviter le z-fighting
         [SerializeField] private Material lineMaterial;
@@ -26,7 +39,7 @@ namespace Sarabande.Levels
         [SerializeField] private Material passThroughWallMaterial; // optionnel, sinon on réutilise wallMaterial
 
         [Header("Wall Materials")]
-        [SerializeField] private Material wallMaterial;
+
         [SerializeField] private Material thinWallMaterial;
 
         [Header("Debug Markers")]
@@ -38,8 +51,7 @@ namespace Sarabande.Levels
         [SerializeField, Min(0.05f)] private float markerDiameter = 0.6f; // diamètre des disques
         [SerializeField, Min(0.05f)] private float exitMarkerSize = 0.25f; // taille du cube "exit"
 
-        [Header("Layers")]
-        [SerializeField] private string obstaclesLayerName = "Obstacles";
+
 
         [SerializeField] private bool useLevelContext = true;
         [SerializeField] private Sarabande.Core.LevelContext levelContext;
@@ -122,8 +134,8 @@ namespace Sarabande.Levels
                 lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 lr.receiveShadows = false;
 
-                lr.SetPosition(0, new Vector3(x * cellSize, lineY, 0f));
-                lr.SetPosition(1, new Vector3(x * cellSize, lineY, h * cellSize));
+                lr.SetPosition(0, new Vector3(x * LevelGlobalSettings.cellSize, lineY, 0f));
+                lr.SetPosition(1, new Vector3(x * LevelGlobalSettings.cellSize, lineY, h * LevelGlobalSettings.cellSize));
             }
 
             // Lignes horizontales (z constant, x de 0 à w)
@@ -140,8 +152,8 @@ namespace Sarabande.Levels
                 lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 lr.receiveShadows = false;
 
-                lr.SetPosition(0, new Vector3(0f, lineY, z * cellSize));
-                lr.SetPosition(1, new Vector3(w * cellSize, lineY, z * cellSize));
+                lr.SetPosition(0, new Vector3(0f, lineY, z * LevelGlobalSettings.cellSize));
+                lr.SetPosition(1, new Vector3(w * LevelGlobalSettings.cellSize, lineY, z * LevelGlobalSettings.cellSize));
             }
         }
 
@@ -158,28 +170,19 @@ namespace Sarabande.Levels
                 }
 
                 // On instancie un cube 1x1xwallHeight, centré sur la case
-                var pos = GridCenter(c);
-                var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                go.name = $"Wall_{c.x}_{c.z}";
-                go.transform.SetParent(_wallsParent, false);
-                go.transform.position = new Vector3(pos.x, wallHeight * 0.5f, pos.z);
-                float sx = Mathf.Max(0.001f, cellSize - 2f * wallInset);
-                float sz = Mathf.Max(0.001f, cellSize - 2f * wallInset);
-                go.transform.localScale = new Vector3(sx, wallHeight, sz);
+                Vector3 pos = GridCenter(c);
 
-                //assignation de layer
-                int obsLayer = LayerMask.NameToLayer(obstaclesLayerName);
-                if (obsLayer != -1) go.layer = obsLayer;
-                else Debug.LogWarning($"[LevelLoader] Layer '{obstaclesLayerName}' introuvable. Crée-le dans Project Settings > Tags and Layers.");
-
-                // Optionnel : on peut désactiver l'ombre pour un look "editeur"
-                var mr = go.GetComponent<MeshRenderer>();
-                if (mr != null)
+                GameObject temp = Instantiate(library.GetWallPrefab(), pos, Quaternion.identity, _wallsParent);
+                WallVisual visual = temp.GetComponent<WallVisual>();
+                if (temp.GetComponent<WallVisual>() != null)
                 {
-                    mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    mr.receiveShadows = false;
-                    if (wallMaterial != null) mr.sharedMaterial = wallMaterial;
+                    visual.Init(pos, $"Wall_{c.x}_{c.z}");
                 }
+                else
+                {
+                    Debug.LogError("Wall Prefab has no WallVisual attached");
+                }
+
             }
         }
 
@@ -213,26 +216,26 @@ namespace Sarabande.Levels
                 go.transform.SetParent(_thinWallsParent, false);
 
                 //assignation de layer
-                int obsLayer = LayerMask.NameToLayer(obstaclesLayerName);
+                int obsLayer = LayerMask.NameToLayer(LevelGlobalSettings.obstaclesLayerName);
                 if (obsLayer != -1) go.layer = obsLayer;
-                else Debug.LogWarning($"[LevelLoader] Layer '{obstaclesLayerName}' introuvable. Crée-le dans Project Settings > Tags and Layers.");
+                else Debug.LogWarning($"[LevelLoader] Layer '{LevelGlobalSettings.obstaclesLayerName}' introuvable. Crée-le dans Project Settings > Tags and Layers.");
 
                 // Position & scale : une "barre" mince posée sur l'arête
                 if (sameX)
                 {
                     // Séparation horizontale entre deux rangées : x au centre de la colonne, z sur la ligne entre les 2 cases
-                    float x = e.a.x * cellSize + cellSize * 0.5f;
-                    float z = Mathf.Min(e.a.z, e.b.z) * cellSize + cellSize; // ligne entre z et z+1
+                    float x = e.a.x * LevelGlobalSettings.cellSize + LevelGlobalSettings.cellSize * 0.5f;
+                    float z = Mathf.Min(e.a.z, e.b.z) * LevelGlobalSettings.cellSize + LevelGlobalSettings.cellSize; // ligne entre z et z+1
                     go.transform.position = new Vector3(x, wallHeight * 0.5f, z);
-                    go.transform.localScale = new Vector3(cellSize, wallHeight, thinThickness);
+                    go.transform.localScale = new Vector3(LevelGlobalSettings.cellSize, wallHeight, thinThickness);
                 }
                 else // sameZ
                 {
                     // Séparation verticale entre deux colonnes : z au centre de la rangée, x sur la ligne entre les 2 cases
-                    float x = Mathf.Min(e.a.x, e.b.x) * cellSize + cellSize; // ligne entre x et x+1
-                    float z = e.a.z * cellSize + cellSize * 0.5f;
+                    float x = Mathf.Min(e.a.x, e.b.x) * LevelGlobalSettings.cellSize + LevelGlobalSettings.cellSize; // ligne entre x et x+1
+                    float z = e.a.z * LevelGlobalSettings.cellSize + LevelGlobalSettings.cellSize * 0.5f;
                     go.transform.position = new Vector3(x, wallHeight * 0.5f, z);
-                    go.transform.localScale = new Vector3(thinThickness, wallHeight, cellSize);
+                    go.transform.localScale = new Vector3(thinThickness, wallHeight, LevelGlobalSettings.cellSize);
                 }
 
                 var mr = go.GetComponent<MeshRenderer>();
@@ -241,7 +244,6 @@ namespace Sarabande.Levels
                     mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     mr.receiveShadows = false;
                     if (thinWallMaterial != null) mr.sharedMaterial = thinWallMaterial;
-                    else if (wallMaterial != null) mr.sharedMaterial = wallMaterial;
                 }
             }
         }
@@ -261,38 +263,30 @@ namespace Sarabande.Levels
                     continue;
                 }
 
-                var center = GridCenter(c);
-
-                var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                go.name = $"FakeWall_{c.x}_{c.z}";
-                go.transform.SetParent(_fakeWallsParent, false);
-                go.transform.position = new Vector3(center.x, wallHeight * 0.5f, center.z);
-
-                // même gabarit que les murs “réels”
-                float sx = Mathf.Max(0.001f, cellSize - 2f * wallInset);
-                float sz = Mathf.Max(0.001f, cellSize - 2f * wallInset);
-                go.transform.localScale = new Vector3(sx, wallHeight, sz);
-
-                // Visuel identique
-                var mr = go.GetComponent<MeshRenderer>();
-                if (mr)
+                Vector3 pos = GridCenter(c);
+                GameObject temp = Instantiate(library.GetFakeWallPrefab(), pos, Quaternion.identity, _fakeWallsParent);
+                FakeWallEntity visual = temp.GetComponent<FakeWallEntity>();
+                if (temp.GetComponent<FakeWallEntity>() != null)
                 {
-                    mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    mr.receiveShadows = false;
-                    mr.sharedMaterial = passThroughWallMaterial ? passThroughWallMaterial : wallMaterial;
+                    visual.Init(TempGridCoordConverter(c), pos, $"FakeWall_{c.x}_{c.z}");
+                }
+                else
+                {
+                    Debug.LogError("Fake Wall Prefab has no FakeWallEntity attached");
                 }
 
-                // Important : NE PAS le mettre sur "Obstacles" (pour la LOS)
-                // Option : retirer le collider pour éviter tout hasard physique
-                var col = go.GetComponent<Collider>();
-                if (col) Destroy(col);
             }
         }
 
         /// <summary>Centre monde de la case (x,z).</summary>
         private Vector3 GridCenter(GridCoord c)
         {
-            return new Vector3((c.x + 0.5f) * cellSize, 0f, (c.z + 0.5f) * cellSize);
+            return new Vector3((c.x + 0.5f) * LevelGlobalSettings.cellSize, 0f, (c.z + 0.5f) * LevelGlobalSettings.cellSize);
+        }
+
+        private Vector2Int TempGridCoordConverter(GridCoord c)
+        {
+            return new Vector2Int(c.x, c.z);
         }
 
         private void BuildDebugMarkers()
@@ -349,7 +343,7 @@ namespace Sarabande.Levels
             var pos = center;
 
             // Place le marqueur sur le bord extérieur de la case dans la direction d'Exit
-            float half = cellSize * 0.5f;
+            float half = LevelGlobalSettings.cellSize * 0.5f;
             switch (dir)
             {
                 case EdgeDirection.East: pos.x += half; break;

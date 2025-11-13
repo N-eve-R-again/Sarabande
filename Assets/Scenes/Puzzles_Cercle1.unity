@@ -605,6 +605,8 @@ GameObject:
   - component: {fileID: 619786942}
   - component: {fileID: 619786943}
   - component: {fileID: 619786955}
+  - component: {fileID: 619786959}
+  - component: {fileID: 619786960}
   - component: {fileID: 619786944}
   - component: {fileID: 619786945}
   - component: {fileID: 619786946}
@@ -657,16 +659,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b112df8e1840694dbbff83d7d3fb894, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cellSize: 1
+  library: {fileID: 619786959}
   lineWidth: 0.03
   lineY: 0.01
   lineMaterial: {fileID: 2100000, guid: 031f2185ee7d6964497e2dce35d5ff6d, type: 2}
   wallInset: 0.03
-  wallHeight: 1
+  wallHeight: 0.5
   thinThickness: 0.1
   buildPassThrough: 1
   passThroughWallMaterial: {fileID: 0}
-  wallMaterial: {fileID: 2100000, guid: 4ba436b99e17b6e4fa83ff923eb032f4, type: 2}
   thinWallMaterial: {fileID: 2100000, guid: f9be59f175831094c874b94e8ae33337, type: 2}
   showMarkers: 1
   heroMarkerMaterial: {fileID: 2100000, guid: 03e2fbf2be5f6f14fbfc3fc923caa187, type: 2}
@@ -675,7 +676,6 @@ MonoBehaviour:
   markerY: 0.02
   markerDiameter: 0.3
   exitMarkerSize: 0.25
-  obstaclesLayerName: Obstacles
   useLevelContext: 1
   levelContext: {fileID: 619786955}
   levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
@@ -1216,6 +1216,35 @@ MonoBehaviour:
   nmePrefab: {fileID: 5685716814006458922, guid: 92119acf2c2a5204c81482408b097526, type: 3}
   cellSize: 1
   nmeParent: {fileID: 0}
+--- !u!114 &619786959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 619786941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94e69641e9eab074c9660592a7f88b5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wallPrefab: {fileID: 4484211654490024867, guid: bc7f5c343f7944b4bbc4f0fe40695cdd, type: 3}
+  fakeWallPrefab: {fileID: 4484211654490024867, guid: 0871e47d513f14e4fbe45e1c45a5d3bc, type: 3}
+--- !u!114 &619786960
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 619786941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5b7ac40bf49f45458cafa911d3056d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializedDico:
+    debugKeys: []
+    debugValues: []
 --- !u!1 &653965775
 GameObject:
   m_ObjectHideFlags: 0

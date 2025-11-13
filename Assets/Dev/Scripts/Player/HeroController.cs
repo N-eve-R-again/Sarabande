@@ -36,7 +36,7 @@ namespace Sarabande.Player
     /// - Sortie : autorisée si on part depuis la case/direction configurée dans LevelData.
     /// </summary>
     [RequireComponent(typeof(PlayerInput))]
-    public class HeroController : MonoBehaviour, Sarabande.Core.IResettable
+    public class HeroController : MonoBehaviour, Sarabande.Core.IResettable, IActor
     {
         // ?????????????????????????????????????????????????????????????????????????????
         // Serialized fields (groupés par thème) — NOMS CONSERVÉS (NE PAS RENOMMER)
@@ -321,11 +321,16 @@ namespace Sarabande.Player
 
             _readyAtTime = Time.time + interStepPause;
 
+
             // Gestion de la sortie si ce step correspond à un “exit move”
             if (isExitMove)
             {
                 onExit?.Invoke();
                 if (disableOnExit) enabled = false; // coupe ce contrôleur pour éviter tout input post-sortie
+            }
+            else
+            {
+                LevelEntitiesManager.Instance.ActorMoveEvent(_gridPos, this);
             }
         }
 
