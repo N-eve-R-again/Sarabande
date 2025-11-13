@@ -5,38 +5,52 @@ using UnityEngine;
 public class FakeWallEntity : MonoBehaviour, IListener, IResettable
 {
     public GameObject GameObject => gameObject;
+    public IListener.ListenerType type => IListener.ListenerType.FakeWall;
 
     [SerializeField, Min(0f)] private float wallInset = 0.05f;
     [SerializeField, Min(0.1f)] private float wallHeight = 1f;
-    [SerializeField, Min(0.01f)] private float thinThickness = 0.10f;
 
     [SerializeField] private Vector2Int gridPosition;
+
     [SerializeField] private bool revealed = false;
     [SerializeField] float alphaOnRevealed = 0.5f;
-    public void Init(Vector2Int _gridPos, Vector3 _pos, string _name)
+    public void Init(GridCoord _coord, string _name)
     {
         gameObject.name = _name;
-        transform.position = _pos;
 
+        gridPosition = (Vector2Int)_coord;
+        transform.position = SetPosition(_coord);
+        transform.localScale = SetSize();
 
-        transform.position = new Vector3(_pos.x, wallHeight * 0.5f, _pos.z);
+        LevelEntitiesManager.Instance.RegisterListener(gridPosition, this);
+    }
+
+    public Vector3 SetSize()
+    {
         float scaleXZ = Mathf.Max(0.001f, LevelGlobalSettings.cellSize - 2f * wallInset);
-        Vector3 initScale = new Vector3(scaleXZ, wallHeight, scaleXZ);
-        transform.localScale = initScale;
-
-        LevelEntitiesManager.Instance.RegisterListener(_gridPos, this);
+        return new Vector3(scaleXZ, wallHeight, scaleXZ);
+    }
+    private Vector3 SetPosition(GridCoord c)
+    {
+        float x = (c.x + 0.5f) * LevelGlobalSettings.cellSize;
+        float z = (c.z + 0.5f) * LevelGlobalSettings.cellSize;
+        return new Vector3(x, wallHeight * 0.5f, z);
     }
 
     private void Discovered()
     {
-        gameObject.GetComponent<Renderer>().material.color = new Color(1, 1, 1, 0.25f);
+        gameObject.GetComponent<Renderer>().material.color = new Color(1, 1, 1, alphaOnRevealed);
         revealed = true;
+    }
+    private void UnDiscover()
+    {
+        gameObject.GetComponent<Renderer>().material.color = Color.white;
+        revealed = false;
     }
 
     public void ResetToInitial()
     {
-        gameObject.GetComponent<Renderer>().material.color = Color.white;
-        revealed = false;
+        UnDiscover();
         //reset implementation here        
     }
 
@@ -45,6 +59,13 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
         if (!revealed)
         {
             Discovered();
+        }
+    }
+    public void OnExitInteract()
+    {
+        if (revealed)
+        {
+            UnDiscover();
         }
     }
 }

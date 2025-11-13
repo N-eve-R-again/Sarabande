@@ -15,3 +15,5 @@ MonoBehaviour:
   coloredTitles:
   - name: Main Camera
     color: {r: 0.28773582, g: 0.9325813, b: 1, a: 0.3529412}
+  - name: LevelRoot
+    color: {r: 1, g: 0, b: 0.020870686, a: 0.3529412}

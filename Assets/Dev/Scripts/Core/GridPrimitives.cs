@@ -10,7 +10,13 @@ namespace Sarabande.Core
         public int z; // rangée   (1=0 ... 8=7)
 
         public GridCoord(int x, int z) { this.x = x; this.z = z; }
-        public override string ToString() => $"({x},{z})";
+
+        public static implicit operator Vector2Int(GridCoord coord)
+        {
+            return new Vector2Int(coord.x, coord.z);
+        }
+
+        public override string ToString() => $"({x}_{z})";
     }
 
     /// <summary>Direction cardinale pour les sorties/murs fins</summary>
