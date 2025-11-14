@@ -1,26 +1,34 @@
+using Sarabande.Core;
 using Sarabande.Levels;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEngine;
 
-public class StaticListenerFactory : MonoBehaviour
+public class StaticListenerFactory : MonoBehaviour, IClearable
 {
     [Header("GameObject Folders")]
     private Transform fakeWallsParent;
+    private Transform messageParent;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject fakeWallPrefab;
+    [SerializeField] private GameObject messagePrefab;
 
 
     [SerializeField] private bool jobDone = false;
     public bool IsJobDone() { return jobDone; }
+    public void ClearObject()
+    {
 
+    }
     public void BuildStaticListeners(LevelData _levelData)
     {
         if (!PrefabAreValid()) return;
 
         CreateFolders();
 
-        BuildPassThroughWalls(_levelData);
+        CreateFakeWalls(_levelData);
+        CreateMessages(_levelData);
         //message
         //arrowtrap
         //doors
@@ -30,18 +38,27 @@ public class StaticListenerFactory : MonoBehaviour
     }
     private bool PrefabAreValid()
     {
-        if (fakeWallPrefab == null)
+
+        if (fakeWallPrefab == null || messagePrefab == null)
         {
-            Debug.LogError("Missing Prefabs");
+            Debug.LogError("Missing one or all Prefabs");
             return false;
         }
 
         bool valid = true;
+
         if (fakeWallPrefab.GetComponent<FakeWallEntity>() == null)
         {
             Debug.LogError("FakeWallPrefab has no FakeWallEntity attached");
             valid = false;
         }
+
+        if (fakeWallPrefab.GetComponent<FakeWallEntity>() == null)
+        {
+            Debug.LogError("MessagePrefab has no MessageCollectibleEntity attached");
+            valid = false;
+        }
+
 
         return valid;
     }
@@ -50,17 +67,14 @@ public class StaticListenerFactory : MonoBehaviour
     {
         fakeWallsParent = new GameObject("FakeWalls").transform;
         fakeWallsParent.SetParent(transform, false);
+
+        messageParent = new GameObject("MessagesCollectibles").transform;
+        messageParent.SetParent(transform, false);
     }
 
-    private void BuildPassThroughWalls(LevelData _levelData)
+    private void CreateFakeWalls(LevelData _levelData)
     {
         if (_levelData.passThroughWalls == null) return;
-
-        if (fakeWallPrefab.GetComponent<FakeWallEntity>() == null)
-        {
-            Debug.LogError("Fake Wall Prefab has no FakeWallEntity attached");
-            return;
-        }
 
         // dé-duplication légère au cas où
         var set = new HashSet<(int x, int z)>();
@@ -79,5 +93,19 @@ public class StaticListenerFactory : MonoBehaviour
             entity.Init(coord, $"FakeWall_{coord.ToString()}");
 
         }
+    }
+
+    private void CreateMessages(LevelData levelData)
+    {
+        if (levelData.messages == null) return;
+
+        foreach(MessageSpec msg in levelData.messages)
+        {
+            GameObject temp = Instantiate(messagePrefab, messageParent);
+            MessageCollectibleEntity entity = temp.GetComponent<MessageCollectibleEntity>();
+
+            entity.Init(msg, $"Message_{msg.cell.ToString()}");
+        }
+
     }
 }

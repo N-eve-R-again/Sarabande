@@ -39,8 +39,8 @@ namespace Sarabande.Levels
 
         private void Awake()
         {
-            if (!levelContext) levelContext = FindObjectOfType<LevelContext>(true);
-            if (!resetManager) resetManager = FindObjectOfType<ResetManager>(true);
+            if (!levelContext) levelContext = FindFirstObjectByType<LevelContext>();
+            if (!resetManager) resetManager = FindFirstObjectByType<ResetManager>();
 
             // Sélectionne l'index courant à partir du LevelData en cours (si présent dans la liste)
             if (puzzleList != null && levelContext != null && levelContext.LevelData != null)

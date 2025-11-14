@@ -1,13 +1,17 @@
+using Sarabande.Core;
+using Sarabande.Levels;
+using Sarabande.Messages;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LevelEntitiesManager : MonoBehaviour
+public class LevelEntitiesManager : MonoBehaviour, IClearable
 {
     [Header("Listeners")]
     private Dictionary<Vector2Int, IListener> listeners = new();
 
-    [SerializeField] public static LevelEntitiesManager Instance;
+    private static LevelEntitiesManager Instance;
+    public static LevelEntitiesManager I => Instance;
 
     [Header("Buffers")]
     private List<InteractionBuffer> interactions = new List<InteractionBuffer>();
@@ -15,15 +19,22 @@ public class LevelEntitiesManager : MonoBehaviour
     [Header("DebugLists")]
     [SerializeField] private DebugListenerDico serializedDico;
 
+    [Header("SubManagers")]
+    [SerializeField] private MessageSystem messageSystem;
+
     public void Ready()
     {
+        if(messageSystem == null) throw new MissingReferenceException("MessageSystem");
         Instance = this;
+
     }
 
-    public void GlobalReset()
+    public void ClearObject()
     {
         //reset tout les objects ici
     }
+
+    public MessageSystem GetMessageSystem() { return messageSystem; }
 
 
     public void RegisterListener(Vector2Int pos, IListener listener)

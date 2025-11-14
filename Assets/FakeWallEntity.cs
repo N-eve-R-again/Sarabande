@@ -7,10 +7,12 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
     public GameObject GameObject => gameObject;
     public IListener.ListenerType type => IListener.ListenerType.FakeWall;
 
+    public Vector2Int gridPosition;
+
     [SerializeField, Min(0f)] private float wallInset = 0.05f;
     [SerializeField, Min(0.1f)] private float wallHeight = 1f;
 
-    [SerializeField] private Vector2Int gridPosition;
+
 
     [SerializeField] private bool revealed = false;
     [SerializeField] float alphaOnRevealed = 0.5f;
@@ -22,7 +24,7 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
         transform.position = SetPosition(_coord);
         transform.localScale = SetSize();
 
-        LevelEntitiesManager.Instance.RegisterListener(gridPosition, this);
+        IListener.Register(gridPosition,this);
     }
 
     public Vector3 SetSize()

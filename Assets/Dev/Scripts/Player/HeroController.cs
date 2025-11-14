@@ -25,6 +25,7 @@ using Sarabande.NME;
 using static Sarabande.Core.GridUtils;
 using System.Collections.Generic;
 using UnityEngine.Events;
+using LEM = LevelEntitiesManager;
 
 namespace Sarabande.Player
 {
@@ -43,8 +44,8 @@ namespace Sarabande.Player
         // ?????????????????????????????????????????????????????????????????????????????
 
         [Header("ActorSettings")]
-        [SerializeField] private InteractionLayer interactionLayer = new InteractionLayer(true, true);
-        public InteractionLayer InteractionLayer => interactionLayer;
+        [SerializeField] private ListenerInteractionLayer interactionLayer = new ListenerInteractionLayer(true, true,true);
+        public ListenerInteractionLayer InteractionLayer => interactionLayer;
 
         [Header("Data")]
         [SerializeField] private bool useLevelContext = true;
@@ -335,7 +336,7 @@ namespace Sarabande.Player
             }
             else
             {
-                LevelEntitiesManager.Instance.ActorMoveEvent(_gridPos, this);
+                LEM.I.ActorMoveEvent(_gridPos, this);
             }
         }
 

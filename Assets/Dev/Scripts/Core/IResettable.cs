@@ -5,4 +5,9 @@ namespace Sarabande.Core
     {
         void ResetToInitial();
     }
+
+    public interface IClearable
+    {
+        void ClearObject();
+    }
 }

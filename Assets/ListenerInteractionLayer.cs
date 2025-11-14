@@ -2,15 +2,17 @@ using System;
 using UnityEngine;
 
 [Serializable]
-public class InteractionLayer
+public class ListenerInteractionLayer
 {
     [SerializeField] private bool FakeWall;
     [SerializeField] private bool ArrowTrap;
+    [SerializeField] private bool Message;
 
-    public InteractionLayer(bool fakeWall, bool arrowTrap)
+    public ListenerInteractionLayer(bool fakeWall, bool arrowTrap, bool message)
     {
         FakeWall = fakeWall;
         ArrowTrap = arrowTrap;
+        Message = message;
     }
     public bool CanInteractWith(IListener target)
     {
@@ -18,6 +20,7 @@ public class InteractionLayer
         {
             case IListener.ListenerType.FakeWall: return FakeWall;
             case IListener.ListenerType.ArrowTrap: return ArrowTrap;
+            case IListener.ListenerType.Message: return Message;
         }
         return false;
 

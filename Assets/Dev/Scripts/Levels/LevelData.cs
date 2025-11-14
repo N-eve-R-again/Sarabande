@@ -20,7 +20,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sarabande.Core;
-using UnityEngine.Serialization;
 
 namespace Sarabande.Levels
 {
@@ -157,14 +156,6 @@ namespace Sarabande.Levels
         [Header("Messages")]
         public List<MessageSpec> messages = new();
 
-        [System.Serializable]
-        public class MessageSpec
-        {
-            public GridCoord cell;        // coordonnées (utilise x/z comme partout)
-            [TextArea(2, 5)] public string text;
-            [Min(0.1f)] public float displaySeconds = 3f;
-            public AudioClip voiceClip;
-        }
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Dalles Disco & Séquences
@@ -234,4 +225,15 @@ namespace Sarabande.Levels
         }
         public List<TriggerBinding> triggerBindings = new();
     }
+
+    [System.Serializable]
+    public class MessageSpec
+    {
+        public GridCoord cell;        // coordonnées (utilise x/z comme partout)
+        [TextArea(2, 5)] public string text;
+        [Min(0.1f)] public float displaySeconds = 3f;
+        public AudioClip voiceClip;
+    }
 }
+
+

@@ -1,8 +1,9 @@
+using Sarabande.Core;
 using Sarabande.Levels;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StaticVisualsFactory : MonoBehaviour
+public class StaticVisualsFactory : MonoBehaviour, IClearable
 {
     [Header("GameObject Folders")]
     private Transform gridParent;
@@ -21,7 +22,10 @@ public class StaticVisualsFactory : MonoBehaviour
 
     [SerializeField] private bool jobDone = false;
     public bool IsJobDone() {  return jobDone; }
+    public void ClearObject()
+    {
 
+    }
     public void BuildStaticVisuals(LevelData _levelData)
     {
         if(!PrefabAreValid()) return;

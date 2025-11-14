@@ -22,6 +22,7 @@ using Sarabande.Core;
 using Sarabande.Levels;
 using Sarabande.Player; // HeroController
 using static Sarabande.Core.GridUtils;
+using LEM = LevelEntitiesManager;
 
 namespace Sarabande.NME
 {
@@ -37,8 +38,8 @@ namespace Sarabande.NME
         // Data & Refs (noms conservés)
         // ?????????????????????????????????????????????????????????????????????????????
         [Header("ActorSettings")]
-        [SerializeField] private InteractionLayer interactionLayer = new InteractionLayer(true, true);
-        public InteractionLayer InteractionLayer => interactionLayer;
+        [SerializeField] private ListenerInteractionLayer interactionLayer = new ListenerInteractionLayer(true, true, false);
+        public ListenerInteractionLayer InteractionLayer => interactionLayer;
 
         [Header("Data & Refs")]
         [SerializeField] private bool useLevelContext = true;
@@ -416,7 +417,7 @@ namespace Sarabande.NME
             _isMoving = false;
             _readyAt = Time.time + interStepPause;
 
-            LevelEntitiesManager.Instance.ActorMoveEvent(_gridPos,this);
+            LEM.I.ActorMoveEvent(_gridPos,this);
 
             MoveProgress = 0f;
             FromCell = ToCell = _gridPos;
