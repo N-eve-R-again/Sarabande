@@ -20,8 +20,9 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
     [SerializeField, Range(0.1f, 2f)] private float spriteScale = 1f; // multiplicateur
 
     public IListener.ListenerType type => IListener.ListenerType.Message;
+    Vector2Int IListener.gridCoord => gridPosition;
     
-    public GameObject GameObject => gameObject;
+
 
     public void Init(MessageSpec _specs, string _name)
     {
@@ -33,7 +34,7 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
         transform.position = SetPosition(specs.cell);
         transform.localScale = SetSize();
 
-        IListener.Register(gridPosition, this);
+        IListener.RegisterListener(this);
         messageIndex = messageSystem.Register(specs);
 
     }

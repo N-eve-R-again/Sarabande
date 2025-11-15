@@ -19,7 +19,7 @@ public class ListenerInteractionLayer
         switch (target.type)
         {
             case IListener.ListenerType.FakeWall: return FakeWall;
-            case IListener.ListenerType.ArrowTrap: return ArrowTrap;
+            case IListener.ListenerType.PressurePad: return ArrowTrap;
             case IListener.ListenerType.Message: return Message;
         }
         return false;

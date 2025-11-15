@@ -6,27 +6,28 @@ public interface IListener
 {
     enum ListenerType{
         FakeWall,
-        ArrowTrap,
+        PressurePad,
         Message
     }
 
     ListenerType type { get;}
-
-    GameObject GameObject { get; }
+    Vector2Int gridCoord { get;}
 
     public void OnInteract();
     public void OnExitInteract();
 
-    public static void Register(Vector2Int gridPosition,IListener listener)
+    public static void RegisterListener(IListener listener)
     {
-        LevelEntitiesManager.I.RegisterListener(gridPosition, listener);
+        LevelEntitiesManager.I.RegisterListener(listener);
+    }
+
+    public static void RegisterLinkToTrigger(int _triggerKey, IListener listener)
+    {
+        LevelEntitiesManager.I.RegisterTriggerLink(listener,_triggerKey);
     }
 }
 
-public interface IActor
-{
-    ListenerInteractionLayer InteractionLayer { get; }
-}
+
 
 
 

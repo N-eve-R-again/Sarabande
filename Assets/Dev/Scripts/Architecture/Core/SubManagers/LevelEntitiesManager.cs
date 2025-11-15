@@ -7,8 +7,10 @@ using UnityEngine;
 
 public class LevelEntitiesManager : MonoBehaviour, IClearable
 {
-    [Header("Listeners")]
     private Dictionary<Vector2Int, IListener> listeners = new();
+    private Dictionary<int,ITriggerable> triggerables = new();
+
+    private Dictionary<IListener, ITriggerable> triggerLinks = new();
 
     private static LevelEntitiesManager Instance;
     public static LevelEntitiesManager I => Instance;
@@ -17,7 +19,9 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
     private List<InteractionBuffer> interactions = new List<InteractionBuffer>();
 
     [Header("DebugLists")]
-    [SerializeField] private DebugListenerDico serializedDico;
+    [SerializeField] private DebugDico listenerDico;
+    [SerializeField] private DebugDico triggerableDico;
+    [SerializeField] private DebugDico triggerLinksDico;
 
     [Header("SubManagers")]
     [SerializeField] private MessageSystem messageSystem;
@@ -37,10 +41,32 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
     public MessageSystem GetMessageSystem() { return messageSystem; }
 
 
-    public void RegisterListener(Vector2Int pos, IListener listener)
+    public void RegisterListener(IListener _listener)
     {
-        listeners[pos] = listener;
-        serializedDico.UpdateDebugLists(listeners);
+        listeners[_listener.gridCoord] = _listener;
+        listenerDico.UpdateDebugList(listeners);
+    }
+
+    public void RegisterTriggerable(ITriggerable _triggerable)
+    {
+        triggerables[_triggerable.triggerableKey] = (_triggerable);
+        triggerableDico.UpdateDebugList(triggerables);
+    }
+
+    public void RegisterTriggerLink(IListener _listener,int triggerKey)
+    {
+        ITriggerable temp = null;
+
+        if(triggerables.TryGetValue(triggerKey, out temp))
+        {
+            triggerLinks[_listener] = temp;
+            triggerLinksDico.UpdateDebugList(triggerLinks);
+        }
+        else
+        {
+            Debug.LogError($"Link by {_listener.ToString()} with key {triggerKey} points to nothing");
+        }
+
     }
 
     public void TryTriggerInteractAt(Vector2Int pos, IActor _actor)
@@ -53,46 +79,52 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
         }
     }
 
+    public void SendEventToTriggerable(IListener _listener)
+    {
+        if(triggerLinks.TryGetValue(_listener, out ITriggerable _target))
+        {
+            _target.Trigger();
+        }
+    }
+
     public void ActorMoveEvent(Vector2Int _EventPos, IActor _actor)
     {
         TryTriggerInteractAt(_EventPos, _actor);
 
         if (interactions.Count == 0) return;
 
-        InteractionBuffer bufferToDelete = null;
-        foreach (InteractionBuffer buffer in interactions)
+        interactions.RemoveAll(buffer =>  // Pour chaque buffer
         {
-            if (_actor != buffer.actor) continue;
-            if(_EventPos != buffer.interactionPosition)
+            // Si les conditions sont remplies :
+            if (buffer.actor == _actor && _EventPos != buffer.interactionPosition)
             {
-                buffer.listener.OnExitInteract();
-                bufferToDelete = buffer;
-                break;
+                buffer.listener.OnExitInteract();  // Déclenche l'événement
+                return true;  // buffer supprimé
             }
-        }
+            return false;  // buffer gardé et ignoré
+        });
 
-        if (bufferToDelete != null) { interactions.Remove(bufferToDelete); }
     }
 
 }
 
 
-
 [Serializable]
-public class DebugListenerDico
+public class DebugDico
 {
-    [SerializeField] private List<Vector2Int> debugKeys = new();
-    [SerializeField] private List<GameObject> debugValues = new();
+    [SerializeField] private List<string> debugKeys = new();
+    [SerializeField] private List<string> debugValues = new();
 
-    public void UpdateDebugLists(Dictionary<Vector2Int, IListener> dico)
+    public void UpdateDebugList<TKey,TValue>(Dictionary<TKey, TValue> dico)
     {
         debugKeys.Clear();
         debugValues.Clear();
 
-        foreach (var kvp in dico)
+        foreach (var element in dico)
         {
-            debugKeys.Add(kvp.Key);
-            debugValues.Add(kvp.Value.GameObject);
+            debugKeys.Add(element.Key?.ToString() ?? "null");
+            debugValues.Add(element.Value?.ToString() ?? "null");
         }
     }
+
 }
