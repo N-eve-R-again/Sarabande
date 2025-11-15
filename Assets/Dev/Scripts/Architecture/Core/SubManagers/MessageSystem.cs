@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Sarabande.Core;
 using Sarabande.Levels;
-using Sarabande.Player;
 using Sarabande.UI;
 
 namespace Sarabande.Messages
@@ -11,7 +10,6 @@ namespace Sarabande.Messages
     /// - Affiche un popup + joue la voix quand HÉRO entre sur une case "message".
     /// - Met à jour le compteur (icône + X/Total).
     /// - Les messages collectés sont DÉFINITIFS (ne reset pas).
-    /// - Construit des marqueurs visuels au sol (sprite plat) pour les messages non-collectés.
     /// À attacher sur LevelRoot.
     /// </summary>
     public class MessageSystem : MonoBehaviour, IClearable
