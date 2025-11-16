@@ -4,24 +4,28 @@ using System.Collections.Generic;
 using System.Drawing;
 using UnityEngine;
 
-public class StaticListenerFactory : MonoBehaviour, IClearable
+public class ListenerFactory : MonoBehaviour, IClearable
 {
     [Header("GameObject Folders")]
     private Transform fakeWallsParent;
-    private Transform messageParent;
+    private Transform messagesParent;
+    private Transform pressurePadsParent;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject fakeWallPrefab;
     [SerializeField] private GameObject messagePrefab;
+    [SerializeField] private GameObject pressurePadPrefab;
 
 
     [SerializeField] private bool jobDone = false;
     public bool IsJobDone() { return jobDone; }
     public void ClearObject()
     {
-
+        //supprimer tout les objets
+        
     }
-    public void BuildStaticListeners(LevelData _levelData)
+
+    public void BuildListeners(LevelData _levelData)
     {
         if (!PrefabAreValid()) return;
 
@@ -29,7 +33,7 @@ public class StaticListenerFactory : MonoBehaviour, IClearable
 
         CreateFakeWalls(_levelData);
         CreateMessages(_levelData);
-        //message
+        CreatePressurePads(_levelData);
         //arrowtrap
         //doors
         //tiles
@@ -63,13 +67,31 @@ public class StaticListenerFactory : MonoBehaviour, IClearable
         return valid;
     }
 
+    private void CreatePressurePads(LevelData _levelData)
+    {
+        if (_levelData.arrowTraps == null) return;
+
+        foreach (TriggerPadConfig config in _levelData.newTriggerPads)
+        {
+
+            GameObject temp = Instantiate(pressurePadPrefab, pressurePadsParent);
+            TriggerPadEntity entity = temp.GetComponent<TriggerPadEntity>();
+
+            entity.Init(config, $"PressurePad_{config.cell.ToString()}");
+
+        }
+    }
+
     private void CreateFolders()
     {
         fakeWallsParent = new GameObject("FakeWalls").transform;
         fakeWallsParent.SetParent(transform, false);
 
-        messageParent = new GameObject("MessagesCollectibles").transform;
-        messageParent.SetParent(transform, false);
+        messagesParent = new GameObject("MessagesCollectibles").transform;
+        messagesParent.SetParent(transform, false);
+
+        pressurePadsParent = new GameObject("PressurePads").transform;
+        pressurePadsParent.SetParent(transform, false);
     }
 
     private void CreateFakeWalls(LevelData _levelData)
@@ -99,9 +121,9 @@ public class StaticListenerFactory : MonoBehaviour, IClearable
     {
         if (levelData.messages == null) return;
 
-        foreach(MessageSpec msg in levelData.messages)
+        foreach(MessageConfig msg in levelData.messages)
         {
-            GameObject temp = Instantiate(messagePrefab, messageParent);
+            GameObject temp = Instantiate(messagePrefab, messagesParent);
             MessageCollectibleEntity entity = temp.GetComponent<MessageCollectibleEntity>();
 
             entity.Init(msg, $"Message_{msg.cell.ToString()}");

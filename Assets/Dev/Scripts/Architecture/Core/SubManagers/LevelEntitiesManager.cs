@@ -1,5 +1,3 @@
-using Sarabande.Core;
-using Sarabande.Levels;
 using Sarabande.Messages;
 using System;
 using System.Collections.Generic;
@@ -19,9 +17,9 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
     private List<InteractionBuffer> interactions = new List<InteractionBuffer>();
 
     [Header("DebugLists")]
-    [SerializeField] private DebugDico listenerDico;
-    [SerializeField] private DebugDico triggerableDico;
-    [SerializeField] private DebugDico triggerLinksDico;
+    [SerializeField] private DictionaryInInspector listenerDico;
+    [SerializeField] private DictionaryInInspector triggerableDico;
+    [SerializeField] private DictionaryInInspector triggerLinksDico;
 
     [Header("SubManagers")]
     [SerializeField] private MessageSystem messageSystem;
@@ -44,13 +42,13 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
     public void RegisterListener(IListener _listener)
     {
         listeners[_listener.gridCoord] = _listener;
-        listenerDico.UpdateDebugList(listeners);
+        listenerDico.UpdateDictionary(listeners);
     }
 
     public void RegisterTriggerable(ITriggerable _triggerable)
     {
         triggerables[_triggerable.triggerableKey] = (_triggerable);
-        triggerableDico.UpdateDebugList(triggerables);
+        triggerableDico.UpdateDictionary(triggerables);
     }
 
     public void RegisterTriggerLink(IListener _listener,int triggerKey)
@@ -60,7 +58,7 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
         if(triggerables.TryGetValue(triggerKey, out temp))
         {
             triggerLinks[_listener] = temp;
-            triggerLinksDico.UpdateDebugList(triggerLinks);
+            triggerLinksDico.UpdateDictionary(triggerLinks);
         }
         else
         {
@@ -84,6 +82,10 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
         if(triggerLinks.TryGetValue(_listener, out ITriggerable _target))
         {
             _target.Trigger();
+        }
+        else
+        {
+            Debug.Log($"{_listener} fired event at nothing - no triggerlink registred");
         }
     }
 
@@ -110,12 +112,12 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
 
 
 [Serializable]
-public class DebugDico
+public class DictionaryInInspector
 {
     [SerializeField] private List<string> debugKeys = new();
     [SerializeField] private List<string> debugValues = new();
 
-    public void UpdateDebugList<TKey,TValue>(Dictionary<TKey, TValue> dico)
+    public void UpdateDictionary<TKey,TValue>(Dictionary<TKey, TValue> dico)
     {
         debugKeys.Clear();
         debugValues.Clear();

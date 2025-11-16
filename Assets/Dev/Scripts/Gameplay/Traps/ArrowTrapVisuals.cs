@@ -21,13 +21,7 @@ namespace Sarabande.Traps
         [SerializeField] private Sarabande.Core.LevelContext levelContext;
         [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
 
-        [Header("Tile (dalle)")]
-        [SerializeField] private Material tileMaterial;
-        [SerializeField, Range(0.5f, 0.98f)] private float tileSizeScale = 0.88f; // < 1 pour plus petite que la case
-        [SerializeField, Min(0.005f)] private float tileThickness = 0.02f;        // épaisseur visuelle
-        [SerializeField, Min(0f)] private float tileUpLift = 0.01f;               // léger relief au repos
-        [SerializeField, Min(0.01f)] private float tilePressDuration = 0.06f;
-        [SerializeField, Min(0.01f)] private float tileReleaseDuration = 0.15f;
+
 
         [Header("Wall Top Marker (mur/bord émetteur)")]
         [SerializeField] private Material wallTopMaterial;
@@ -66,59 +60,8 @@ namespace Sarabande.Traps
             _placedBorderMarks = new HashSet<string>();
 
             BuildDiscoCellSet();
-            BuildTiles();
-            BuildWallTopMarkers();
-        }
-
-        private void BuildTiles()
-        {
-            if (levelData.arrowTraps == null) return;
-            for (int i = 0; i < levelData.arrowTraps.Count; i++)
-            {
-                var spec = levelData.arrowTraps[i];
-                var cell = new Vector2Int(spec.triggerCell.x, spec.triggerCell.z);
-                Vector3 center = GridCenter(cell);
-
-                if (hideTrapPadOnDiscoCells && IsDiscoCell(cell))
-                {
-                    // rien à construire pour cette dalle trap ; elle restera invisible,
-                    // mais le piège se déclenchera toujours côté ArrowTrapSystem.
-                    continue;
-                }
-
-                // géométrie : cube fin, < 1 case
-                var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                go.name = $"TrapTile_{i}_({cell.x},{cell.y})";
-                go.transform.SetParent(_tilesParent, false);
-
-                float sx = tileSizeScale * cellSize;
-                float sy = tileThickness;
-                float sz = tileSizeScale * cellSize;
-
-                // centres Y (repos/enfoncé)
-                float yDownCenter = sy * 0.5f;                 // affleure le sol
-                float yUpCenter = yDownCenter + tileUpLift;  // petit relief
-
-                // place au repos
-                go.transform.position = new Vector3(center.x, yUpCenter, center.z);
-                go.transform.localScale = new Vector3(sx, sy, sz);
-
-                // mat & ombres
-                var col = go.GetComponent<Collider>(); if (col) Destroy(col);
-                var mr = go.GetComponent<MeshRenderer>();
-                if (mr)
-                {
-                    mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    mr.receiveShadows = false;
-                    if (tileMaterial) mr.sharedMaterial = tileMaterial;
-                }
-
-                // anim dalle
-                var tv = go.AddComponent<TrapTileVisual>();
-                tv.SetupCell(cell);
-                tv.ConfigureHeights(yUpCenter, yDownCenter);
-                tv.ConfigureDurations(tilePressDuration, tileReleaseDuration);
-            }
+            //BuildTiles();
+            //BuildWallTopMarkers();
         }
 
         private void BuildWallTopMarkers()
@@ -298,77 +241,5 @@ namespace Sarabande.Traps
             EdgeDirection.West => EdgeDirection.East,
             _ => d
         };
-
-#if UNITY_EDITOR
-        [ContextMenu("Rebuild Visuals")]
-        private void RebuildVisuals()
-        {
-            ClearChildren(_tilesParent);
-            ClearChildren(_wallMarksParent);
-            _placedWallMarks?.Clear();
-            _placedBorderMarks?.Clear();
-            BuildTiles();
-            BuildWallTopMarkers();
-        }
-
-        private static void ClearChildren(Transform t)
-        {
-            if (t == null) return;
-            if (!Application.isPlaying)
-            {
-                for (int i = t.childCount - 1; i >= 0; i--)
-                    DestroyImmediate(t.GetChild(i).gameObject);
-            }
-            else
-            {
-                for (int i = t.childCount - 1; i >= 0; i--)
-                    Destroy(t.GetChild(i).gameObject);
-            }
-        }
-#endif
-        private void AttachContext()
-        {
-            if (!useLevelContext) return;
-
-            if (!levelContext)
-                levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
-
-            if (levelContext != null)
-            {
-                levelContext.LevelDataChanged += HandleContextLevelDataChanged;
-                HandleContextLevelDataChanged(levelContext.LevelData); // init immédiate
-            }
-            else
-            {
-                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
-            }
-        }
-
-        private void DetachContext()
-        {
-            if (levelContext != null)
-                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
-        }
-
-        private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
-        {
-            if (levelData == ld) return;
-            levelData = ld;
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-                UnityEditor.EditorUtility.SetDirty(this); // l’inspector reflète la maj auto
-#endif
-            if (Application.isPlaying)
-            {
-                BuildDiscoCellSet();  // <-- NOUVEAU
-            }
-            // NOTE: si ce système a besoin de se "rebuild" quand le LevelData change,
-            // appelle ici ta méthode interne (ex: RebuildFromLevelData()).
-        }
-        private void OnEnable() { AttachContext(); }
-        private void OnDisable() { DetachContext(); }
-#if UNITY_EDITOR
-        private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
-#endif
     }
 }

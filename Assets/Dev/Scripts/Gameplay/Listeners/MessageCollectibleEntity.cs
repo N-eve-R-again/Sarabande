@@ -10,7 +10,7 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
     [SerializeField] private Vector2Int gridPosition;
     [SerializeField] private bool collected = false;
     [SerializeField] private int messageIndex = -1;
-    [SerializeField] private MessageSpec specs;
+    [SerializeField] private MessageConfig specs;
 
     [SerializeField] private MessageSystem messageSystem;
 
@@ -24,7 +24,7 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
     
 
 
-    public void Init(MessageSpec _specs, string _name)
+    public void Init(MessageConfig _specs, string _name)
     {
         messageSystem = LEM.I.GetMessageSystem();
 

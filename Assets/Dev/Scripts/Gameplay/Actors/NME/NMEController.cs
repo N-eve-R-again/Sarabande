@@ -153,15 +153,10 @@ namespace Sarabande.NME
             {
                 spawnCell = _spawnOverrideCell.Value;
             }
-            else if (levelData != null && levelData.nmeSpawns != null && levelData.nmeSpawns.Count > 0)
+            else
             {
                 // migration vers 0/1/N spawns
                 spawnCell = new Vector2Int(levelData.nmeSpawns[0].x, levelData.nmeSpawns[0].z);
-            }
-            else
-            {
-                // fallback legacy (champ unique)
-                spawnCell = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
             }
 
             _gridPos = spawnCell;
@@ -681,13 +676,9 @@ namespace Sarabande.NME
             {
                 spawnCell = _spawnOverrideCell.Value;
             }
-            else if (levelData != null && levelData.nmeSpawns != null && levelData.nmeSpawns.Count > 0)
-            {
-                spawnCell = new Vector2Int(levelData.nmeSpawns[0].x, levelData.nmeSpawns[0].z);
-            }
             else
             {
-                spawnCell = new Vector2Int(levelData.nmeSpawn.x, levelData.nmeSpawn.z);
+                spawnCell = new Vector2Int(levelData.nmeSpawns[0].x, levelData.nmeSpawns[0].z);
             }
 
             _gridPos = spawnCell;

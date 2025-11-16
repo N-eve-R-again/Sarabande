@@ -74,10 +74,7 @@ MonoBehaviour:
       z: 0
   heroSpawn:
     x: 3
-    z: 8
-  nmeSpawn:
-    x: 1
-    z: 6
+    z: 7
   nmeSpawns:
   - x: 1
     z: 6
@@ -91,6 +88,120 @@ MonoBehaviour:
   passThroughWalls:
   - x: 0
     z: 5
+  newArrowTraps:
+  - cell:
+      x: 5
+      z: 4
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    triggerKey: 0
+  - cell:
+      x: 0
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    triggerKey: 1
+  - cell:
+      x: 1
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    triggerKey: 2
+  - cell:
+      x: 2
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    triggerKey: 3
+  - cell:
+      x: 2
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    triggerKey: 4
+  - cell:
+      x: 4
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    triggerKey: 5
+  - cell:
+      x: 5
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    triggerKey: 6
+  - cell:
+      x: 7
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    triggerKey: 7
+  newTriggerPads:
+  - invisible: 0
+    oneShot: 0
+    cell:
+      x: 5
+      z: 5
+    triggerKey: 0
+  - invisible: 0
+    oneShot: 0
+    cell:
+      x: 0
+      z: 2
+    triggerKey: 1
+  - invisible: 0
+    oneShot: 0
+    cell:
+      x: 1
+      z: 0
+    triggerKey: 2
+  - invisible: 0
+    oneShot: 0
+    cell:
+      x: 2
+      z: 2
+    triggerKey: 3
+  - invisible: 0
+    oneShot: 0
+    cell:
+      x: 2
+      z: 0
+    triggerKey: 4
+  - invisible: 0
+    oneShot: 0
+    cell:
+      x: 4
+      z: 1
+    triggerKey: 5
+  - invisible: 0
+    oneShot: 0
+    cell:
+      x: 5
+      z: 1
+    triggerKey: 6
+  - invisible: 0
+    oneShot: 0
+    cell:
+      x: 7
+      z: 1
+    triggerKey: 7
   arrowTraps:
   - triggerCell:
       x: 5
@@ -250,14 +361,5 @@ MonoBehaviour:
       z: 0
     side: 1
     initiallyOpen: 0
-  triggerPads:
-  - cell:
-      x: 5
-      z: 6
-    canBeTriggeredByNME: 0
-    triggerId: test
-  triggerBindings:
-  - id: test
-    action: 0
-    targetIndex: 0
-    secondsOverride: 0
+  triggerPads: []
+  triggerBindings: []

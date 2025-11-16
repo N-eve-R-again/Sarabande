@@ -22,6 +22,8 @@ namespace Sarabande.Levels
         }
     }
 
+
+
     /// <summary>
     /// Construit la grille visible, les murs (non-walkables) et les murs fins à partir d'un LevelData.
     /// À attacher sur LevelRoot dans la scène.
@@ -34,12 +36,14 @@ namespace Sarabande.Levels
 
         [Space]
         [SerializeField] private StaticVisualsFactory staticVisualsFactory;
-        [SerializeField] private StaticListenerFactory staticListenerFactory;
+        [SerializeField] private ListenerFactory listenerFactory;
+        [SerializeField] private TriggerableFactory triggerableFactory;
 
         [Header("Debug")]
         [SerializeField] private bool useLevelContext = true;
         [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
- 
+
+
         private void Awake()
         {
             if (levelData == null)
@@ -51,7 +55,8 @@ namespace Sarabande.Levels
             entitiesManager.Ready();
 
             staticVisualsFactory.BuildStaticVisuals(levelData); //Walls, ThinWalls, Grid
-            staticListenerFactory.BuildStaticListeners(levelData); //Message, FakeWalls, Exit, Messages
+            triggerableFactory.BuildTriggerables(levelData);
+            listenerFactory.BuildListeners(levelData); //Message, FakeWalls, Exit, Messages
 
             BuildActors();//Player, NMEs
 
@@ -63,44 +68,8 @@ namespace Sarabande.Levels
             //player
             //enemies
         }
-        
-        private void AttachContext()
-        {
-            if (!useLevelContext) return;
 
-            if (!levelContext)
-                levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
 
-            if (levelContext != null)
-            {
-                levelContext.LevelDataChanged += HandleContextLevelDataChanged;
-                HandleContextLevelDataChanged(levelContext.LevelData); // init immédiate
-            }
-            else
-            {
-                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
-            }
-        }
 
-        private void DetachContext()
-        {
-            if (levelContext != null)
-                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
-        }
-
-        private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
-        {
-            if (levelData == ld) return;
-            levelData = ld;
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-                UnityEditor.EditorUtility.SetDirty(this); // l’inspector reflète la maj auto
-#endif
-        }
-        private void OnEnable() { AttachContext(); }
-        private void OnDisable() { DetachContext(); }
-#if UNITY_EDITOR
-        private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
-#endif
     }
 }

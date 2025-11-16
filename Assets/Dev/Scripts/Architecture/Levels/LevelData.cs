@@ -17,9 +17,10 @@
 // - Utilisé par : HeroController, NMESpawnSystem, GridGateSystem, TimedDoorSystem, LeverSystem,
 //                 PressurePadSystem/TriggerRouter, ArrowTrapSystem, DiscoSequenceSystem, MessageSystem, etc.
 
+using Sarabande.Core;
 using System.Collections.Generic;
 using UnityEngine;
-using Sarabande.Core;
+using static Sarabande.Levels.LevelData;
 
 namespace Sarabande.Levels
 {
@@ -50,9 +51,6 @@ namespace Sarabande.Levels
         [Header("Spawns")]
         public GridCoord heroSpawn;  // D8 = (3,7)
 
-        [System.Obsolete("Use nmeSpawns instead")]
-        [HideInInspector]
-        public GridCoord nmeSpawn;   // B7 = (1,6) — legacy non utilisé
 
         [Tooltip("Liste des cellules de spawn des ennemis. Vide = 0 ennemi.")]
         public List<GridCoord> nmeSpawns = new();
@@ -79,6 +77,28 @@ namespace Sarabande.Levels
         // Arrow Traps (proto)
         // ?????????????????????????????????????????????????????????????????????????????
 
+        [Header("New Version")]
+        public List<ArrowTrapConfig> newArrowTraps = new();
+        public List<TriggerPadConfig> newTriggerPads = new();
+
+        [ContextMenu("Upgrade Arrow Traps to New Version")]
+        public void ImportLegacyArrowTraps()
+        {
+            newArrowTraps.Clear();
+            newTriggerPads.Clear();
+            int i = 0;
+            foreach (ArrowTrapSpec item in arrowTraps)
+            {
+                TriggerPadConfig triggerPad = new TriggerPadConfig(false, item.canRearm, item.triggerCell, i);
+                ArrowTrapConfig arrowTrap = new ArrowTrapConfig(item.startCell,item.travelDir,item.arrowSpeed,item.canRearm,item.rearmDelay,i);
+                newTriggerPads.Add(triggerPad);
+                newArrowTraps.Add(arrowTrap);
+                i++;
+            }
+
+
+        }
+
         [System.Serializable]
         public struct ArrowTrapSpec
         {
@@ -102,6 +122,7 @@ namespace Sarabande.Levels
             public List<ArrowEmission> emissions;   // null/empty = comportement historique
         }
 
+
         [System.Serializable]
         public class ArrowEmission
         {
@@ -124,7 +145,7 @@ namespace Sarabande.Levels
             [Tooltip("Si > 0, tire exactement N fois (intervalle constant). Prend le pas sur repeatDuration.")]
             [Min(0)] public int repeatCount = 0;
         }
-
+        [Header("Legacy")]
         [Tooltip("Pièges à flèche : quand on marche sur 'triggerCell', une flèche part de 'startCell' dans 'travelDir'.")]
         public List<ArrowTrapSpec> arrowTraps = new();
 
@@ -154,7 +175,7 @@ namespace Sarabande.Levels
         // ?????????????????????????????????????????????????????????????????????????????
 
         [Header("Messages")]
-        public List<MessageSpec> messages = new();
+        public List<MessageConfig> messages = new();
 
 
         // ?????????????????????????????????????????????????????????????????????????????
@@ -227,13 +248,56 @@ namespace Sarabande.Levels
     }
 
     [System.Serializable]
-    public class MessageSpec
+    public class MessageConfig
     {
         public GridCoord cell;        // coordonnées (utilise x/z comme partout)
         [TextArea(2, 5)] public string text;
         [Min(0.1f)] public float displaySeconds = 3f;
         public AudioClip voiceClip;
     }
+
+    [System.Serializable]
+    public class TriggerPadConfig
+    {
+        public bool invisible = false;
+        public bool oneShot = true;
+
+        public GridCoord cell;
+        public int triggerKey = -1;
+
+        public TriggerPadConfig(bool _invisible, bool _oneShot, GridCoord _cell, int _triggerKey)
+        {
+            invisible = _invisible;
+            oneShot = _oneShot;
+            cell = _cell;
+            triggerKey = _triggerKey;
+        }
+    }
+
+    [System.Serializable]
+    public class ArrowTrapConfig
+    {
+        public GridCoord cell;             // première case dans la map que la flèche traverse
+        public EdgeDirection travelDir;         // direction de déplacement (N/E/S/W)
+        [Min(0.1f)] public float arrowSpeed;   // vitesse (unités monde / seconde)
+
+        // --- options de réarmement ---
+        public bool canRearm;                   // si true, le piège se réarme
+        [Min(0f)] public float rearmDelay;      // délai avant réarmement (secondes)
+
+        public int triggerKey = -1;
+
+        public ArrowTrapConfig(GridCoord cell, EdgeDirection travelDir, float arrowSpeed, bool canRearm, float rearmDelay, int triggerKey)
+        {
+            this.cell = cell;
+            this.travelDir = travelDir;
+            this.arrowSpeed = arrowSpeed;
+            this.canRearm = canRearm;
+            this.rearmDelay = rearmDelay;
+            this.triggerKey = triggerKey;
+        }
+    }
+
 }
 
 

@@ -21,14 +21,14 @@ namespace Sarabande.Messages
 
         [Header("Completion")]
         [SerializeField] private List<bool> messages;
-        [SerializeField] private List<MessageSpec> messagesSpecs;
+        [SerializeField] private List<MessageConfig> messagesSpecs;
 
         [Header("Audio")]
         [SerializeField, Range(0f, 1f)] private float voiceVolume = 0.9f;
         private AudioSource _voice;
 
         // --- Collect ---
-        public int Register(MessageSpec spec)
+        public int Register(MessageConfig spec)
         {
             messages.Add(false);
             messagesSpecs.Add(spec);
@@ -39,7 +39,7 @@ namespace Sarabande.Messages
         {
             // popup
             messages[index] = true;
-            MessageSpec collectedSpec = messagesSpecs[index];
+            MessageConfig collectedSpec = messagesSpecs[index];
             popupUI?.Show(collectedSpec.text, Mathf.Max(0.1f, collectedSpec.displaySeconds));
 
             // voix

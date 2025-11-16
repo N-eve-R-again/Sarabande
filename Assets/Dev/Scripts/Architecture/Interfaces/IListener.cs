@@ -21,6 +21,10 @@ public interface IListener
         LevelEntitiesManager.I.RegisterListener(listener);
     }
 
+    public static void SendEventToTriggerable(IListener listener)
+    {
+        LevelEntitiesManager.I.SendEventToTriggerable(listener);
+    }
     public static void RegisterLinkToTrigger(int _triggerKey, IListener listener)
     {
         LevelEntitiesManager.I.RegisterTriggerLink(listener,_triggerKey);
