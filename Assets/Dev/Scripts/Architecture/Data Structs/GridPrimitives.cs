@@ -1,3 +1,4 @@
+using Sarabande.Core;
 using UnityEngine;
 
 namespace Sarabande.Core
@@ -22,6 +23,7 @@ namespace Sarabande.Core
     /// <summary>Direction cardinale pour les sorties/murs fins</summary>
     public enum EdgeDirection { North, East, South, West }
 
+
     /// <summary>Mur fin entre deux cases adjacentes</summary>
     [System.Serializable]
     public struct EdgeBlocker
@@ -36,5 +38,9 @@ namespace Sarabande.Core
     {
         public GridCoord fromCell;     // ex: H1 = (7,0)
         public EdgeDirection direction; // ex: East (sortir à droite)
+
+
     }
+
+
 }

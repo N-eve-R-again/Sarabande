@@ -44,8 +44,8 @@ namespace Sarabande.Player
         // ?????????????????????????????????????????????????????????????????????????????
 
         [Header("ActorSettings")]
-        [SerializeField] private ListenerInteractionLayer interactionLayer = new ListenerInteractionLayer(true, true,true);
-        public ListenerInteractionLayer InteractionLayer => interactionLayer;
+        [SerializeField] private ActorType _actorType;
+        ActorType IActor.type => _actorType;
 
         [Header("Data")]
         [SerializeField] private bool useLevelContext = true;
@@ -209,6 +209,7 @@ namespace Sarabande.Player
             }
 
             if (faceOnMove) FaceDirection(intendedDir);
+
             StartCoroutine(StepTo(targetCell));
         }
 
@@ -260,7 +261,7 @@ namespace Sarabande.Player
 
             Vector3 worldStart = transform.position;
             Vector3 worldEnd = Center(target, cellSize);
-
+            LEM.I.ActorMoveEvent(target, this, ActorInteractionType.OnIntent);
             float lerpT = 0f;
             while (lerpT < 1f)
             {
@@ -288,10 +289,13 @@ namespace Sarabande.Player
                     transform.position = worldStart;
                     _isMoving = false;
                     MoveProgress = 0f;
+                    
                     FromCell = ToCell = _gridPos;      // on reste logiquement sur la case d’origine
+                    LEM.I.ActorMoveEvent(ToCell, this, ActorInteractionType.OnCancelIntent);
                     _readyAtTime = Time.time + interStepPause;
                     yield break;
                 }
+
 
                 // pas de conflit : on applique la position prévue
                 transform.position = worldPosAtThisFrame;
@@ -336,7 +340,7 @@ namespace Sarabande.Player
             }
             else
             {
-                LEM.I.ActorMoveEvent(_gridPos, this);
+                LEM.I.ActorMoveEvent(_gridPos, this, ActorInteractionType.OnMove);
             }
         }
 
@@ -363,7 +367,7 @@ namespace Sarabande.Player
                 transform.position = Vector3.Lerp(start, start + bumpVector, lerpT);
                 yield return null;
             }
-
+            LEM.I.ActorMoveEvent(_gridPos, this, ActorInteractionType.OnCancelIntent);
             // Retour
             lerpT = 0f;
             while (lerpT < 1f)

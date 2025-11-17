@@ -54,6 +54,7 @@ namespace Sarabande.Core
             _ => d
         };
 
+
         // --- Arêtes (pour murs fins, grid gates, etc.) ---
         public static (Vector2Int a, Vector2Int b) NormalizeEdge(Vector2Int a, Vector2Int b)
         {

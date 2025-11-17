@@ -4,23 +4,22 @@ using UnityEngine;
 [Serializable]
 public class ListenerInteractionLayer
 {
-    [SerializeField] private bool FakeWall;
-    [SerializeField] private bool ArrowTrap;
-    [SerializeField] private bool Message;
+    [SerializeField] private bool NME;
+    [SerializeField] private bool Hero;
 
-    public ListenerInteractionLayer(bool fakeWall, bool arrowTrap, bool message)
+
+    public ListenerInteractionLayer(bool hero, bool nme)
     {
-        FakeWall = fakeWall;
-        ArrowTrap = arrowTrap;
-        Message = message;
+        Hero = hero;
+        NME = nme;
     }
-    public bool CanInteractWith(IListener target)
+    public bool CanInteractWith(IActor actor)
     {
-        switch (target.type)
+        switch (actor.type)
         {
-            case IListener.ListenerType.FakeWall: return FakeWall;
-            case IListener.ListenerType.PressurePad: return ArrowTrap;
-            case IListener.ListenerType.Message: return Message;
+            case ActorType.None: return false;
+            case ActorType.Hero: return Hero;
+            case ActorType.NME: return NME;
         }
         return false;
 

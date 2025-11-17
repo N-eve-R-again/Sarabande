@@ -40,7 +40,6 @@ namespace Sarabande.Levels
         [SerializeField] private TriggerableFactory triggerableFactory;
 
         [Header("Debug")]
-        [SerializeField] private bool useLevelContext = true;
         [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
 
 

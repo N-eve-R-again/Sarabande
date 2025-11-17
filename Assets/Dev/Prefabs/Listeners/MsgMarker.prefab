@@ -46,9 +46,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gridPosition: {x: 0, y: 0}
+  collected: 0
+  messageIndex: -1
+  specs:
+    cell:
+      x: 0
+      z: 0
+    text: 
+    displaySeconds: 3
+    voiceClip: {fileID: 0}
+  messageSystem: {fileID: 0}
   markerY: 0.02
   fitToCell: 1
   spriteScale: 1
+  interactsWith:
+    NME: 0
+    Hero: 1
 --- !u!1 &9195854969100810866
 GameObject:
   m_ObjectHideFlags: 0

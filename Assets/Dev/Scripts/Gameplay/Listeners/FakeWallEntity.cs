@@ -15,8 +15,10 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
     [SerializeField] private bool revealed = false;
     [SerializeField] private float alphaOnRevealed = 0.5f;
 
-    public IListener.ListenerType type => IListener.ListenerType.FakeWall;
+    [SerializeField] private ListenerInteractionLayer interactsWith;
+    ListenerInteractionLayer IListener.interactionLayer => interactsWith;
     Vector2Int IListener.gridCoord => gridPosition;
+
     public void Init(GridCoord _coord, string _name)
     {
         gameObject.name = _name;
@@ -53,22 +55,22 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
 
     public void ResetToInitial()
     {
-        UnDiscover();
-        //reset implementation here        
+        UnDiscover(); 
     }
 
-    public void OnInteract()
+    public void OnInteract(ActorInteractionType interactionType)
     {
+        if (interactionType != ActorInteractionType.OnIntent) return;
         if (!revealed)
         {
             Discovered();
         }
     }
-    public void OnExitInteract()
+    public void OnExitInteract(ActorInteractionType interactionType)
     {
         if (revealed)
         {
-            UnDiscover();
+            //UnDiscover();
         }
     }
 }

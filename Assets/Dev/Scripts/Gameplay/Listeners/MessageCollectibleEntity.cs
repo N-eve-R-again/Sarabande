@@ -19,7 +19,8 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
     [SerializeField] private bool fitToCell = true;              // ajuste la largeur au cellSize
     [SerializeField, Range(0.1f, 2f)] private float spriteScale = 1f; // multiplicateur
 
-    public IListener.ListenerType type => IListener.ListenerType.Message;
+    [SerializeField] private ListenerInteractionLayer interactsWith;
+    ListenerInteractionLayer IListener.interactionLayer => interactsWith;
     Vector2Int IListener.gridCoord => gridPosition;
     
 
@@ -57,13 +58,15 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
         return new Vector3(x, markerY, z);
     }
 
-    public void OnExitInteract()
+    public void OnExitInteract(ActorInteractionType interactionType)
     {
         
     }
 
-    public void OnInteract()
+    public void OnInteract(ActorInteractionType interactionType)
     {
+        if (interactionType != ActorInteractionType.OnMove) return;
+
         if (collected) return;
         collected = true;
         Debug.Log("MESSAGE COLLECTED");

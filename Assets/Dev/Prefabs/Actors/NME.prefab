@@ -48,6 +48,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a18de46fe3e0a88408ba9214a8a6b182, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _actorType: 1
   useLevelContext: 1
   levelContext: {fileID: 0}
   levelData: {fileID: 11400000, guid: c107f687bb8fddd4781a3c352022b908, type: 2}
@@ -71,6 +72,8 @@ MonoBehaviour:
   drawFovGizmos: 1
   gizmoFovRadius: 20
   heroYieldThreshold: 0.2
+  nmeYieldThreshold: 0.15
+  nmeVacateThreshold: 0.25
   resetManager: {fileID: 0}
 --- !u!114 &7868407491334303854
 MonoBehaviour:

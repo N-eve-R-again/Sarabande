@@ -4,17 +4,12 @@ using UnityEngine;
 
 public interface IListener
 {
-    enum ListenerType{
-        FakeWall,
-        PressurePad,
-        Message
-    }
 
-    ListenerType type { get;}
+    ListenerInteractionLayer interactionLayer { get;}
     Vector2Int gridCoord { get;}
 
-    public void OnInteract();
-    public void OnExitInteract();
+    public void OnInteract(ActorInteractionType interactionType);
+    public void OnExitInteract(ActorInteractionType interactionType);
 
     public static void RegisterListener(IListener listener)
     {

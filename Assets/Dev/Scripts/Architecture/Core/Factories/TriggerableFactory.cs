@@ -40,9 +40,9 @@ public class TriggerableFactory : MonoBehaviour, IClearable
         {
             GridCoord c = config.cell;
             GameObject temp = Instantiate(arrowTrapPrefab, arrowTrapsParent);
-            TestTriggerable entity = temp.GetComponent<TestTriggerable>();
+            ArrowTrapEntity entity = temp.GetComponent<ArrowTrapEntity>();
 
-            entity.Init(c,config.triggerKey, $"ArrowTrap_{c.ToString()}");
+            entity.Init(config, $"ArrowTrap_{c.ToString()}");
         }
     }
 }

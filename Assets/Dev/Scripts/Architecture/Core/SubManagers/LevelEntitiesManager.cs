@@ -67,14 +67,30 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
 
     }
 
-    public void TryTriggerInteractAt(Vector2Int pos, IActor _actor)
+    public void TryTriggerInteractAt(Vector2Int _eventPos, IActor _actor, ActorInteractionType interactionType)
     {
-        if (listeners.TryGetValue(pos, out IListener listener))
+        if (listeners.TryGetValue(_eventPos, out IListener listener))
         {
-            if (!_actor.InteractionLayer.CanInteractWith(listener)) return;
-            listener.OnInteract();
-            interactions.Add(new InteractionBuffer(listener, _actor, pos));
+            if (!listener.interactionLayer.CanInteractWith(_actor)) return;
+            listener.OnInteract(interactionType);
+            interactions.Add(new InteractionBuffer(listener, _actor, _eventPos));
         }
+    }
+
+    private void CheckForBufferedEvents(Vector2Int _eventPos, IActor _actor, ActorInteractionType interactionType)
+    {
+        if (interactions.Count == 0) return;
+
+        interactions.RemoveAll(buffer =>  // Pour chaque buffer
+        {
+            // Si les conditions sont remplies :
+            if (buffer.actor == _actor && _eventPos != buffer.interactionPosition)
+            {
+                buffer.listener.OnExitInteract(interactionType);  // Déclenche l'événement
+                return true;  // buffer supprimé
+            }
+            return false;  // buffer gardé et ignoré
+        });
     }
 
     public void SendEventToTriggerable(IListener _listener)
@@ -89,22 +105,11 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
         }
     }
 
-    public void ActorMoveEvent(Vector2Int _EventPos, IActor _actor)
+    public void ActorMoveEvent(Vector2Int _eventPos, IActor _actor, ActorInteractionType _interactionType)
     {
-        TryTriggerInteractAt(_EventPos, _actor);
+        TryTriggerInteractAt(_eventPos, _actor, _interactionType);
+        CheckForBufferedEvents(_eventPos, _actor, _interactionType);
 
-        if (interactions.Count == 0) return;
-
-        interactions.RemoveAll(buffer =>  // Pour chaque buffer
-        {
-            // Si les conditions sont remplies :
-            if (buffer.actor == _actor && _EventPos != buffer.interactionPosition)
-            {
-                buffer.listener.OnExitInteract();  // Déclenche l'événement
-                return true;  // buffer supprimé
-            }
-            return false;  // buffer gardé et ignoré
-        });
 
     }
 

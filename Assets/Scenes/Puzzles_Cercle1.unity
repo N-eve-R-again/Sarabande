@@ -755,11 +755,6 @@ MonoBehaviour:
   useLevelContext: 1
   levelContext: {fileID: 619786955}
   levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
-  wallTopMaterial: {fileID: 2100000, guid: 84ce8959b7a624a41966d42d8c2cafbc, type: 2}
-  topWidthScale: 0.2
-  topDepthScale: 0.18
-  topMarkerThickness: 0.01
-  markBorders: 1
   hideTrapPadOnDiscoCells: 1
   includeDiscoStartTiles: 1
 --- !u!114 &619786948
@@ -1254,7 +1249,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2343a63165fdd974993040542f574355, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  arrowTrapPrefab: {fileID: 4793133088255339177, guid: 5c61d24e697cf0145a21e4dd52b76ce0, type: 3}
+  arrowTrapPrefab: {fileID: 3345884438229575653, guid: d7b1b47a4e7b43048840071a87037f28, type: 3}
   jobDone: 0
 --- !u!114 &619786964
 MonoBehaviour:
@@ -1269,6 +1264,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelContext: {fileID: 619786955}
+  levelDataCopy: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
+  triggerpadsize: {x: 0.8, y: 0.1, z: 0.8}
+  arrowtraplinesize: 0.471
+  arrowtrapsize: 0.124
   walls:
   - {x: 0.5, y: 0.5, z: 7.5}
   - {x: 1.5, y: 0.5, z: 7.5}
@@ -1289,7 +1288,47 @@ MonoBehaviour:
   - {x: 5.5, y: 0.5, z: 3.5}
   - {x: 6.5, y: 0.5, z: 3.5}
   - {x: 7.5, y: 0.5, z: 3.5}
-  triggerpads: []
+  triggerpads:
+  - {x: 5.5, y: 0.05, z: 5.5}
+  - {x: 0.5, y: 0.05, z: 2.5}
+  - {x: 1.5, y: 0.05, z: 0.5}
+  - {x: 2.5, y: 0.05, z: 2.5}
+  - {x: 2.5, y: 0.05, z: 0.5}
+  - {x: 4.5, y: 0.05, z: 1.5}
+  - {x: 5.5, y: 0.05, z: 1.5}
+  - {x: 7.5, y: 0.05, z: 1.5}
+  triggerpadsgoto:
+  - {x: 5.5, y: 0.5, z: 4}
+  - {x: 0.5, y: 0.5, z: 0}
+  - {x: 1.5, y: 0.5, z: 0}
+  - {x: 2.5, y: 0.5, z: 0}
+  - {x: 2.5, y: 0.5, z: 0}
+  - {x: 4.5, y: 0.5, z: 0}
+  - {x: 5.5, y: 0.5, z: 0}
+  - {x: 7.5, y: 0.5, z: 0}
+  arrowtraps:
+  - {x: 5.5, y: 0.5, z: 4}
+  - {x: 0.5, y: 0.5, z: 0}
+  - {x: 1.5, y: 0.5, z: 0}
+  - {x: 2.5, y: 0.5, z: 0}
+  - {x: 2.5, y: 0.5, z: 0}
+  - {x: 4.5, y: 0.5, z: 0}
+  - {x: 5.5, y: 0.5, z: 0}
+  - {x: 7.5, y: 0.5, z: 0}
+  arrowtrapdirections:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  bounds:
+  - {x: 0, y: 0.2, z: 0}
+  - {x: 0, y: 0.2, z: 8}
+  - {x: 8, y: 0.2, z: 8}
+  - {x: 8, y: 0.2, z: 0}
 --- !u!1 &653965775
 GameObject:
   m_ObjectHideFlags: 0
@@ -2015,10 +2054,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ba42ae756209d44d867b5fd0a045a96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  interactionLayer:
-    FakeWall: 1
-    ArrowTrap: 1
-    Message: 1
+  _actorType: 2
   useLevelContext: 1
   levelContext: {fileID: 619786955}
   levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
@@ -2131,43 +2167,12 @@ MonoBehaviour:
     south: {fileID: 21300000, guid: 2c254fa28acb3b547b35f4caa87b260e, type: 3}
     west: {fileID: 21300000, guid: 7934eb31316ad3e4c9690231bac0b0c3, type: 3}
   cellSize: 1
-  yOffset: 0.05
+  yOffset: 0.3
   fitToCell: 1
   scale: 1.1
   sortingLayerName: Default
   orderInLayer: 10
   flipVertical: 1
---- !u!1 &1144661287
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1144661288}
-  m_Layer: 0
-  m_Name: LevelEditorViewer
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1144661288
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1144661287}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0.01, z: 2.5}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1151910043
 GameObject:
   m_ObjectHideFlags: 0
@@ -2390,12 +2395,12 @@ Transform:
   m_GameObject: {fileID: 1299417520}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0.05, z: 0}
+  m_LocalPosition: {x: 0, y: 0.3, z: 0}
   m_LocalScale: {x: 0.48245615, y: -0.48245615, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1116510832}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -112.18, y: 0, z: 0}
 --- !u!212 &1299417522
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -3217,4 +3222,3 @@ SceneRoots:
   - {fileID: 511754654}
   - {fileID: 1929999199}
   - {fileID: 1369825146}
-  - {fileID: 1144661288}

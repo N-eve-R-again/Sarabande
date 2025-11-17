@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class TestTriggerable : MonoBehaviour, ITriggerable
 {
-    public GameObject GameObject => gameObject;
-
     public int triggerableKey;
 
     int ITriggerable.triggerableKey { get => triggerableKey;}
