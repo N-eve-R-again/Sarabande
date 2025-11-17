@@ -622,7 +622,6 @@ GameObject:
   - component: {fileID: 619786952}
   - component: {fileID: 619786953}
   - component: {fileID: 619786956}
-  - component: {fileID: 619786957}
   - component: {fileID: 619786958}
   m_Layer: 0
   m_Name: LevelRoot
@@ -663,7 +662,6 @@ MonoBehaviour:
   staticVisualsFactory: {fileID: 619786961}
   listenerFactory: {fileID: 619786962}
   triggerableFactory: {fileID: 619786963}
-  useLevelContext: 1
   levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
 --- !u!114 &619786944
 MonoBehaviour:
@@ -750,12 +748,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19dafddd12fa33b4da97a43900730f1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cellSize: 1
-  wallHeight: 1
-  useLevelContext: 1
   levelContext: {fileID: 619786955}
   levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
-  hideTrapPadOnDiscoCells: 1
   includeDiscoStartTiles: 1
 --- !u!114 &619786948
 MonoBehaviour:
@@ -1139,32 +1133,6 @@ MonoBehaviour:
   levelContext: {fileID: 619786955}
   levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
   timedDoorSystem: {fileID: 619786948}
---- !u!114 &619786957
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619786941}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eea28308bbc0fdb498f4eab333817b86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  useLevelContext: 1
-  levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
-  cellSize: 1
-  hero: {fileID: 1116510830}
-  timedDoorSystem: {fileID: 619786948}
-  triggerRouter: {fileID: 619786956}
-  padVisualsInScene: []
-  padTileMaterial: {fileID: 2100000, guid: 7c12ca4230d5b064e90a0e3983fd21c9, type: 2}
-  padTileSizeScale: 0.88
-  padTileThickness: 0.02
-  padTileUpLift: 0.01
-  padTilePressDuration: 0.06
-  padTileReleaseDuration: 0.15
 --- !u!114 &619786958
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -81,7 +81,6 @@ namespace Sarabande.Traps
         // ????????????? Runtime caches ?????????????
 
         private NMEController[] _nmes;
-        private Dictionary<Vector2Int, TrapTileVisual> _tileVisuals;
 
         private struct TrapRuntime
         {
@@ -123,10 +122,6 @@ namespace Sarabande.Traps
             _runtime = new TrapRuntime[count];
 
             // Cache des dalles visuelles (si présentes dans la scène)
-            _tileVisuals = new Dictionary<Vector2Int, TrapTileVisual>();
-            var foundTileVisuals = FindObjectsByType<TrapTileVisual>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var trapTileVisual in foundTileVisuals)
-                if (trapTileVisual != null) _tileVisuals[trapTileVisual.Cell] = trapTileVisual;
 
             // Init armement
             for (int i = 0; i < count; i++)
@@ -222,11 +217,7 @@ namespace Sarabande.Traps
 
             // Visuel de la dalle
             var triggerCell = new Vector2Int(spec.triggerCell.x, spec.triggerCell.z);
-            if (_tileVisuals != null && _tileVisuals.TryGetValue(triggerCell, out var tile))
-            {
-                tile.PressAndHide();
-                if (spec.canRearm) StartCoroutine(RearmTile(tile, spec.rearmDelay));
-            }
+
 
             // SFX “clic”
             var triggerPosWorld = Center(triggerCell, cellSize) + Vector3.up * 0.02f;
@@ -428,9 +419,7 @@ namespace Sarabande.Traps
                     if (n != null) _lastNmeCell[n] = n.GridPos;
 
             // Dalles visuelles
-            if (_tileVisuals != null)
-                foreach (var kv in _tileVisuals)
-                    if (kv.Value != null) kv.Value.ResetVisual();
+
 
             // Stoppe toutes les planifications en cours pour tous les pièges
             foreach (var kv in _trapCo)
@@ -442,12 +431,7 @@ namespace Sarabande.Traps
             }
         }
 
-        /// <summary>Réarme une dalle après délai (si le piège peut se réarmer).</summary>
-        private System.Collections.IEnumerator RearmTile(TrapTileVisual tile, float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            if (tile != null) tile.ShowThenRelease();
-        }
+
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Instanciation d’un projectile
