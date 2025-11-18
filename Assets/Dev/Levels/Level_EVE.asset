@@ -122,14 +122,6 @@ MonoBehaviour:
     rearmDelay: 0
     triggerKey: 3
   - cell:
-      x: 2
-      z: 0
-    travelDir: 0
-    arrowSpeed: 6
-    canRearm: 0
-    rearmDelay: 0
-    triggerKey: 4
-  - cell:
       x: 4
       z: 0
     travelDir: 0
@@ -183,7 +175,7 @@ MonoBehaviour:
     cell:
       x: 2
       z: 0
-    triggerKey: 4
+    triggerKey: 3
   - invisible: 0
     oneShot: 0
     cell:

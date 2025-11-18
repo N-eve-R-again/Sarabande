@@ -6,14 +6,12 @@ public class TestTriggerable : MonoBehaviour, ITriggerable
 {
     public int triggerableKey;
 
-    int ITriggerable.triggerableKey { get => triggerableKey;}
-
     public void Init(GridCoord _gridCoord, int _key, string _name)
     {
         gameObject.name = _name;
         triggerableKey = _key;
         transform.position = SetPosition(_gridCoord);
-        ITriggerable.RegisterTriggerable(this);
+        LevelEntityEvents.NotifyTriggerableRegistry(_key, this);
 
     }
     private Vector3 SetPosition(GridCoord c)

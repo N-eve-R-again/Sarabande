@@ -1,3 +1,4 @@
+using Sarabande.Core;
 using Sarabande.Messages;
 using System;
 using System.Collections.Generic;
@@ -24,11 +25,32 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
     [Header("SubManagers")]
     [SerializeField] private MessageSystem messageSystem;
 
+
+    private void SubscribeToEvents()
+    {
+        // S'abonner aux events
+        LevelEntityEvents.OnListenerRegistry += RegisterListener;
+        LevelEntityEvents.OnListenerTryCallTrigger += SendEventToTriggerable;
+        LevelEntityEvents.OnTryTriggerLinkRegistry += RegisterTriggerLink;
+        LevelEntityEvents.OnTriggerableRegistry += RegisterTriggerable;
+        Debug.Log("LEM Subscribed to LevelEntityEvents");
+    }
+
+    private void OnDisable()
+    {
+        // Se désabonner (important pour éviter les fuites mémoire!)
+        LevelEntityEvents.OnListenerRegistry -= RegisterListener;
+        LevelEntityEvents.OnListenerTryCallTrigger -= SendEventToTriggerable;
+        LevelEntityEvents.OnTryTriggerLinkRegistry -= RegisterTriggerLink;
+        LevelEntityEvents.OnTriggerableRegistry -= RegisterTriggerable;
+        Debug.Log("LEM Unsubscribed to LevelEntityEvents");
+    }
+
     public void Ready()
     {
         if(messageSystem == null) throw new MissingReferenceException("MessageSystem");
         Instance = this;
-
+        SubscribeToEvents();
     }
 
     public void ClearObject()
@@ -39,26 +61,28 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
     public MessageSystem GetMessageSystem() { return messageSystem; }
 
 
-    public void RegisterListener(IListener _listener)
+    public void RegisterListener(Vector2Int _gridCoord,IListener _listener)
     {
-        listeners[_listener.gridCoord] = _listener;
-        listenerDico.UpdateDictionary(listeners);
+        listeners[_gridCoord] = _listener;
+
+        listenerDico.UpdateDictionary(listeners); //for inspector debug
     }
 
-    public void RegisterTriggerable(ITriggerable _triggerable)
+    public void RegisterTriggerable(int _triggerableKey, ITriggerable _triggerable)
     {
-        triggerables[_triggerable.triggerableKey] = (_triggerable);
-        triggerableDico.UpdateDictionary(triggerables);
+        triggerables[_triggerableKey] = (_triggerable);
+
+        triggerableDico.UpdateDictionary(triggerables); //for inspector debug
     }
 
-    public void RegisterTriggerLink(IListener _listener,int triggerKey)
+    public void RegisterTriggerLink(int triggerKey,IListener _listener)
     {
         ITriggerable temp = null;
 
         if(triggerables.TryGetValue(triggerKey, out temp))
         {
             triggerLinks[_listener] = temp;
-            triggerLinksDico.UpdateDictionary(triggerLinks);
+            triggerLinksDico.UpdateDictionary(triggerLinks); //for inspector debug
         }
         else
         {

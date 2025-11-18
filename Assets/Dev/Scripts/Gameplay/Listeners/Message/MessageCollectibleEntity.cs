@@ -7,7 +7,6 @@ using LEM = LevelEntitiesManager;
 public class MessageCollectibleEntity : MonoBehaviour, IListener
 {
 
-    [SerializeField] private Vector2Int gridPosition;
     [SerializeField] private bool collected = false;
     [SerializeField] private int messageIndex = -1;
     [SerializeField] private MessageConfig specs;
@@ -21,21 +20,18 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
 
     [SerializeField] private ListenerInteractionLayer interactsWith;
     ListenerInteractionLayer IListener.interactionLayer => interactsWith;
-    Vector2Int IListener.gridCoord => gridPosition;
-    
 
 
     public void Init(MessageConfig _specs, string _name)
     {
+        specs = _specs;
+
         messageSystem = LEM.I.GetMessageSystem();
 
-        gameObject.name = _name;
-        specs = _specs;
-        gridPosition = (Vector2Int)specs.cell;
-        transform.position = SetPosition(specs.cell);
-        transform.localScale = SetSize();
+        ListenerCreationHelper.SetupListenerEntity(this,this,specs.cell, _name);
 
-        IListener.RegisterListener(this);
+        SetPosition();
+        transform.localScale = SetSize();
         messageIndex = messageSystem.Register(specs);
 
     }
@@ -51,11 +47,9 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
 
     }
 
-    private Vector3 SetPosition(GridCoord _coord)
+    private void SetPosition()
     {
-        float x = (_coord.x + 0.5f) * LevelGlobalSettings.cellSize;
-        float z = (_coord.z + 0.5f) * LevelGlobalSettings.cellSize;
-        return new Vector3(x, markerY, z);
+        transform.position += new Vector3(0, markerY, 0);
     }
 
     public void OnExitInteract(ActorInteractionType interactionType)

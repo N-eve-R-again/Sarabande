@@ -614,7 +614,6 @@ GameObject:
   - component: {fileID: 619786944}
   - component: {fileID: 619786945}
   - component: {fileID: 619786946}
-  - component: {fileID: 619786947}
   - component: {fileID: 619786948}
   - component: {fileID: 619786949}
   - component: {fileID: 619786954}
@@ -736,21 +735,6 @@ MonoBehaviour:
   fxLifetime: 0.96
   fxYOffset: 0.05
   disco: {fileID: 619786952}
---- !u!114 &619786947
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619786941}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19dafddd12fa33b4da97a43900730f1d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
-  includeDiscoStartTiles: 1
 --- !u!114 &619786948
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1233,7 +1217,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelContext: {fileID: 619786955}
   levelDataCopy: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
+  messageSprite: {fileID: 2800000, guid: 90372531edfc8214d854fa7307b90100, type: 3}
   triggerpadsize: {x: 0.8, y: 0.1, z: 0.8}
+  messageoffset: {x: 0, y: 0.5, z: 0}
   arrowtraplinesize: 0.471
   arrowtrapsize: 0.124
   walls:
@@ -1279,12 +1265,16 @@ MonoBehaviour:
   - {x: 0.5, y: 0.5, z: 0}
   - {x: 1.5, y: 0.5, z: 0}
   - {x: 2.5, y: 0.5, z: 0}
-  - {x: 2.5, y: 0.5, z: 0}
   - {x: 4.5, y: 0.5, z: 0}
   - {x: 5.5, y: 0.5, z: 0}
   - {x: 7.5, y: 0.5, z: 0}
+  messages:
+  - {x: 0.5, y: 0.5, z: 6.5}
+  - {x: 1.5, y: 0.5, z: 1.5}
+  - {x: 7.5, y: 0.5, z: 2.5}
+  fakewalls:
+  - {x: 0.5, y: 0.5, z: 5.5}
   arrowtrapdirections:
-  - 0
   - 0
   - 0
   - 0

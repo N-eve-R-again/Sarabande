@@ -8,36 +8,23 @@ public class TriggerPadEntity : MonoBehaviour, IListener, IResettable
 
     public bool armed = true;
 
-    public Vector2Int gridPosition;
-
     [SerializeField] private ListenerInteractionLayer interactsWith;
     ListenerInteractionLayer IListener.interactionLayer => interactsWith;
-    Vector2Int IListener.gridCoord => gridPosition;
 
     public void Init(TriggerPadConfig _config, string _name)
     {
         config = _config;
-        gameObject.name = _name;
+        ListenerCreationHelper.SetupListenerEntity(this, this, _config.cell, _name);
 
-        gridPosition = config.cell;
-        transform.position = SetPosition(config.cell);
         transform.localScale = SetSize();
 
-        
-        IListener.RegisterListener(this);
-        IListener.RegisterLinkToTrigger(config.triggerKey,this);
+        LevelEntityEvents.NotifyTryTriggerLinkRegistry(config.triggerKey,this);
     }
 
     public Vector3 SetSize()
     {
         float scaleXZ = LevelGlobalSettings.cellSize;
         return new Vector3(scaleXZ,1, scaleXZ);
-    }
-    private Vector3 SetPosition(GridCoord c)
-    {
-        float x = (c.x + 0.5f) * LevelGlobalSettings.cellSize;
-        float z = (c.z + 0.5f) * LevelGlobalSettings.cellSize;
-        return new Vector3(x, 0f, z);
     }
 
     public void OnExitInteract(ActorInteractionType interactionType)
@@ -54,7 +41,7 @@ public class TriggerPadEntity : MonoBehaviour, IListener, IResettable
 
             //visuals,
             //sound
-            IListener.SendEventToTriggerable(this);
+            LevelEntityEvents.NotifyListenerTryCallTrigger(this);
 
         }
 

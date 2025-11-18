@@ -9,8 +9,6 @@ public class ArrowTrapEntity : MonoBehaviour, ITriggerable
     [SerializeField] private ArrowTrapConfig config;
     [SerializeField] private bool armed = true;
     [SerializeField] private ArrowTrapVisual visual;
-    int ITriggerable.triggerableKey { get => triggerableKey; }
-
     public void Init(ArrowTrapConfig _config, string _name)
     {
         config = _config;
@@ -18,7 +16,7 @@ public class ArrowTrapEntity : MonoBehaviour, ITriggerable
         gameObject.name = _name;
         triggerableKey = config.triggerKey;
         transform.position = SetPosition(config.cell);
-        ITriggerable.RegisterTriggerable(this);
+        LevelEntityEvents.NotifyTriggerableRegistry(triggerableKey, this);
 
     }
     private Vector3 SetPosition(GridCoord c)

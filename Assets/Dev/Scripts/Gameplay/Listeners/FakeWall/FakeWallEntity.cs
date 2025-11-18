@@ -5,10 +5,6 @@ using UnityEngine;
 public class FakeWallEntity : MonoBehaviour, IListener, IResettable
 {
 
-
-
-    [SerializeField] private Vector2Int gridPosition;
-
     [SerializeField, Min(0f)] private float wallInset = 0.05f;
     [SerializeField, Min(0.1f)] private float wallHeight = 1f;
 
@@ -16,30 +12,23 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
     [SerializeField] private float alphaOnRevealed = 0.5f;
 
     [SerializeField] private ListenerInteractionLayer interactsWith;
-    ListenerInteractionLayer IListener.interactionLayer => interactsWith;
-    Vector2Int IListener.gridCoord => gridPosition;
+    public ListenerInteractionLayer interactionLayer => interactsWith;
 
     public void Init(GridCoord _coord, string _name)
     {
-        gameObject.name = _name;
-
-        gridPosition = (Vector2Int)_coord;
-        transform.position = SetPosition(_coord);
-        transform.localScale = SetSize();
-
-        IListener.RegisterListener(this);
+        ListenerCreationHelper.SetupListenerEntity(this, this, _coord, _name);
+        SetSize(); //bientot dans le visual
+        SetPosition();
     }
 
-    public Vector3 SetSize()
+    public void SetSize()
     {
         float scaleXZ = Mathf.Max(0.001f, LevelGlobalSettings.cellSize - 2f * wallInset);
-        return new Vector3(scaleXZ, wallHeight, scaleXZ);
+        transform.localScale = new Vector3(scaleXZ, wallHeight, scaleXZ);
     }
-    private Vector3 SetPosition(GridCoord c)
+    private void SetPosition()
     {
-        float x = (c.x + 0.5f) * LevelGlobalSettings.cellSize;
-        float z = (c.z + 0.5f) * LevelGlobalSettings.cellSize;
-        return new Vector3(x, wallHeight * 0.5f, z);
+        transform.position += new Vector3(0, wallHeight * 0.5f, 0);
     }
 
     private void Discovered()
