@@ -72,6 +72,11 @@ MonoBehaviour:
     b:
       x: 6
       z: 0
+  newHeroSpawn:
+    spawnCell:
+      x: 3
+      z: 7
+    spawnDirection: 0
   heroSpawn:
     x: 3
     z: 7
@@ -95,7 +100,7 @@ MonoBehaviour:
     travelDir: 0
     arrowSpeed: 6
     canRearm: 0
-    rearmDelay: 0
+    rearmTimeDelay: 0
     triggerKey: 0
   - cell:
       x: 0
@@ -103,7 +108,7 @@ MonoBehaviour:
     travelDir: 0
     arrowSpeed: 6
     canRearm: 0
-    rearmDelay: 0
+    rearmTimeDelay: 0
     triggerKey: 1
   - cell:
       x: 1
@@ -111,7 +116,7 @@ MonoBehaviour:
     travelDir: 0
     arrowSpeed: 6
     canRearm: 0
-    rearmDelay: 0
+    rearmTimeDelay: 0
     triggerKey: 2
   - cell:
       x: 2
@@ -119,7 +124,7 @@ MonoBehaviour:
     travelDir: 0
     arrowSpeed: 6
     canRearm: 0
-    rearmDelay: 0
+    rearmTimeDelay: 0
     triggerKey: 3
   - cell:
       x: 4
@@ -127,7 +132,7 @@ MonoBehaviour:
     travelDir: 0
     arrowSpeed: 6
     canRearm: 0
-    rearmDelay: 0
+    rearmTimeDelay: 0
     triggerKey: 5
   - cell:
       x: 5
@@ -135,7 +140,7 @@ MonoBehaviour:
     travelDir: 0
     arrowSpeed: 6
     canRearm: 0
-    rearmDelay: 0
+    rearmTimeDelay: 0
     triggerKey: 6
   - cell:
       x: 7
@@ -143,57 +148,80 @@ MonoBehaviour:
     travelDir: 0
     arrowSpeed: 6
     canRearm: 0
-    rearmDelay: 0
+    rearmTimeDelay: 0
     triggerKey: 7
   newTriggerPads:
   - invisible: 0
     oneShot: 0
+    timeToRearm: 1
     cell:
       x: 5
       z: 5
     triggerKey: 0
   - invisible: 0
     oneShot: 0
+    timeToRearm: 1
     cell:
       x: 0
       z: 2
     triggerKey: 1
   - invisible: 0
     oneShot: 0
+    timeToRearm: 1
     cell:
       x: 1
       z: 0
     triggerKey: 2
   - invisible: 0
     oneShot: 0
+    timeToRearm: 0
     cell:
       x: 2
       z: 2
     triggerKey: 3
   - invisible: 0
     oneShot: 0
+    timeToRearm: 1
     cell:
       x: 2
       z: 0
     triggerKey: 3
   - invisible: 0
     oneShot: 0
+    timeToRearm: 1
     cell:
       x: 4
       z: 1
     triggerKey: 5
   - invisible: 0
     oneShot: 0
+    timeToRearm: 1
     cell:
       x: 5
       z: 1
     triggerKey: 6
   - invisible: 0
     oneShot: 0
+    timeToRearm: 1
     cell:
       x: 7
       z: 1
     triggerKey: 7
+  triggerKeys:
+  - key: 0
+    entityType: arrowTrap (5_4)
+  - key: 1
+    entityType: arrowTrap (0_0)
+  - key: 2
+    entityType: arrowTrap (1_0)
+  - key: 3
+    entityType: arrowTrap (2_0)
+  - key: 5
+    entityType: arrowTrap (4_0)
+  - key: 6
+    entityType: arrowTrap (5_0)
+  - key: 7
+    entityType: arrowTrap (7_0)
   arrowTraps:
   - triggerCell:
       x: 5

@@ -21,7 +21,7 @@ namespace Sarabande.Core
     }
 
     /// <summary>Direction cardinale pour les sorties/murs fins</summary>
-    public enum EdgeDirection { North, East, South, West }
+    public enum CardinalDirection { North, East, South, West }
 
 
     /// <summary>Mur fin entre deux cases adjacentes</summary>
@@ -37,7 +37,7 @@ namespace Sarabande.Core
     public struct EdgeExit
     {
         public GridCoord fromCell;     // ex: H1 = (7,0)
-        public EdgeDirection direction; // ex: East (sortir à droite)
+        public CardinalDirection direction; // ex: East (sortir à droite)
 
 
     }

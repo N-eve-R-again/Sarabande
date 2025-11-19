@@ -35,30 +35,30 @@ namespace Sarabande.Core
         }
 
         // --- Directions ---
-        public static Vector2Int DirToVec(EdgeDirection d) => d switch
+        public static Vector2Int DirToVec(CardinalDirection d) => d switch
         {
-            EdgeDirection.North => Vector2Int.up,
-            EdgeDirection.East => Vector2Int.right,
-            EdgeDirection.South => Vector2Int.down,
-            EdgeDirection.West => Vector2Int.left,
+            CardinalDirection.North => Vector2Int.up,
+            CardinalDirection.East => Vector2Int.right,
+            CardinalDirection.South => Vector2Int.down,
+            CardinalDirection.West => Vector2Int.left,
             _ => Vector2Int.zero
         };
 
-        public static Vector3 DirToWorld(EdgeDirection d) => d switch
+        public static Vector3 DirToWorld(CardinalDirection d) => d switch
         {
-            EdgeDirection.North => new Vector3(0f, 0f, 1f),
-            EdgeDirection.East => new Vector3(1f, 0f, 0f),
-            EdgeDirection.South => new Vector3(0f, 0f, -1f),
-            EdgeDirection.West => new Vector3(-1f, 0f, 0f),
+            CardinalDirection.North => new Vector3(0f, 0f, 1f),
+            CardinalDirection.East => new Vector3(1f, 0f, 0f),
+            CardinalDirection.South => new Vector3(0f, 0f, -1f),
+            CardinalDirection.West => new Vector3(-1f, 0f, 0f),
             _ => Vector3.forward
         };
 
-        public static EdgeDirection Opposite(EdgeDirection d) => d switch
+        public static CardinalDirection Opposite(CardinalDirection d) => d switch
         {
-            EdgeDirection.North => EdgeDirection.South,
-            EdgeDirection.South => EdgeDirection.North,
-            EdgeDirection.East => EdgeDirection.West,
-            EdgeDirection.West => EdgeDirection.East,
+            CardinalDirection.North => CardinalDirection.South,
+            CardinalDirection.South => CardinalDirection.North,
+            CardinalDirection.East => CardinalDirection.West,
+            CardinalDirection.West => CardinalDirection.East,
             _ => d
         };
 
@@ -71,7 +71,7 @@ namespace Sarabande.Core
             return (a.y <= b.y) ? (a, b) : (b, a);
         }
 
-        public static (Vector2Int a, Vector2Int b) EdgeOf(Vector2Int a, EdgeDirection side)
+        public static (Vector2Int a, Vector2Int b) EdgeOf(Vector2Int a, CardinalDirection side)
             => NormalizeEdge(a, a + DirToVec(side));
 
         public static bool IsAdjacentCardinal(Vector2Int a, Vector2Int b)

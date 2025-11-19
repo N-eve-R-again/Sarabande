@@ -57,6 +57,7 @@ namespace Sarabande.Player
         [SerializeField, Min(0.01f)] private float stepDuration = 0.18f;
         [SerializeField, Min(0f)] private float interStepPause = 0.04f;
         [SerializeField, Range(0.1f, 0.99f)] private float inputDeadzone = 0.5f;
+        [SerializeField] private AnimationCurve stepToLerpCurve;
 
         [Header("Collision & Bump")]
         [SerializeField, Min(0.01f)] private float bumpDistance = 0.12f;
@@ -79,6 +80,7 @@ namespace Sarabande.Player
         [SerializeField] private bool enforceNoOverlap = true;
         [SerializeField, Min(0.01f)] private float overlapReturnDuration = 0.08f;
         [SerializeField, Range(0f, 0.5f)] private float overlapEarlyCheckFromT = 0.15f;
+        [SerializeField, Range(0f, 1f)] private float validateMoveTime = 0.45f;
         // on commence à vérifier à partir de 15% du step (évite les faux positifs très tôt)
 
         [SerializeField] private Sarabande.Core.ResetManager resetManager;
@@ -131,15 +133,15 @@ namespace Sarabande.Player
             BuildCollisionSets();
 
             _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-
+            ActorSpawn spawn = levelData.newHeroSpawn;
             // Coord grille du spawn (ex. D8)
-            _gridPos = new Vector2Int(levelData.heroSpawn.x, levelData.heroSpawn.z);
+            _gridPos = (Vector2Int)spawn.spawnCell;
 
             // Centre monde de la case de spawn
             Vector3 spawnCenterWorld = Center(_gridPos, cellSize);
 
             // Position initiale : une case "à l'extérieur" depuis la direction choisie
-            Vector3 outsideWorldPosition = spawnCenterWorld + EntryOffset(levelData.heroEntry);
+            Vector3 outsideWorldPosition = spawnCenterWorld + EntryOffset(spawn.spawnDirection);
             transform.position = outsideWorldPosition;
 
             // Lancer l'entry step (jusqu’au centre de la cellule de spawn)
@@ -258,24 +260,30 @@ namespace Sarabande.Player
             FromCell = _gridPos;
             ToCell = target;
             MoveProgress = 0f;
-
+            bool actionvalidated = false;
             Vector3 worldStart = transform.position;
             Vector3 worldEnd = Center(target, cellSize);
             LEM.I.ActorMoveEvent(target, this, ActorInteractionType.OnIntent);
             float lerpT = 0f;
-            while (lerpT < 1f)
+            while (lerpT < stepDuration)
             {
                 // progression anim
-                lerpT += Time.deltaTime / stepDuration;
-                if (lerpT > 1f) lerpT = 1f;
-                MoveProgress = lerpT;
+                lerpT += Time.deltaTime;
+                float ratio = lerpT / stepDuration;
+                if (lerpT > stepDuration) lerpT = stepDuration;
+                MoveProgress = ratio;
 
-                // position prévue à cette frame
-                Vector3 worldPosAtThisFrame = Vector3.Lerp(worldStart, worldEnd, lerpT);
+                if (ratio >= validateMoveTime && !actionvalidated)
+                {
+                    LEM.I.ActorMoveEvent(target, this, ActorInteractionType.OnMove);
+                    actionvalidated = true;
+                }
+                    // position prévue à cette frame
+                Vector3 worldPosAtThisFrame = Vector3.Lerp(worldStart, worldEnd, stepToLerpCurve.Evaluate(ratio));
 
                 // --- GARDE-FOU INTERMÉDIAIRE ---
                 // si on détecte une superposition en cours de step, on “revient” rapidement
-                if (enforceNoOverlap && lerpT >= overlapEarlyCheckFromT && IsCellOccupiedNowByNME(target))
+                if (enforceNoOverlap && ratio >= overlapEarlyCheckFromT && IsCellOccupiedNowByNME(target))
                 {
                     float returnLerpT = 0f;
                     while (returnLerpT < 1f)
@@ -291,7 +299,7 @@ namespace Sarabande.Player
                     MoveProgress = 0f;
                     
                     FromCell = ToCell = _gridPos;      // on reste logiquement sur la case d’origine
-                    LEM.I.ActorMoveEvent(ToCell, this, ActorInteractionType.OnCancelIntent);
+                    //LEM.I.ActorMoveEvent(ToCell, this, ActorInteractionType.OnCancelIntent);
                     _readyAtTime = Time.time + interStepPause;
                     yield break;
                 }
@@ -338,10 +346,7 @@ namespace Sarabande.Player
                 onExit?.Invoke();
                 if (disableOnExit) enabled = false; // coupe ce contrôleur pour éviter tout input post-sortie
             }
-            else
-            {
-                LEM.I.ActorMoveEvent(_gridPos, this, ActorInteractionType.OnMove);
-            }
+
         }
 
         /// <summary>
@@ -406,7 +411,7 @@ namespace Sarabande.Player
         /// <summary>
         /// Décale d’une cellule vers l’extérieur de la grille selon l’edge d’entrée choisi.
         /// </summary>
-        private Vector3 EntryOffset(EdgeDirection dir) => DirToWorld(dir) * cellSize;
+        private Vector3 EntryOffset(CardinalDirection dir) => DirToWorld(dir) * cellSize;
 
         /// <summary>
         /// Step d’entrée depuis l’extérieur jusqu’à la cellule de spawn.
@@ -464,7 +469,7 @@ namespace Sarabande.Player
         /// <summary>
         /// Applique un blocage d’arête dynamique (par côté depuis une cellule).
         /// </summary>
-        public void AddDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
+        public void AddDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
         {
             EnsureSets();
             _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec(side)));
@@ -482,7 +487,7 @@ namespace Sarabande.Player
         /// <summary>
         /// Retire un blocage d’arête dynamique (par côté depuis une cellule).
         /// </summary>
-        public void RemoveDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
+        public void RemoveDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
         {
             EnsureSets();
             _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));

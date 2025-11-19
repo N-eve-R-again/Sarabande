@@ -104,7 +104,7 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
     private void CheckForBufferedEvents(Vector2Int _eventPos, IActor _actor, ActorInteractionType interactionType)
     {
         if (interactions.Count == 0) return;
-
+        if (interactionType != ActorInteractionType.OnMove) return;
         interactions.RemoveAll(buffer =>  // Pour chaque buffer
         {
             // Si les conditions sont remplies :

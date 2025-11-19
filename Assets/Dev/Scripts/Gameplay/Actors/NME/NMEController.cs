@@ -57,7 +57,7 @@ namespace Sarabande.NME
         [SerializeField, Range(90f, 180f)] private float fovDegrees = 120f;
         [SerializeField, Min(0f)] private float losHeight = 0.5f;           // hauteur du ray (Y)
         [SerializeField] private LayerMask obstaclesMask;                    // coche "Obstacles" dans l'Inspector
-        [SerializeField] private EdgeDirection initialFacing = EdgeDirection.East;
+        [SerializeField] private CardinalDirection initialFacing = CardinalDirection.East;
 
         [Header("Attack")]
         [SerializeField, Min(0.01f)] private float attackPreDelay = 0.12f;  // délai avant de lever le bras
@@ -620,7 +620,7 @@ namespace Sarabande.NME
         // Facing / rotation
         // ?????????????????????????????????????????????????????????????????????????????
 
-        private void SetFacing(EdgeDirection dir)
+        private void SetFacing(CardinalDirection dir)
         {
             var fwd = DirToWorld(dir);
             if (fwd.sqrMagnitude > 0f)
@@ -628,7 +628,7 @@ namespace Sarabande.NME
         }
 
         /// <summary>Applique une orientation initiale (utilisée par le spawner) et mémorise pour les resets.</summary>
-        public void OverrideInitialFacing(EdgeDirection dir)
+        public void OverrideInitialFacing(CardinalDirection dir)
         {
             initialFacing = dir;
             SetFacing(dir); // applique visuellement dès maintenant
@@ -636,10 +636,10 @@ namespace Sarabande.NME
 
         private void FaceDirection(Vector2Int delta)
         {
-            if (delta == Vector2Int.right) SetFacing(EdgeDirection.East);
-            else if (delta == Vector2Int.left) SetFacing(EdgeDirection.West);
-            else if (delta == Vector2Int.up) SetFacing(EdgeDirection.North);
-            else if (delta == Vector2Int.down) SetFacing(EdgeDirection.South);
+            if (delta == Vector2Int.right) SetFacing(CardinalDirection.East);
+            else if (delta == Vector2Int.left) SetFacing(CardinalDirection.West);
+            else if (delta == Vector2Int.up) SetFacing(CardinalDirection.North);
+            else if (delta == Vector2Int.down) SetFacing(CardinalDirection.South);
         }
 
         // ?????????????????????????????????????????????????????????????????????????????
@@ -901,7 +901,7 @@ namespace Sarabande.NME
             EnsureSets();
             _dynamicEdgeBlocks.Add(NormalizeEdge(a, b));
         }
-        public void AddDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
+        public void AddDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
         {
             EnsureSets();
             _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec(side)));
@@ -911,7 +911,7 @@ namespace Sarabande.NME
             EnsureSets();
             _dynamicEdgeBlocks.Remove(NormalizeEdge(a, b));
         }
-        public void RemoveDynamicEdgeBlock(Vector2Int a, EdgeDirection side)
+        public void RemoveDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
         {
             EnsureSets();
             _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));

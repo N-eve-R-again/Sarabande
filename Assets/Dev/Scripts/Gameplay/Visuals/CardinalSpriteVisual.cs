@@ -37,9 +37,9 @@ namespace Sarabande.Visuals
         [SerializeField] private bool flipVertical = true; // pieds en bas sans casser E/O
 
         private SpriteRenderer _sr;
-        private EdgeDirection _facing = EdgeDirection.South;
+        private CardinalDirection _facing = CardinalDirection.South;
 
-        public void SetFacing(EdgeDirection dir)
+        public void SetFacing(CardinalDirection dir)
         {
             if (_facing == dir) return;
             _facing = dir;
@@ -71,9 +71,9 @@ namespace Sarabande.Visuals
             Vector3 f = transform.forward; f.y = 0f;
             if (f.sqrMagnitude < 0.0001f) return;
 
-            EdgeDirection dir = (Mathf.Abs(f.x) > Mathf.Abs(f.z))
-                ? (f.x >= 0f ? EdgeDirection.East : EdgeDirection.West)
-                : (f.z >= 0f ? EdgeDirection.North : EdgeDirection.South);
+            CardinalDirection dir = (Mathf.Abs(f.x) > Mathf.Abs(f.z))
+                ? (f.x >= 0f ? CardinalDirection.East : CardinalDirection.West)
+                : (f.z >= 0f ? CardinalDirection.North : CardinalDirection.South);
 
             SetFacing(dir);
         }
@@ -137,10 +137,10 @@ namespace Sarabande.Visuals
             Sprite s = sprites.south;
             switch (_facing)
             {
-                case EdgeDirection.North: s = sprites.north; break;
-                case EdgeDirection.East: s = sprites.east; break; // mapping naturel
-                case EdgeDirection.South: s = sprites.south; break;
-                case EdgeDirection.West: s = sprites.west; break; // mapping naturel
+                case CardinalDirection.North: s = sprites.north; break;
+                case CardinalDirection.East: s = sprites.east; break; // mapping naturel
+                case CardinalDirection.South: s = sprites.south; break;
+                case CardinalDirection.West: s = sprites.west; break; // mapping naturel
             }
             _sr.sprite = s;
             ApplyLayout();

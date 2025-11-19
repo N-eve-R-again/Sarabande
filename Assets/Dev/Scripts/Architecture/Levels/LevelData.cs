@@ -18,6 +18,7 @@
 //                 PressurePadSystem/TriggerRouter, ArrowTrapSystem, DiscoSequenceSystem, MessageSystem, etc.
 
 using Sarabande.Core;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using static Sarabande.Levels.LevelData;
@@ -49,18 +50,19 @@ namespace Sarabande.Levels
         // ?????????????????????????????????????????????????????????????????????????????
 
         [Header("Spawns")]
-        public GridCoord heroSpawn;  // D8 = (3,7)
+        public ActorSpawn newHeroSpawn;
 
+        public GridCoord heroSpawn;  // D8 = (3,7)
 
         [Tooltip("Liste des cellules de spawn des ennemis. Vide = 0 ennemi.")]
         public List<GridCoord> nmeSpawns = new();
 
         [Tooltip("Facing par NME (optionnel). Même index que nmeSpawns. Si manquant, on garde initialFacing du prefab.")]
-        public List<EdgeDirection> nmeFacings = new();
+        public List<CardinalDirection> nmeFacings = new();
 
         [Header("Entry")]
         [Tooltip("Depuis quel bord le héros arrive pour son entry step.")]
-        public EdgeDirection heroEntry = EdgeDirection.North;
+        public CardinalDirection heroEntry = CardinalDirection.North;
 
         [Header("Sortie")]
         public EdgeExit exit;        // Exemple : fromCell = H1, direction = East
@@ -80,6 +82,7 @@ namespace Sarabande.Levels
         [Header("New Version")]
         public List<ArrowTrapConfig> newArrowTraps = new();
         public List<TriggerPadConfig> newTriggerPads = new();
+        public List<TriggerKey> triggerKeys = new();
 
         [ContextMenu("Upgrade Arrow Traps to New Version")]
         public void ImportLegacyArrowTraps()
@@ -99,13 +102,36 @@ namespace Sarabande.Levels
 
         }
 
+        private void OnValidate()
+        {
+            triggerKeys.Clear();
+            foreach (var item in newArrowTraps)
+            {
+                triggerKeys.Add(new TriggerKey(item.triggerKey, $"arrowTrap {item.cell}"));
+            }
+        }
+
+
+        [ContextMenu("Upgrade HeroSpawn to New Version")]
+        public void UpdateHeroSpawn()
+        {
+            newHeroSpawn = new ActorSpawn(heroSpawn,heroEntry);
+        }
+
+        [ContextMenu("Upgrade ALL LEVEL DATA to New Version")]
+        public void PortLevelDataToNewVersion()
+        {
+            UpdateHeroSpawn();
+            ImportLegacyArrowTraps();
+        }
+
         [System.Serializable]
         public struct ArrowTrapSpec
         {
             [Header("Déclencheur & Origine")]
             public GridCoord triggerCell;           // case walkable à fouler (Héros ou NME)
             public GridCoord startCell;             // première case dans la map que la flèche traverse
-            public EdgeDirection travelDir;         // direction de déplacement (N/E/S/W)
+            public CardinalDirection travelDir;         // direction de déplacement (N/E/S/W)
             [Min(0.1f)] public float arrowSpeed;   // vitesse (unités monde / seconde)
 
             // --- options de réarmement ---
@@ -128,7 +154,7 @@ namespace Sarabande.Levels
         {
             [Header("Origine & Direction")]
             public GridCoord startCell;                          // origine (peut différer de spec.startCell legacy)
-            public Sarabande.Core.EdgeDirection travelDir;       // direction de CETTE émission
+            public Sarabande.Core.CardinalDirection travelDir;       // direction de CETTE émission
             [Min(0.05f)] public float arrowSpeed = 6f;
 
             [Header("Déclenchements fixes (après le trigger)")]
@@ -165,7 +191,7 @@ namespace Sarabande.Levels
         public class LeverSpec
         {
             public GridCoord cell;                        // ex: E7
-            public EdgeDirection requireFacing = EdgeDirection.North; // direction à pousser
+            public CardinalDirection requireFacing = CardinalDirection.North; // direction à pousser
             [Min(0)] public int linkedDoorIndex = 0;     // index dans la liste 'timedDoors'
         }
         public List<LeverSpec> levers = new();
@@ -212,7 +238,7 @@ namespace Sarabande.Levels
         public class GridGateSpec
         {
             public GridCoord cell;                 // case A
-            public EdgeDirection side;             // bord de A (vers B = A + side)
+            public CardinalDirection side;             // bord de A (vers B = A + side)
             public bool initiallyOpen = false;     // fermé par défaut (bloque), sinon déjà ouvert
         }
         public List<GridGateSpec> gridGates = new();
@@ -261,9 +287,9 @@ namespace Sarabande.Levels
     {
         public bool invisible = false;
         public bool oneShot = true;
-
+        public float timeToRearm = 1f;
         public GridCoord cell;
-        public int triggerKey = -1;
+        [Min(0.3f)] public int triggerKey = -1;
 
         public TriggerPadConfig(bool _invisible, bool _oneShot, GridCoord _cell, int _triggerKey)
         {
@@ -278,26 +304,53 @@ namespace Sarabande.Levels
     public class ArrowTrapConfig
     {
         public GridCoord cell;             // première case dans la map que la flèche traverse
-        public EdgeDirection travelDir;         // direction de déplacement (N/E/S/W)
+        public CardinalDirection travelDir;         // direction de déplacement (N/E/S/W)
         [Min(0.1f)] public float arrowSpeed;   // vitesse (unités monde / seconde)
 
         // --- options de réarmement ---
         public bool canRearm;                   // si true, le piège se réarme
-        [Min(0f)] public float rearmDelay;      // délai avant réarmement (secondes)
+        [Min(0f)] public float rearmTimeDelay = 1f;      // délai avant réarmement (secondes)
 
         public int triggerKey = -1;
 
-        public ArrowTrapConfig(GridCoord cell, EdgeDirection travelDir, float arrowSpeed, bool canRearm, float rearmDelay, int triggerKey)
+        public ArrowTrapConfig(GridCoord cell, CardinalDirection travelDir, float arrowSpeed, bool canRearm, float rearmDelay, int triggerKey)
         {
             this.cell = cell;
             this.travelDir = travelDir;
             this.arrowSpeed = arrowSpeed;
             this.canRearm = canRearm;
-            this.rearmDelay = rearmDelay;
+            this.rearmTimeDelay = rearmDelay;
             this.triggerKey = triggerKey;
+        }
+
+        
+    }
+
+    [System.Serializable]
+    public class ActorSpawn
+    {
+        public GridCoord spawnCell;
+        public CardinalDirection spawnDirection;
+
+        public ActorSpawn(GridCoord spawnCell, CardinalDirection spawnDirection)
+        {
+            this.spawnCell = spawnCell;
+            this.spawnDirection = spawnDirection;
         }
     }
 
+    [System.Serializable]
+    public class TriggerKey
+    {
+        public int key;
+        public string entityType;
+
+        public TriggerKey(int key, string entityType)
+        {
+            this.key = key;
+            this.entityType = entityType;
+        }
+    }
 }
 
 

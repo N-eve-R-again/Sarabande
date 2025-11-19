@@ -5,6 +5,7 @@ using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem.XR;
+using static UnityEditor.PlayerSettings;
 
 
 
@@ -14,8 +15,10 @@ public class LevelEditorViewer : MonoBehaviour
     public LevelContext levelContext;
     public LevelData levelDataCopy;
     public Texture messageSprite;
+    public Texture heroSprite;
+    public Texture heroStartSprite;
     public Vector3 triggerpadsize = Vector3.one;
-    public Vector3 messageoffset = Vector3.one;
+    public Vector3 gizmosOffsets = Vector3.one;
     [Range(0.05f,1f)]
     public float arrowtraplinesize = 1f;
     [Range(0.05f, 1f)]
@@ -30,7 +33,7 @@ public class LevelEditorViewer : MonoBehaviour
     public Vector3[] bounds = new Vector3[4];
     public Dictionary<int,Vector3> links = new();
 
-
+    public ActorSpawn herospawn;
 
     // Update is called once per frame
     void OnDrawGizmos()
@@ -81,7 +84,13 @@ public class LevelEditorViewer : MonoBehaviour
             Gizmos.DrawLine(pos, pos + Quaternion.Euler(0, arrowtrapdirections[i], 0) * Vector3.forward * arrowtraplinesize);
             i++;
         }
-
+        Vector3 heropos = GridUtils.CenterXZ(herospawn.spawnCell) + gizmosOffsets;
+        Vector3 heroposstart = heropos + Quaternion.Euler(0, SetRotation(herospawn.spawnDirection), 0) * Vector3.forward * LevelGlobalSettings.cellSize;
+        
+        if(heroSprite != null) Gizmos.DrawIcon(heropos, heroSprite.name);
+        Gizmos.color = Color.white;
+        Gizmos.DrawIcon(heroposstart, heroStartSprite.name);
+        Gizmos.DrawLine(heropos, heroposstart);
     }
 
     public void ReImportLevel()
@@ -99,6 +108,7 @@ public class LevelEditorViewer : MonoBehaviour
         bounds[1] = offsety + Vector3.forward * levelDataCopy.height;
         bounds[2] = offsety + (Vector3.forward + Vector3.right) * levelDataCopy.width;
         bounds[3] = offsety + Vector3.right * levelDataCopy.width;
+        herospawn = levelDataCopy.newHeroSpawn;
         foreach (var item in levelDataCopy.nonWalkables)
         {
             walls.Add((Vector3.up * 0.5f) + GridUtils.CenterGrid(item, LevelGlobalSettings.cellSize));
@@ -123,7 +133,7 @@ public class LevelEditorViewer : MonoBehaviour
 
         foreach (var item in levelDataCopy.messages)
         {
-            Vector3 messagepos = GridUtils.CenterXZ(item.cell) + messageoffset;
+            Vector3 messagepos = GridUtils.CenterXZ(item.cell) + gizmosOffsets;
             messages.Add(messagepos);
         }
 
@@ -133,16 +143,16 @@ public class LevelEditorViewer : MonoBehaviour
         }
     }
 
-    private float SetRotation(EdgeDirection dir)
+    private float SetRotation(CardinalDirection dir)
     {
         float yRot = 0f;
         switch (dir)
         {
-            case EdgeDirection.North:
+            case CardinalDirection.North:
                 yRot = 0f; break;
-            case EdgeDirection.South: yRot = 180f; break;
-            case EdgeDirection.East: yRot = 90f; break;
-            case EdgeDirection.West: yRot = 270f; break;
+            case CardinalDirection.South: yRot = 180f; break;
+            case CardinalDirection.East: yRot = 90f; break;
+            case CardinalDirection.West: yRot = 270f; break;
 
         }
         return yRot;

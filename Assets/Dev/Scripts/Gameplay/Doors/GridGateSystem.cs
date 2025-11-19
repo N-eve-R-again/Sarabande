@@ -54,7 +54,7 @@ namespace Sarabande.Gates
             public int index;
             public Vector2Int a;            // case A
             public Vector2Int b;            // case B = A + dir
-            public EdgeDirection side;      // côté de A
+            public CardinalDirection side;      // côté de A
             public bool isOpen;             // état courant
             public GameObject go;           // visuel
         }
@@ -123,7 +123,7 @@ namespace Sarabande.Gates
                 // - si côté Nord/Sud : largeur sur X, faible épaisseur sur Z
                 // - si côté Est/Ouest : largeur sur Z, faible épaisseur sur X
                 float thickness = 0.04f * cellSize; // visuel fin
-                if (spec.side == EdgeDirection.North || spec.side == EdgeDirection.South)
+                if (spec.side == CardinalDirection.North || spec.side == CardinalDirection.South)
                 {
                     gateGO.transform.localScale = new Vector3(cellSize, wallHeight, thickness);
                     gateGO.transform.rotation = Quaternion.identity;

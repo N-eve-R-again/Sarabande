@@ -1218,10 +1218,12 @@ MonoBehaviour:
   levelContext: {fileID: 619786955}
   levelDataCopy: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
   messageSprite: {fileID: 2800000, guid: 90372531edfc8214d854fa7307b90100, type: 3}
+  heroSprite: {fileID: 2800000, guid: 68a8c99671a70944da82317fd17ef147, type: 3}
+  heroStartSprite: {fileID: 2800000, guid: 471ae3782442b2f4d869b9bed1741c8f, type: 3}
   triggerpadsize: {x: 0.8, y: 0.1, z: 0.8}
-  messageoffset: {x: 0, y: 0.5, z: 0}
-  arrowtraplinesize: 0.471
-  arrowtrapsize: 0.124
+  gizmosOffsets: {x: 0, y: 0.5, z: 0}
+  arrowtraplinesize: 0.565
+  arrowtrapsize: 0.068
   walls:
   - {x: 0.5, y: 0.5, z: 7.5}
   - {x: 1.5, y: 0.5, z: 7.5}
@@ -1287,6 +1289,11 @@ MonoBehaviour:
   - {x: 0, y: 0.2, z: 8}
   - {x: 8, y: 0.2, z: 8}
   - {x: 8, y: 0.2, z: 0}
+  herospawn:
+    spawnCell:
+      x: 3
+      z: 7
+    spawnDirection: 0
 --- !u!1 &653965775
 GameObject:
   m_ObjectHideFlags: 0
@@ -2020,6 +2027,39 @@ MonoBehaviour:
   stepDuration: 0.35
   interStepPause: 0.1
   inputDeadzone: 0.5
+  stepToLerpCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.113034785
+      outSlope: 0.113034785
+      tangentMode: 0
+      weightedMode: 2
+      inWeight: 0
+      outWeight: 0.2985083
+    - serializedVersion: 3
+      time: 0.2511168
+      value: 0.4377206
+      inSlope: 2.4922712
+      outSlope: 2.4922712
+      tangentMode: 0
+      weightedMode: 3
+      inWeight: 0.23535253
+      outWeight: 0.12470532
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.15220413
+      outSlope: 0.15220413
+      tangentMode: 0
+      weightedMode: 1
+      inWeight: 0.43356654
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   bumpDistance: 0.3
   bumpOutDuration: 0.1
   bumpReturnDuration: 0.15
@@ -2045,6 +2085,7 @@ MonoBehaviour:
   enforceNoOverlap: 1
   overlapReturnDuration: 0.08
   overlapEarlyCheckFromT: 0.15
+  validateMoveTime: 0.55
   resetManager: {fileID: 619786945}
 --- !u!114 &1116510831
 MonoBehaviour:
@@ -2085,7 +2126,7 @@ Transform:
   m_GameObject: {fileID: 1116510829}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.5, y: 0, z: 7.5}
+  m_LocalPosition: {x: -1.64, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

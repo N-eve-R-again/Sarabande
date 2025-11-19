@@ -442,7 +442,7 @@ namespace Sarabande.Traps
         /// <paramref name="travelDir"/> à la vitesse <paramref name="speed"/>.
         /// Gère sprite/cube fallback, SFX de départ et injection des dépendances dans ArrowProjectile.
         /// </summary>
-        public void SpawnArrow(Vector2Int startCell, Sarabande.Core.EdgeDirection travelDir, float speed)
+        public void SpawnArrow(Vector2Int startCell, Sarabande.Core.CardinalDirection travelDir, float speed)
         {
             Vector3 startPosWorld = Center(startCell, cellSize) + Vector3.up * 0.02f;
             Vector3 worldDir = DirToWorld(travelDir);

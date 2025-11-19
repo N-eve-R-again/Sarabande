@@ -66,7 +66,7 @@ namespace Sarabande.Doors
         private class LeverRuntime
         {
             public Vector2Int cell;
-            public EdgeDirection requireFacing;
+            public CardinalDirection requireFacing;
             public int doorIndex;
             public bool isOn;               // OFF par défaut
             public Transform handle;        // pour une petite rotation visuelle
@@ -142,10 +142,10 @@ namespace Sarabande.Doors
                 Vector3 baseWorldPos = cellCenterWorld;
                 switch (r.requireFacing)
                 {
-                    case EdgeDirection.North: baseWorldPos.z = cellCenterWorld.z + halfCell - wallInset; break;
-                    case EdgeDirection.South: baseWorldPos.z = cellCenterWorld.z - halfCell + wallInset; break;
-                    case EdgeDirection.East: baseWorldPos.x = cellCenterWorld.x + halfCell - wallInset; break;
-                    case EdgeDirection.West: baseWorldPos.x = cellCenterWorld.x - halfCell + wallInset; break;
+                    case CardinalDirection.North: baseWorldPos.z = cellCenterWorld.z + halfCell - wallInset; break;
+                    case CardinalDirection.South: baseWorldPos.z = cellCenterWorld.z - halfCell + wallInset; break;
+                    case CardinalDirection.East: baseWorldPos.x = cellCenterWorld.x + halfCell - wallInset; break;
+                    case CardinalDirection.West: baseWorldPos.x = cellCenterWorld.x - halfCell + wallInset; break;
                 }
 
                 // Hauteur de montage sur le mur (en proportion de wallHeight)
@@ -218,12 +218,12 @@ namespace Sarabande.Doors
         /// <summary>
         /// Yaw (rotation Y) pour que le +Z local pointe vers l’intérieur de la case.
         /// </summary>
-        private static float InteriorYaw(EdgeDirection d) => d switch
+        private static float InteriorYaw(CardinalDirection d) => d switch
         {
-            EdgeDirection.North => 180f, // intérieur = Sud
-            EdgeDirection.East => 270f, // intérieur = Ouest
-            EdgeDirection.South => 0f,   // intérieur = Nord
-            EdgeDirection.West => 90f,  // intérieur = Est
+            CardinalDirection.North => 180f, // intérieur = Sud
+            CardinalDirection.East => 270f, // intérieur = Ouest
+            CardinalDirection.South => 0f,   // intérieur = Nord
+            CardinalDirection.West => 90f,  // intérieur = Est
             _ => 0f
         };
 
