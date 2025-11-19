@@ -607,20 +607,14 @@ GameObject:
   - component: {fileID: 619786964}
   - component: {fileID: 619786943}
   - component: {fileID: 619786960}
-  - component: {fileID: 619786961}
-  - component: {fileID: 619786962}
-  - component: {fileID: 619786963}
   - component: {fileID: 619786950}
-  - component: {fileID: 619786944}
   - component: {fileID: 619786945}
-  - component: {fileID: 619786946}
   - component: {fileID: 619786948}
   - component: {fileID: 619786949}
   - component: {fileID: 619786954}
   - component: {fileID: 619786951}
   - component: {fileID: 619786952}
   - component: {fileID: 619786953}
-  - component: {fileID: 619786956}
   - component: {fileID: 619786958}
   m_Layer: 0
   m_Name: LevelRoot
@@ -641,7 +635,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1561729935}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &619786943
@@ -658,22 +653,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelContext: {fileID: 619786955}
   entitiesManager: {fileID: 619786960}
-  staticVisualsFactory: {fileID: 619786961}
-  listenerFactory: {fileID: 619786962}
-  triggerableFactory: {fileID: 619786963}
+  staticVisualsFactory: {fileID: 1561729937}
+  listenerFactory: {fileID: 1561729936}
+  triggerableFactory: {fileID: 1561729934}
   levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
---- !u!114 &619786944
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619786941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4297e4eb74f7da84ea41938a8e4e9d03, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &619786945
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -692,49 +675,6 @@ MonoBehaviour:
   rewindClip: {fileID: 8300000, guid: 20cd270230468f24980079787426b4aa, type: 3}
   rewindVolume: 0.081
   rewindSpatialBlend: 0
---- !u!114 &619786946
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619786941}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 215cf200fec374b4eae91c3e08c46b6a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  useLevelContext: 1
-  levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
-  cellSize: 1
-  hero: {fileID: 1116510830}
-  resetManager: {fileID: 619786945}
-  arrowMaterial: {fileID: 2100000, guid: 84ce8959b7a624a41966d42d8c2cafbc, type: 2}
-  arrowThickness: 0.25
-  arrowLengthInCell: 0.7
-  arrowSprite: {fileID: 21300000, guid: 884b93e49c7f4fa4e9876e66980ef61e, type: 3}
-  spriteScale: 0.55
-  spriteYOffset: 0.02
-  spriteSortingLayer: Default
-  spriteOrderInLayer: 50
-  obstaclesMask:
-    serializedVersion: 2
-    m_Bits: 8
-  projectilesLayerName: Projectiles
-  clickTriggerClip: {fileID: 8300000, guid: 214a09dea7b200a44b5bbb91de2398da, type: 3}
-  bowReleaseClip: {fileID: 8300000, guid: 1ae26063f3121374fb5ea4f98ae03bcc, type: 3}
-  hitLoveClip: {fileID: 8300000, guid: f196e884920819d43941adfd654e5413, type: 3}
-  clickVolume: 0.9
-  releaseVolume: 0.9
-  hitVolume: 0.168
-  spatialBlend: 0
-  minDistance: 2
-  maxDistance: 18
-  hitLoveFxPrefab: {fileID: 1202522996400206, guid: f87e7926fd589094b8a269e14b8bea5e, type: 3}
-  fxLifetime: 0.96
-  fxYOffset: 0.05
-  disco: {fileID: 619786952}
 --- !u!114 &619786948
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -893,7 +833,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 619786946}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Sarabande.Traps.ArrowTrapSystem, Assembly-CSharp
         m_MethodName: OnDiscoStart
         m_Mode: 1
@@ -920,7 +860,7 @@ MonoBehaviour:
   onSequenceSuccess:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 619786944}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Sarabande.Utils.LogOnEvent, Assembly-CSharp
         m_MethodName: LogMessage
         m_Mode: 5
@@ -956,7 +896,7 @@ MonoBehaviour:
           m_StringArgument: DISCO OK
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 619786946}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Sarabande.Traps.ArrowTrapSystem, Assembly-CSharp
         m_MethodName: OnDiscoStop
         m_Mode: 1
@@ -995,7 +935,7 @@ MonoBehaviour:
           m_StringArgument: DISCO FAILED
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 619786944}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Sarabande.Utils.LogOnEvent, Assembly-CSharp
         m_MethodName: LogMessage
         m_Mode: 5
@@ -1007,7 +947,7 @@ MonoBehaviour:
           m_StringArgument: 'Debug.Log("[Disco] STOP: " + (new System.Diagnostics.StackTrace()).GetFrame(1)?.GetMethod()?.Name); '
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 619786946}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Sarabande.Traps.ArrowTrapSystem, Assembly-CSharp
         m_MethodName: OnDiscoStop
         m_Mode: 1
@@ -1101,22 +1041,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
---- !u!114 &619786956
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619786941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 49efe41dd7f30d145a963d8f0927466d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  useLevelContext: 1
-  levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: 8dc0320e3a2f3614e98c213b0e9130be, type: 2}
-  timedDoorSystem: {fileID: 619786948}
 --- !u!114 &619786958
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1145,64 +1069,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5b7ac40bf49f45458cafa911d3056d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  listenerDico:
-    debugKeys: []
-    debugValues: []
-  triggerableDico:
-    debugKeys: []
-    debugValues: []
-  triggerLinksDico:
-    debugKeys: []
-    debugValues: []
   messageSystem: {fileID: 619786950}
---- !u!114 &619786961
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619786941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e86fe2c81aa85554890ae25cab019498, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  wallPrefab: {fileID: 4484211654490024867, guid: bc7f5c343f7944b4bbc4f0fe40695cdd, type: 3}
-  thinWallPrefab: {fileID: 4484211654490024867, guid: aee89fce5f43d7a4eafc32a223b8b3c8, type: 3}
-  lineWidth: 0.03
-  lineY: 0.01
-  lineMaterial: {fileID: 2100000, guid: 031f2185ee7d6964497e2dce35d5ff6d, type: 2}
-  jobDone: 0
---- !u!114 &619786962
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619786941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae13c0e7d6969704985ec486b2208e28, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  fakeWallPrefab: {fileID: 4484211654490024867, guid: 0871e47d513f14e4fbe45e1c45a5d3bc, type: 3}
-  messagePrefab: {fileID: 627002258150249875, guid: e32360811f2f8be46abfa27f023a3e8c, type: 3}
-  pressurePadPrefab: {fileID: 7419689930699451478, guid: 0934fed72e6b6584497a392b6cbf8d26, type: 3}
-  jobDone: 0
---- !u!114 &619786963
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619786941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2343a63165fdd974993040542f574355, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  arrowTrapPrefab: {fileID: 3345884438229575653, guid: d7b1b47a4e7b43048840071a87037f28, type: 3}
-  jobDone: 0
 --- !u!114 &619786964
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2042,12 +1909,12 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 0.2511168
       value: 0.4377206
-      inSlope: 2.4922712
-      outSlope: 2.4922712
+      inSlope: 2.2819936
+      outSlope: 2.2819936
       tangentMode: 0
       weightedMode: 3
       inWeight: 0.23535253
-      outWeight: 0.12470532
+      outWeight: 0.24406366
     - serializedVersion: 3
       time: 1
       value: 1
@@ -2068,7 +1935,7 @@ MonoBehaviour:
   onExit:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 619786944}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Sarabande.Utils.LogOnEvent, Assembly-CSharp
         m_MethodName: LogMessage
         m_Mode: 5
@@ -2085,7 +1952,7 @@ MonoBehaviour:
   enforceNoOverlap: 1
   overlapReturnDuration: 0.08
   overlapEarlyCheckFromT: 0.15
-  validateMoveTime: 0.55
+  validateMoveTime: 0.75
   resetManager: {fileID: 619786945}
 --- !u!114 &1116510831
 MonoBehaviour:
@@ -2994,6 +2861,88 @@ MonoBehaviour:
   group: {fileID: 1561477409}
   fadeIn: 0.12
   fadeOut: 0.18
+--- !u!1 &1561729933
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1561729935}
+  - component: {fileID: 1561729937}
+  - component: {fileID: 1561729936}
+  - component: {fileID: 1561729934}
+  m_Layer: 0
+  m_Name: EntityFactories
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1561729934
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1561729933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2343a63165fdd974993040542f574355, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  arrowTrapPrefab: {fileID: 3345884438229575653, guid: d7b1b47a4e7b43048840071a87037f28, type: 3}
+  jobDone: 0
+--- !u!4 &1561729935
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1561729933}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 619786942}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1561729936
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1561729933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae13c0e7d6969704985ec486b2208e28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fakeWallPrefab: {fileID: 4484211654490024867, guid: 0871e47d513f14e4fbe45e1c45a5d3bc, type: 3}
+  messagePrefab: {fileID: 627002258150249875, guid: e32360811f2f8be46abfa27f023a3e8c, type: 3}
+  pressurePadPrefab: {fileID: 7419689930699451478, guid: 0934fed72e6b6584497a392b6cbf8d26, type: 3}
+  jobDone: 0
+--- !u!114 &1561729937
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1561729933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e86fe2c81aa85554890ae25cab019498, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wallPrefab: {fileID: 4484211654490024867, guid: bc7f5c343f7944b4bbc4f0fe40695cdd, type: 3}
+  thinWallPrefab: {fileID: 4484211654490024867, guid: aee89fce5f43d7a4eafc32a223b8b3c8, type: 3}
+  lineWidth: 0.03
+  lineY: 0.01
+  lineMaterial: {fileID: 2100000, guid: 031f2185ee7d6964497e2dce35d5ff6d, type: 2}
+  jobDone: 0
 --- !u!1 &1563016532
 GameObject:
   m_ObjectHideFlags: 0

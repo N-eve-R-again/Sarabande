@@ -11,6 +11,7 @@ public class TriggerableFactory : MonoBehaviour, IClearable
     [SerializeField] private GameObject arrowTrapPrefab;
 
     [SerializeField] private bool jobDone = false;
+    public bool IsJobDone() => jobDone;
 
     public void ClearObject()
     {
@@ -29,7 +30,9 @@ public class TriggerableFactory : MonoBehaviour, IClearable
         //arrow traps
         //doors et timed doors
         //grilles
-        
+
+        jobDone = true; 
+
     }
 
     private void CreateArrowTraps(LevelData _levelData)

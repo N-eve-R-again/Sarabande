@@ -18,7 +18,7 @@ public class ListenerFactory : MonoBehaviour, IClearable
 
 
     [SerializeField] private bool jobDone = false;
-    public bool IsJobDone() { return jobDone; }
+    public bool IsJobDone() => jobDone;
     public void ClearObject()
     {
         //supprimer tout les objets
