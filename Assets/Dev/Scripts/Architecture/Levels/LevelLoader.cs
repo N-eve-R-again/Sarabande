@@ -34,14 +34,13 @@ namespace Sarabande.Levels
         [SerializeField] private LevelContext levelContext;
         [SerializeField] private LevelEntitiesManager entitiesManager;
 
-        [Space]
+        [Header("Factories")]
         [SerializeField] private StaticVisualsFactory staticVisualsFactory;
         [SerializeField] private ListenerFactory listenerFactory;
         [SerializeField] private TriggerableFactory triggerableFactory;
 
         [Header("Debug")]
         [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
-
 
         private void Awake()
         {
@@ -54,7 +53,7 @@ namespace Sarabande.Levels
             entitiesManager.Ready();
 
             staticVisualsFactory.BuildStaticVisuals(levelData); //Walls, ThinWalls, Grid
-            triggerableFactory.BuildTriggerables(levelData);
+            triggerableFactory.BuildTriggerables(levelData);//ArrowTraps, Doors, Disco, Grilles
             listenerFactory.BuildListeners(levelData); //Message, FakeWalls, Exit, Messages
 
             BuildActors();//Player, NMEs

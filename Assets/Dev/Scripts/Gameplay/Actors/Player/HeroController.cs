@@ -263,7 +263,7 @@ namespace Sarabande.Player
             bool actionvalidated = false;
             Vector3 worldStart = transform.position;
             Vector3 worldEnd = Center(target, cellSize);
-            LEM.I.ActorMoveEvent(target, this, ActorInteractionType.OnIntent);
+            ActorEvents.NotifyActorMove(target, this, ActorInteractionType.OnIntent);
             float lerpT = 0f;
             while (lerpT < stepDuration)
             {
@@ -275,7 +275,7 @@ namespace Sarabande.Player
 
                 if (ratio >= validateMoveTime && !actionvalidated)
                 {
-                    LEM.I.ActorMoveEvent(target, this, ActorInteractionType.OnMove);
+                    ActorEvents.NotifyActorMove(target, this, ActorInteractionType.OnMove);
                     actionvalidated = true;
                 }
                     // position prévue à cette frame
@@ -299,7 +299,7 @@ namespace Sarabande.Player
                     MoveProgress = 0f;
                     
                     FromCell = ToCell = _gridPos;      // on reste logiquement sur la case d’origine
-                    //LEM.I.ActorMoveEvent(ToCell, this, ActorInteractionType.OnCancelIntent);
+                    ActorEvents.NotifyActorMove(ToCell, this, ActorInteractionType.OnCancelIntent);
                     _readyAtTime = Time.time + interStepPause;
                     yield break;
                 }
@@ -372,7 +372,7 @@ namespace Sarabande.Player
                 transform.position = Vector3.Lerp(start, start + bumpVector, lerpT);
                 yield return null;
             }
-            LEM.I.ActorMoveEvent(_gridPos, this, ActorInteractionType.OnCancelIntent);
+            ActorEvents.NotifyActorMove(_gridPos, this, ActorInteractionType.OnBump);
             // Retour
             lerpT = 0f;
             while (lerpT < 1f)

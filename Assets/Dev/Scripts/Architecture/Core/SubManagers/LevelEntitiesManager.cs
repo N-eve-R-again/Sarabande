@@ -6,43 +6,38 @@ using UnityEngine;
 
 public class LevelEntitiesManager : MonoBehaviour, IClearable
 {
-    private Dictionary<Vector2Int, IListener> listeners = new();
-    private Dictionary<int,ITriggerable> triggerables = new();
 
-    private Dictionary<IListener, ITriggerable> triggerLinks = new();
 
     private static LevelEntitiesManager Instance;
     public static LevelEntitiesManager I => Instance;
 
-    [Header("Buffers")]
-    private List<InteractionBuffer> interactions = new List<InteractionBuffer>();
-
-    [Header("DebugLists")]
-    [SerializeField] private DictionaryInInspector listenerDico;
-    [SerializeField] private DictionaryInInspector triggerableDico;
-    [SerializeField] private DictionaryInInspector triggerLinksDico;
-
     [Header("SubManagers")]
     [SerializeField] private MessageSystem messageSystem;
+    private InteractionSystem interactionSystem;
 
+    public MessageSystem GetMessageSystem() => messageSystem;
 
     private void SubscribeToEvents()
     {
         // S'abonner aux events
-        LevelEntityEvents.OnListenerRegistry += RegisterListener;
-        LevelEntityEvents.OnListenerTryCallTrigger += SendEventToTriggerable;
-        LevelEntityEvents.OnTryTriggerLinkRegistry += RegisterTriggerLink;
-        LevelEntityEvents.OnTriggerableRegistry += RegisterTriggerable;
+        interactionSystem = new InteractionSystem();
+
+        LevelEntityEvents.OnListenerRegistry += interactionSystem.RegisterListener;
+        LevelEntityEvents.OnListenerTryCallTrigger += interactionSystem.SendEventToTriggerable;
+        LevelEntityEvents.OnTryTriggerLinkRegistry += interactionSystem.RegisterTriggerLink;
+        LevelEntityEvents.OnTriggerableRegistry += interactionSystem.RegisterTriggerable;
+        ActorEvents.OnActorMove += interactionSystem.ActorMoved;
         Debug.Log("LEM Subscribed to LevelEntityEvents");
     }
 
     private void OnDisable()
     {
         // Se désabonner (important pour éviter les fuites mémoire!)
-        LevelEntityEvents.OnListenerRegistry -= RegisterListener;
-        LevelEntityEvents.OnListenerTryCallTrigger -= SendEventToTriggerable;
-        LevelEntityEvents.OnTryTriggerLinkRegistry -= RegisterTriggerLink;
-        LevelEntityEvents.OnTriggerableRegistry -= RegisterTriggerable;
+        LevelEntityEvents.OnListenerRegistry -= interactionSystem.RegisterListener;
+        LevelEntityEvents.OnListenerTryCallTrigger -= interactionSystem.SendEventToTriggerable;
+        LevelEntityEvents.OnTryTriggerLinkRegistry -= interactionSystem.RegisterTriggerLink;
+        LevelEntityEvents.OnTriggerableRegistry -= interactionSystem.RegisterTriggerable;
+        ActorEvents.OnActorMove -= interactionSystem.ActorMoved;
         Debug.Log("LEM Unsubscribed to LevelEntityEvents");
     }
 
@@ -56,85 +51,6 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
     public void ClearObject()
     {
         //reset tout les objects ici
-    }
-
-    public MessageSystem GetMessageSystem() { return messageSystem; }
-
-
-    public void RegisterListener(Vector2Int _gridCoord,IListener _listener)
-    {
-        listeners[_gridCoord] = _listener;
-
-        listenerDico.UpdateDictionary(listeners); //for inspector debug
-    }
-
-    public void RegisterTriggerable(int _triggerableKey, ITriggerable _triggerable)
-    {
-        triggerables[_triggerableKey] = (_triggerable);
-
-        triggerableDico.UpdateDictionary(triggerables); //for inspector debug
-    }
-
-    public void RegisterTriggerLink(int triggerKey,IListener _listener)
-    {
-        ITriggerable temp = null;
-
-        if(triggerables.TryGetValue(triggerKey, out temp))
-        {
-            triggerLinks[_listener] = temp;
-            triggerLinksDico.UpdateDictionary(triggerLinks); //for inspector debug
-        }
-        else
-        {
-            Debug.LogError($"Link by {_listener.ToString()} with key {triggerKey} points to nothing");
-        }
-
-    }
-
-    public void TryTriggerInteractAt(Vector2Int _eventPos, IActor _actor, ActorInteractionType interactionType)
-    {
-        if (listeners.TryGetValue(_eventPos, out IListener listener))
-        {
-            if (!listener.interactionLayer.CanInteractWith(_actor)) return;
-            listener.OnInteract(interactionType);
-            interactions.Add(new InteractionBuffer(listener, _actor, _eventPos));
-        }
-    }
-
-    private void CheckForBufferedEvents(Vector2Int _eventPos, IActor _actor, ActorInteractionType interactionType)
-    {
-        if (interactions.Count == 0) return;
-        if (interactionType != ActorInteractionType.OnMove) return;
-        interactions.RemoveAll(buffer =>  // Pour chaque buffer
-        {
-            // Si les conditions sont remplies :
-            if (buffer.actor == _actor && _eventPos != buffer.interactionPosition)
-            {
-                buffer.listener.OnExitInteract(interactionType);  // Déclenche l'événement
-                return true;  // buffer supprimé
-            }
-            return false;  // buffer gardé et ignoré
-        });
-    }
-
-    public void SendEventToTriggerable(IListener _listener)
-    {
-        if(triggerLinks.TryGetValue(_listener, out ITriggerable _target))
-        {
-            _target.Trigger();
-        }
-        else
-        {
-            Debug.Log($"{_listener} fired event at nothing - no triggerlink registred");
-        }
-    }
-
-    public void ActorMoveEvent(Vector2Int _eventPos, IActor _actor, ActorInteractionType _interactionType)
-    {
-        TryTriggerInteractAt(_eventPos, _actor, _interactionType);
-        CheckForBufferedEvents(_eventPos, _actor, _interactionType);
-
-
     }
 
 }

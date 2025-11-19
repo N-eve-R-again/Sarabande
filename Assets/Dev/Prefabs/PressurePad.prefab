@@ -104,12 +104,16 @@ MonoBehaviour:
   config:
     invisible: 0
     oneShot: 1
+    timeToRearm: 0
     cell:
       x: 0
       z: 0
     triggerKey: -1
   visual: {fileID: 6917377788624719024}
   armed: 1
+  rearming: 0
+  occuped: 0
+  timerTillRearm: 0
   interactsWith:
     NME: 1
     Hero: 1
@@ -126,6 +130,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _animator: {fileID: 1569327224946505903}
+  trembling: 0
 --- !u!1001 &3707480060879688879
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -195,6 +200,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2100000, guid: 761d8e1f988ed2345a28312145c79c6e, type: 2}
     - target: {fileID: -1461304994638716399, guid: 9c31babd3d1d02241ae0f4d95bf18c95, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7c12ca4230d5b064e90a0e3983fd21c9, type: 2}
+    - target: {fileID: -678588488315902003, guid: 9c31babd3d1d02241ae0f4d95bf18c95, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 7c12ca4230d5b064e90a0e3983fd21c9, type: 2}

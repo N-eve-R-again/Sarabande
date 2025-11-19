@@ -412,7 +412,7 @@ namespace Sarabande.NME
             _isMoving = false;
             _readyAt = Time.time + interStepPause;
 
-            LEM.I.ActorMoveEvent(_gridPos,this,ActorInteractionType.OnMove);
+            ActorEvents.NotifyActorMove(_gridPos,this,ActorInteractionType.OnMove);
 
             MoveProgress = 0f;
             FromCell = ToCell = _gridPos;
