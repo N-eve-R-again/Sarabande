@@ -6,6 +6,7 @@ public class TriggerableFactory : MonoBehaviour, IClearable
 {
     [Header("GameObject Folders")]
     private Transform arrowTrapsParent;
+    private Transform triggerableFolder;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject arrowTrapPrefab;
@@ -19,8 +20,11 @@ public class TriggerableFactory : MonoBehaviour, IClearable
     }
     private void CreateFolders()
     {
+        triggerableFolder = new GameObject("Triggerables").transform;
+        triggerableFolder.SetParent(transform.parent);
+
         arrowTrapsParent = new GameObject("ArrowTraps").transform;
-        arrowTrapsParent.SetParent(transform, false);
+        arrowTrapsParent.SetParent(triggerableFolder, false);
 
     }
     public void BuildTriggerables(LevelData _levelData)

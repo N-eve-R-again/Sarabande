@@ -26,6 +26,7 @@ using static Sarabande.Core.GridUtils;
 using System.Collections.Generic;
 using UnityEngine.Events;
 using LEM = LevelEntitiesManager;
+using Sarabande.Visuals;
 
 namespace Sarabande.Player
 {
@@ -46,6 +47,14 @@ namespace Sarabande.Player
         [Header("ActorSettings")]
         [SerializeField] private ActorType _actorType;
         ActorType IActor.type => _actorType;
+
+        //On prépare des ActorInteractionData pour les reutiliser (eviter le garbage collector)
+        [SerializeField] private ActorInteractionData intentInteraction;
+        [SerializeField] private ActorInteractionData moveInteraction;
+        [SerializeField] private ActorInteractionData leaveInteraction;
+        [SerializeField] private ActorInteractionData bumpInteraction;
+
+        [SerializeField] private CardinalDirection actorDirection;
 
         [Header("Data")]
         [SerializeField] private bool useLevelContext = true;
@@ -75,6 +84,7 @@ namespace Sarabande.Player
 
         [Header("Facing")]
         [SerializeField] private bool faceOnMove = true;
+        [SerializeField] private CardinalSpriteVisual spriteVisual;
 
         [Header("Anti-overlap Guard")]
         [SerializeField] private bool enforceNoOverlap = true;
@@ -130,6 +140,11 @@ namespace Sarabande.Player
                 return;
             }
 
+            moveInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnMove);
+            bumpInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnBump);
+            leaveInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnLeave);
+            intentInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnIntent);
+
             BuildCollisionSets();
 
             _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -144,6 +159,7 @@ namespace Sarabande.Player
             Vector3 outsideWorldPosition = spawnCenterWorld + EntryOffset(spawn.spawnDirection);
             transform.position = outsideWorldPosition;
 
+            actorDirection = Opposite(spawn.spawnDirection);
             // Lancer l'entry step (jusqu’au centre de la cellule de spawn)
             _isMoving = true;
             StartCoroutine(SpawnInFromEdge());
@@ -159,6 +175,7 @@ namespace Sarabande.Player
 
             Vector2Int intendedDir = HeldToCardinal(_held, inputDeadzone);
             CurrentIntentDir = intendedDir;
+            
 
             if (_isMoving) return;
             if (Time.time < _readyAtTime) return;
@@ -166,7 +183,8 @@ namespace Sarabande.Player
 
             // Case cible dans la grille
             Vector2Int targetCell = _gridPos + intendedDir;
-
+            actorDirection = GetCardinalDirection(intendedDir);
+            if (faceOnMove) FaceDirection();
             // Tentative de sortie : autorisée depuis la case/direction d'Exit
             if (IsExitMove(_gridPos, intendedDir))
             {
@@ -177,7 +195,6 @@ namespace Sarabande.Player
                     return;
                 }
 
-                if (faceOnMove) FaceDirection(intendedDir);
                 StartCoroutine(StepTo(targetCell, isExitMove: true));
                 return;
             }
@@ -210,7 +227,7 @@ namespace Sarabande.Player
                 return;
             }
 
-            if (faceOnMove) FaceDirection(intendedDir);
+
 
             StartCoroutine(StepTo(targetCell));
         }
@@ -243,11 +260,9 @@ namespace Sarabande.Player
         /// <summary>
         /// Oriente le transform dans la direction de déplacement (visuel/facing).
         /// </summary>
-        private void FaceDirection(Vector2Int dir)
+        private void FaceDirection()
         {
-            if (dir == Vector2Int.zero) return;
-            Vector3 forward = new Vector3(dir.x, 0f, dir.y);
-            transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
+            spriteVisual.SetFacing(actorDirection);
         }
 
         /// <summary>
@@ -259,11 +274,17 @@ namespace Sarabande.Player
 
             FromCell = _gridPos;
             ToCell = target;
+
+            intentInteraction.UpdateInteraction(actorDirection, target);
+            moveInteraction.UpdateInteraction(actorDirection, ToCell);
+            leaveInteraction.UpdateInteraction(actorDirection, FromCell);
+
+
             MoveProgress = 0f;
             bool actionvalidated = false;
             Vector3 worldStart = transform.position;
             Vector3 worldEnd = Center(target, cellSize);
-            ActorEvents.NotifyActorMove(target, this, ActorInteractionType.OnIntent);
+            ActorEvents.NotifyActorMove(this, intentInteraction);
             float lerpT = 0f;
             while (lerpT < stepDuration)
             {
@@ -275,8 +296,8 @@ namespace Sarabande.Player
 
                 if (ratio >= validateMoveTime && !actionvalidated)
                 {
-                    ActorEvents.NotifyActorMove(FromCell, this, ActorInteractionType.OnLeave);
-                    ActorEvents.NotifyActorMove(ToCell, this, ActorInteractionType.OnMove);
+                    ActorEvents.NotifyActorMove(this, leaveInteraction);
+                    ActorEvents.NotifyActorMove(this, moveInteraction);
                     actionvalidated = true;
                 }
                     // position prévue à cette frame
@@ -357,8 +378,8 @@ namespace Sarabande.Player
             if (_isMoving) yield break;
             _isMoving = true;
 
+            bumpInteraction.UpdateInteraction(actorDirection, _gridPos + dir);
             // on se tourne vers la direction tentée, même si c'est bloqué
-            if (faceOnMove) FaceDirection(dir);
 
             Vector3 start = transform.position;
             Vector3 bumpVector = new Vector3(dir.x, 0f, dir.y).normalized * bumpDistance;
@@ -372,7 +393,7 @@ namespace Sarabande.Player
                 transform.position = Vector3.Lerp(start, start + bumpVector, lerpT);
                 yield return null;
             }
-            ActorEvents.NotifyActorMove(_gridPos + dir, this, ActorInteractionType.OnBump);
+            ActorEvents.NotifyActorMove( this, bumpInteraction);
             // Retour
             lerpT = 0f;
             while (lerpT < 1f)

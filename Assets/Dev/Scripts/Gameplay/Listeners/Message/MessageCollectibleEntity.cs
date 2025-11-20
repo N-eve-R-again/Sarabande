@@ -57,9 +57,9 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
         
     }
 
-    public bool OnInteract(ActorInteractionType interactionType)
+    public bool OnInteract(ActorInteractionData _interaction)
     {
-        if (interactionType != ActorInteractionType.OnMove) return false;
+        if (_interaction.interactionType != ActorInteractionType.OnMove) return false;
 
         if (collected) return false;
 

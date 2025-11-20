@@ -2040,8 +2040,8 @@ GameObject:
   - component: {fileID: 1116510832}
   - component: {fileID: 1116510831}
   - component: {fileID: 1116510830}
-  - component: {fileID: 1116510833}
   - component: {fileID: 1116510834}
+  - component: {fileID: 1116510833}
   m_Layer: 0
   m_Name: Hero
   m_TagString: Untagged
@@ -2062,6 +2062,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _actorType: 2
+  actorDirection: 0
   useLevelContext: 1
   levelContext: {fileID: 619786955}
   levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
@@ -2124,6 +2125,7 @@ MonoBehaviour:
         m_CallState: 2
   disableOnExit: 1
   faceOnMove: 1
+  spriteVisual: {fileID: 1116510834}
   enforceNoOverlap: 1
   overlapReturnDuration: 0.08
   overlapEarlyCheckFromT: 0.15
@@ -2692,38 +2694,11 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1414520887}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &1453896778 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3550705469269433223, guid: 7275e11f4156ebd46b3d4b73499a029c, type: 3}
-  m_PrefabInstance: {fileID: 5210140227432487160}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1453896779 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7833811998813478455, guid: 7275e11f4156ebd46b3d4b73499a029c, type: 3}
   m_PrefabInstance: {fileID: 5210140227432487160}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1453896780
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1453896778}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3428eda3b4d0349458ec0f49054fb6ce, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  interactsWith:
-    NME: 0
-    Hero: 1
-  config:
-    oneShot: 0
-    timeToRearm: 0
-    cell:
-      x: 0
-      z: 0
-    triggerKey: 0
 --- !u!1 &1468027463
 GameObject:
   m_ObjectHideFlags: 0
@@ -3456,10 +3431,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7833811998813478455, guid: 7275e11f4156ebd46b3d4b73499a029c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 852196246}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3550705469269433223, guid: 7275e11f4156ebd46b3d4b73499a029c, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1453896780}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7275e11f4156ebd46b3d4b73499a029c, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

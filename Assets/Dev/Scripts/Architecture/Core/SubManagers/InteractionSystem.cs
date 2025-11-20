@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class InteractionSystem : MonoBehaviour
+public class InteractionSystem
 {
     private Dictionary<Vector2Int, IListener> listeners = new();
     private Dictionary<int, ITriggerable> triggerables = new();
@@ -84,7 +84,7 @@ public class InteractionSystem : MonoBehaviour
         }
     }
 
-    private void ActorMoved(Vector2Int _eventPos, IActor _actor, ActorInteractionType _interactionType)
+    private void ActorMoved(IActor _actor, ActorInteractionData _interaction)
     {
         /*switch (_interactionType)
         {
@@ -96,31 +96,36 @@ public class InteractionSystem : MonoBehaviour
         }
         */
 
-        if(_interactionType != ActorInteractionType.OnLeave)// OnMove, OnIntent, OnBump
+        if(_interaction.interactionType != ActorInteractionType.OnLeave)// OnMove, OnIntent, OnBump
         {
-            TryTriggerInteractAt(_eventPos, _actor, _interactionType); //On essaye de faire une interaction
+            (IListener _listener, bool _createBuffer) = TryTriggerInteractAt(_interaction.cell, _interaction);//On essaye de faire une interaction
+
+            if (_listener != null && _createBuffer)
+            {
+                //le listener veut continuer d'écouter pour son ExitInteract()
+                interactions.Add(new InteractionBuffer(_listener, _actor, _interaction.cell));
+            }
+
         }
         else //OnLeave
         {
-            CheckForBufferedEvents(_eventPos, _actor);//On regarde si on a des ExitEvents à trigger
+            CheckForBufferedEvents(_interaction.cell, _actor);//On regarde si on a des ExitEvents à trigger
         }
 
     }
 
-    private void TryTriggerInteractAt(Vector2Int _eventPos, IActor _actor, ActorInteractionType interactionType)
+    private (IListener,bool) TryTriggerInteractAt(Vector2Int _eventPos, ActorInteractionData _interaction)
     {
         if (listeners.TryGetValue(_eventPos, out IListener listener)) //est ce que j'ai un listener à _eventPos
         {
-            if (!listener.interactionLayer.CanInteractWith(_actor)) return; //si l'acteur est pas du bon type on ignore
+            if (!listener.interactionLayer.CanInteractWith(_interaction.actorType)) return (null, false); //si l'acteur est pas du bon type on ignore
 
+            bool willCreateBuffer = listener.OnInteract(_interaction);
             //on fait la logique du listener
-            bool willCreateBuffer = listener.OnInteract(interactionType);
-
-            if (willCreateBuffer) //le listener veut continuer d'écouter pour son ExitInteract()
-            { 
-                interactions.Add(new InteractionBuffer(listener, _actor, _eventPos));
-            }
+            return (listener, willCreateBuffer);
         }
+
+        return (null, false);
     }
 
     private void CheckForBufferedEvents(Vector2Int _eventPos, IActor _actor)

@@ -9,6 +9,8 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
     private Transform gridParent;
     private Transform wallsParent;
     private Transform thinWallsParent;
+    private Transform staticVisualsFolder;
+
 
     [Header("Prefabs")]
     [SerializeField] private GameObject wallPrefab;
@@ -63,13 +65,16 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
     }
     private void CreateFolders()
     {
+        staticVisualsFolder = new GameObject("Static Visuals").transform;
+        staticVisualsFolder.SetParent(transform.parent);
+
         gridParent = new GameObject("GridLines").transform;
         wallsParent = new GameObject("Walls").transform;
         thinWallsParent = new GameObject("ThinWalls").transform;
 
-        gridParent.SetParent(transform, false);
-        wallsParent.SetParent(transform, false);
-        thinWallsParent.SetParent(transform, false);
+        gridParent.SetParent(staticVisualsFolder, false);
+        wallsParent.SetParent(staticVisualsFolder, false);
+        thinWallsParent.SetParent(staticVisualsFolder, false);
     }
 
     private void BuildWalls(LevelData _levelData)

@@ -46,9 +46,8 @@ public class ArrowTrapEntity : MonoBehaviour, ITriggerable
     {
         if (armed) {
             armed = false;
-            Debug.Log($"ARROW SPAWNED BY {gameObject.name}");
+            //Debug.Log($"ARROW SPAWNED BY {gameObject.name}");
             visual.SetArmed(armed);
-
         }
     }
 }

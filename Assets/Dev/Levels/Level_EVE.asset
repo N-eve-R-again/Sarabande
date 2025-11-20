@@ -152,7 +152,7 @@ MonoBehaviour:
     triggerKey: 7
   newTriggerPads:
   - invisible: 0
-    oneShot: 0
+    oneShot: 1
     timeToRearm: -1
     cell:
       x: 5
@@ -160,7 +160,7 @@ MonoBehaviour:
     triggerKey: 0
   - invisible: 0
     oneShot: 0
-    timeToRearm: 1
+    timeToRearm: 2
     cell:
       x: 0
       z: 2
@@ -173,14 +173,14 @@ MonoBehaviour:
       z: 0
     triggerKey: 2
   - invisible: 0
-    oneShot: 0
-    timeToRearm: 0
+    oneShot: 1
+    timeToRearm: 1
     cell:
       x: 2
       z: 2
     triggerKey: 3
   - invisible: 0
-    oneShot: 0
+    oneShot: 1
     timeToRearm: 1
     cell:
       x: 2

@@ -4,21 +4,26 @@ using UnityEngine;
 
 public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettable
 {
-    public TriggerPadConfig config;
+    private enum PadState
+    {
+        Armed,
+        Disarmed,
+        WaitingRearm
+    }
+
+    [SerializeField] private ListenerInteractionLayer interactsWith;
+
+    [SerializeField] private TriggerPadConfig config;
     [SerializeField] private TriggerPadVisual visual;
     public bool needsCallback => !config.oneShot && config.timeToRearm < 0;
 
-    public bool armed = true;
+    [Header("State")]
+    [SerializeField] private PadState state = PadState.Armed;
+    [SerializeField] private bool occuped = false;
+    [SerializeField] private float timer;
 
-    public bool rearming = false;
-    public bool occuped = false;
-    public bool callbackRearmed = false;
-
-    [SerializeField] private float timerTillRearm;
-
-    [SerializeField] private ListenerInteractionLayer interactsWith;
+    //References de l'interface
     ListenerInteractionLayer IListener.interactionLayer => interactsWith;
-
     bool IListenerWithCallback.wantsCallback => needsCallback;
 
     public void Init(TriggerPadConfig _config, string _name)
@@ -32,83 +37,99 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
         RegistryEvents.NotifyTryTriggerLinkRegistry(config.triggerKey,this); //j'enregistre mon triggerLink
     }
 
+
     private void Update()
     {
-        if (config.oneShot) return;
+        if (state != PadState.WaitingRearm) return;
 
-        if(callbackRearmed && !armed && !occuped)//si j'ai un callback de rearm en attente => j'attends de plus etre occuped
+        if (needsCallback)
         {
-            callbackRearmed = false; //reset
-            Rearm();// je me rearme
+            TryCallbackRearm();
+        }
+        else
+        {
+            UpdateTimerRearm();
+        }
+    }
+    private void TryCallbackRearm()
+    {
+        AttemptRearm();
+    }
+
+    private void AttemptRearm()
+    {
+        if (occuped)
+        {
+            visual.StartTremble();
             return;
         }
 
-        if(!rearming || needsCallback) return; //si je me réarme automatiquement avec timer
-
-        timerTillRearm -= Time.deltaTime; //j'update le timer
-
-        if (timerTillRearm < 0.20f) //j'active le tremblement quand 0.2s du timer restant
-        {
-            visual.StartTremble();
-        }
-
-        if (timerTillRearm <= 0f) // mon timer est fini, je me rearme
-        {
-            if (occuped) //si je suis occupé cette frame -> je mets en pause le timer - Grace period
-            {
-                timerTillRearm = 0f;
-            }
-            else
-            {
-                Rearm();
-            }
-        }
-
+        Rearm();
     }
 
-    public void OnExitInteract()
+    private void UpdateTimerRearm()
     {
-        occuped = false;
+        if (timer > 0f)
+        {
+            timer -= Time.deltaTime;
+            if (timer < 0.2f)
+            {
+                visual.StartTremble();
+            }
+
+            return;
+        }
+
+        AttemptRearm();
     }
 
-    public bool OnInteract(ActorInteractionType interactionType)//return true si j'ai il y a quelqu'un sur moi
+
+    public void OnExitInteract() => occuped = false;
+
+    public bool OnInteract(ActorInteractionData _interaction)//return true si j'ai il y a quelqu'un sur moi
     {
-        if (interactionType != ActorInteractionType.OnMove) return false;
+        if (_interaction.interactionType != ActorInteractionType.OnMove)
+            return false;
 
         occuped = true;
 
-        if (armed)
-        {
-            armed = false;
-            visual.PressAnim();
-
-            if (!config.oneShot) StartAutoRearm();
-            //sound
-            LevelEntityEvents.NotifyListenerTryCallTrigger(this);
-        }
+        if (state == PadState.Armed)
+            OnPressed();
 
         return true;
 
+        
+    }
+
+    private void OnPressed()
+    {
+        state = PadState.Disarmed;
+        visual.PressAnim();
+
+        LevelEntityEvents.NotifyListenerTryCallTrigger(this);
+
+        if (!config.oneShot)
+        {
+            if (!needsCallback)
+                StartTimerRearm();
+        }
     }
 
     private void Rearm() //reset des valeur pour le rechargement
     {
-        timerTillRearm = 0f;
+        state = PadState.Armed;
         visual.ResetAnim();
-        rearming = false;
-        armed = true;
+        timer = 0f;
     }
-
-    private void StartAutoRearm() //pour commencer le ream avec timer
+    private void StartTimerRearm()
     {
-        timerTillRearm = config.timeToRearm;
-        rearming = true;
+        timer = config.timeToRearm;
+        state = PadState.WaitingRearm;
     }
 
     public void OnCallback() //si je me rearme avec un callback
     {
-        callbackRearmed = true; //prochaine frame ou je suis pas occupé je me rearme
-        if (occuped) visual.StartTremble(); //si je suis occupé, je ne peux pas me rearmer de suite, donc je tremble
+        state = PadState.WaitingRearm;  //prochaine frame ou je suis pas occupé je me rearme
     }
 
     public void ResetToInitial()

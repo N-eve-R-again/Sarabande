@@ -67,7 +67,7 @@ namespace Sarabande.Visuals
 
         private void Update()
         {
-            // déduire la direction depuis le forward XZ du parent
+            /*// déduire la direction depuis le forward XZ du parent
             Vector3 f = transform.forward; f.y = 0f;
             if (f.sqrMagnitude < 0.0001f) return;
 
@@ -75,7 +75,7 @@ namespace Sarabande.Visuals
                 ? (f.x >= 0f ? CardinalDirection.East : CardinalDirection.West)
                 : (f.z >= 0f ? CardinalDirection.North : CardinalDirection.South);
 
-            SetFacing(dir);
+            SetFacing(dir);*/
         }
 
         private void LateUpdate()

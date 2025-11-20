@@ -287,8 +287,9 @@ namespace Sarabande.Levels
     public class LeverConfig
     {
         public bool oneShot = true;
-        [Tooltip("si -1 alors attendra le callback du triggerable")][Min(0.3f)] public float timeToRearm = 1f;
+        [Tooltip("si -1 alors attendra le callback du triggerable")][Min(-1f)] public float timeToRearm = 1f;
 
+        public CardinalDirection attachedToSide = CardinalDirection.North;
         public GridCoord cell;
         public int triggerKey = -1;
 

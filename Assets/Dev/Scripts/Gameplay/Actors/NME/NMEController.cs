@@ -42,6 +42,11 @@ namespace Sarabande.NME
         [SerializeField] private ActorType _actorType;
         ActorType IActor.type => _actorType;
 
+        [SerializeField] private ActorInteractionData intentInteraction;
+        [SerializeField] private ActorInteractionData moveInteraction;
+        [SerializeField] private ActorInteractionData leaveInteraction;
+        [SerializeField] private CardinalDirection actorDirection;
+
         [Header("Data & Refs")]
         [SerializeField] private Sarabande.Core.LevelContext levelContext;
         [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
@@ -146,6 +151,10 @@ namespace Sarabande.NME
                 return;
             }
 
+            moveInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnMove);
+            leaveInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnLeave);
+            intentInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnIntent);
+
             BuildCollisionSets();
 
             Vector2Int spawnCell;
@@ -247,7 +256,7 @@ namespace Sarabande.NME
 
                             _path.RemoveAt(0);
                             FaceDirection(next - _gridPos);
-
+                            actorDirection = GetCardinalDirection(next - _gridPos);
                             // Gate fermée sur l’arête -> on annule et on repath
                             if (HasThinWallBetween(_gridPos, next))
                             {
@@ -408,13 +417,15 @@ namespace Sarabande.NME
                 yield return null;
             }
 
-            ActorEvents.NotifyActorMove(_gridPos, this, ActorInteractionType.OnLeave);
+            moveInteraction.UpdateInteraction(actorDirection,ToCell);
+            leaveInteraction.UpdateInteraction(actorDirection,FromCell);
+            ActorEvents.NotifyActorMove(this, leaveInteraction);
 
             _gridPos = target;
             _isMoving = false;
             _readyAt = Time.time + interStepPause;
 
-            ActorEvents.NotifyActorMove(target,this,ActorInteractionType.OnMove);
+            ActorEvents.NotifyActorMove(this,moveInteraction);
 
 
             MoveProgress = 0f;

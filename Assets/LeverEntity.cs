@@ -19,7 +19,7 @@ public class LeverEntity : MonoBehaviour, IListener, IResettable
         RegistryEvents.NotifyTryTriggerLinkRegistry(config.triggerKey, this);
     }
 
-    public bool OnInteract(ActorInteractionType interactionType)
+    public bool OnInteract(ActorInteractionData _interaction)
     {
         throw new System.NotImplementedException();
     }

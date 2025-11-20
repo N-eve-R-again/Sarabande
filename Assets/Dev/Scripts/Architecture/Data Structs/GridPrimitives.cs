@@ -1,4 +1,5 @@
 using Sarabande.Core;
+using System.Drawing;
 using UnityEngine;
 
 namespace Sarabande.Core
@@ -17,12 +18,20 @@ namespace Sarabande.Core
             return new Vector2Int(coord.x, coord.z);
         }
 
+        public static implicit operator GridCoord(Vector2Int coord)
+        {
+            return new GridCoord(coord.x, coord.y);
+        }
+
+
+
+
+
         public override string ToString() => $"({x}_{z})";
     }
 
     /// <summary>Direction cardinale pour les sorties/murs fins</summary>
     public enum CardinalDirection { North, East, South, West }
-
 
     /// <summary>Mur fin entre deux cases adjacentes</summary>
     [System.Serializable]

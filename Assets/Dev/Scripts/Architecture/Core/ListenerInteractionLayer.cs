@@ -13,9 +13,9 @@ public class ListenerInteractionLayer
         Hero = hero;
         NME = nme;
     }
-    public bool CanInteractWith(IActor actor)
+    public bool CanInteractWith(ActorType _actorType)
     {
-        switch (actor.type)
+        switch (_actorType)
         {
             case ActorType.None: return false;
             case ActorType.Hero: return Hero;

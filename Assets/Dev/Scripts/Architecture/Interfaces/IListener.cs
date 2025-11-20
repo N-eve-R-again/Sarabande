@@ -5,7 +5,7 @@ using UnityEngine;
 public interface IListener
 {
     ListenerInteractionLayer interactionLayer { get;}
-    public bool OnInteract(ActorInteractionType interactionType);
+    public bool OnInteract(ActorInteractionData _interaction);
     public void OnExitInteract();
 }
 

@@ -23,6 +23,28 @@ namespace Sarabande.Core
             return new Vector3(x, 0f, z);
         }
 
+        public static CardinalDirection GetCardinalDirection(GridCoord coord)
+        {
+            if (coord.x != 0)
+            {
+                if (coord.x > 0)
+                    return CardinalDirection.East;
+
+                return CardinalDirection.West;
+
+            }
+
+            if (coord.z != 0)
+            {
+                if (coord.z > 0)
+                    return CardinalDirection.North;
+
+                return CardinalDirection.South;
+            }
+
+            return CardinalDirection.North; //North par défaut;
+        }
+
         public static bool InsideBounds(Vector2Int c, int width, int height)
             => c.x >= 0 && c.x < width && c.y >= 0 && c.y < height;
 

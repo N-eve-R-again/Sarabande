@@ -10,6 +10,7 @@ public class ListenerFactory : MonoBehaviour, IClearable
     private Transform fakeWallsParent;
     private Transform messagesParent;
     private Transform pressurePadsParent;
+    private Transform listenerFolder;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject fakeWallPrefab;
@@ -34,8 +35,6 @@ public class ListenerFactory : MonoBehaviour, IClearable
         CreateFakeWalls(_levelData);
         CreateMessages(_levelData);
         CreatePressurePads(_levelData);
-        //arrowtrap
-        //doors
         //tiles
 
         jobDone = true;
@@ -56,14 +55,6 @@ public class ListenerFactory : MonoBehaviour, IClearable
             Debug.LogError("FakeWallPrefab has no FakeWallEntity attached");
             valid = false;
         }
-
-        if (fakeWallPrefab.GetComponent<FakeWallEntity>() == null)
-        {
-            Debug.LogError("MessagePrefab has no MessageCollectibleEntity attached");
-            valid = false;
-        }
-
-
         return valid;
     }
 
@@ -84,14 +75,17 @@ public class ListenerFactory : MonoBehaviour, IClearable
 
     private void CreateFolders()
     {
+        listenerFolder = new GameObject("Listeners").transform;
+        listenerFolder.SetParent(transform.parent);
+
         fakeWallsParent = new GameObject("FakeWalls").transform;
-        fakeWallsParent.SetParent(transform, false);
+        fakeWallsParent.SetParent(listenerFolder, false);
 
         messagesParent = new GameObject("MessagesCollectibles").transform;
-        messagesParent.SetParent(transform, false);
+        messagesParent.SetParent(listenerFolder, false);
 
         pressurePadsParent = new GameObject("PressurePads").transform;
-        pressurePadsParent.SetParent(transform, false);
+        pressurePadsParent.SetParent(listenerFolder, false);
     }
 
     private void CreateFakeWalls(LevelData _levelData)

@@ -40,8 +40,8 @@ public static class RegistryEvents
 public static class ActorEvents
 {
     //Quand un actor fait un move
-    public static event Action<Vector2Int, IActor, ActorInteractionType> OnActorMove; // Event
-    public static void NotifyActorMove(Vector2Int _eventPos, IActor _actor, ActorInteractionType _interactionType) // Fonction Call
-        => OnActorMove?.Invoke(_eventPos, _actor, _interactionType);
+    public static event Action<IActor, ActorInteractionData> OnActorMove; // Event
+    public static void NotifyActorMove(IActor _actor, ActorInteractionData _interaction) // Fonction Call
+        => OnActorMove?.Invoke(_actor, _interaction);
 
 }

@@ -14,6 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   coloredTitles:
   - name: Main Camera
-    color: {r: 0.28773582, g: 0.9325813, b: 1, a: 0.3529412}
+    color: {r: 0.28773582, g: 0.9325813, b: 1, a: 0.7490196}
   - name: LevelRoot
-    color: {r: 1, g: 0, b: 0.020870686, a: 0.3529412}
+    color: {r: 1, g: 1, b: 1, a: 0.7490196}
+  - name: Listeners
+    color: {r: 0.42968425, g: 1, b: 0.2971698, a: 0.3529412}
+  - name: Triggerables
+    color: {r: 1, g: 0, b: 0.38591814, a: 0.3529412}
+  - name: Static Visuals
+    color: {r: 1, g: 0.7673603, b: 0, a: 0.3529412}

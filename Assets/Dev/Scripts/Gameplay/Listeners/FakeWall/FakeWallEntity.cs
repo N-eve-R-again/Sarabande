@@ -1,5 +1,6 @@
 using Sarabande.Core;
 using Sarabande.Levels;
+using UnityEditor.ShaderKeywordFilter;
 using UnityEngine;
 
 public class FakeWallEntity : MonoBehaviour, IListener, IResettable
@@ -47,9 +48,9 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
         UnDiscover(); 
     }
 
-    public bool OnInteract(ActorInteractionType interactionType)
+    public bool OnInteract(ActorInteractionData _interaction)
     {
-        if (interactionType != ActorInteractionType.OnIntent) return false;
+        if (_interaction.interactionType != ActorInteractionType.OnIntent) return false;
 
         if (!revealed)
         {
@@ -58,8 +59,5 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
 
         return true;
     }
-    public void OnExitInteract()
-    {
-
-    }
+    public void OnExitInteract() { }
 }
