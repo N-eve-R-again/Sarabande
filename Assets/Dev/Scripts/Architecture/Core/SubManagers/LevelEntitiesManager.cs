@@ -28,7 +28,12 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
 
     private void OnDisable()
     {
-        interactionSystem.UnSubscribeToEvents();
+        if(interactionSystem != null)
+        {
+
+            interactionSystem.UnSubscribeToEvents();
+        }
+
 
         Debug.Log("LEM Unsubscribed to LevelEntityEvents");
     }

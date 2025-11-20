@@ -36,6 +36,11 @@ public class InteractionSystem : MonoBehaviour
         ActorEvents.OnActorMove -= ActorMoved;
     }
 
+    private void OnDestroy()
+    {
+        UnSubscribeToEvents();
+    }
+
     private void RegisterListener(Vector2Int _gridCoord, IListener _listener) => listeners[_gridCoord] = _listener;
 
     private void RegisterTriggerable(int _triggerableKey, ITriggerable _triggerable) => triggerables[_triggerableKey] = (_triggerable);
