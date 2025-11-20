@@ -187,6 +187,7 @@ namespace Sarabande.Levels
         }
         public List<TimedDoorSpec> timedDoors = new();
 
+
         [System.Serializable]
         public class LeverSpec
         {
@@ -282,14 +283,34 @@ namespace Sarabande.Levels
         public AudioClip voiceClip;
     }
 
+    [Serializable]
+    public class LeverConfig
+    {
+        public bool oneShot = true;
+        [Tooltip("si -1 alors attendra le callback du triggerable")][Min(0.3f)] public float timeToRearm = 1f;
+
+        public GridCoord cell;
+        public int triggerKey = -1;
+
+        public LeverConfig(bool _oneShot, GridCoord _cell, int _triggerKey)
+        {
+            oneShot = _oneShot;
+            cell = _cell;
+            triggerKey = _triggerKey;
+               
+        }
+    }
+    
+
     [System.Serializable]
     public class TriggerPadConfig
     {
         public bool invisible = false;
         public bool oneShot = true;
-        public float timeToRearm = 1f;
+
+        [Tooltip("si -1 alors attendra le callback du triggerable")] [Min(-1f)] public float timeToRearm = 1f;
         public GridCoord cell;
-        [Min(0.3f)] public int triggerKey = -1;
+        public int triggerKey = -1;
 
         public TriggerPadConfig(bool _invisible, bool _oneShot, GridCoord _cell, int _triggerKey)
         {
@@ -299,6 +320,7 @@ namespace Sarabande.Levels
             triggerKey = _triggerKey;
         }
     }
+
 
     [System.Serializable]
     public class ArrowTrapConfig

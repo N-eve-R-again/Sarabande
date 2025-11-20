@@ -408,11 +408,14 @@ namespace Sarabande.NME
                 yield return null;
             }
 
+            ActorEvents.NotifyActorMove(_gridPos, this, ActorInteractionType.OnLeave);
+
             _gridPos = target;
             _isMoving = false;
             _readyAt = Time.time + interStepPause;
 
-            ActorEvents.NotifyActorMove(_gridPos,this,ActorInteractionType.OnMove);
+            ActorEvents.NotifyActorMove(target,this,ActorInteractionType.OnMove);
+
 
             MoveProgress = 0f;
             FromCell = ToCell = _gridPos;

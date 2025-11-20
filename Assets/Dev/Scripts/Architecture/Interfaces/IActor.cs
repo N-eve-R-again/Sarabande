@@ -9,8 +9,8 @@ public enum ActorInteractionType
 {
     OnMove,
     OnIntent,
-    OnCancelIntent,
-    OnBump
+    OnBump,
+    OnLeave
 }
 
 public enum ActorType

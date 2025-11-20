@@ -17,7 +17,7 @@ public class ListenerCreationHelper
 
         // 5. Notifier via events (pas de référence au manager!)
         
-        LevelEntityEvents.NotifyListenerRegistry(cell, listener);
+        RegistryEvents.NotifyListenerRegistry(cell, listener);
     }
 
 

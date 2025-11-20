@@ -5,11 +5,15 @@ using UnityEngine;
 public interface IListener
 {
     ListenerInteractionLayer interactionLayer { get;}
-    public void OnInteract(ActorInteractionType interactionType) { return; }
-    public void OnExitInteract(ActorInteractionType interactionType) { return; }
+    public bool OnInteract(ActorInteractionType interactionType);
+    public void OnExitInteract();
 }
 
-
+public interface IListenerWithCallback : IListener
+{
+    public bool wantsCallback { get; }
+    public void OnCallback();
+}
 
 
 

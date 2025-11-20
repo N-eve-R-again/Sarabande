@@ -52,22 +52,25 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
         transform.position += new Vector3(0, markerY, 0);
     }
 
-    public void OnExitInteract(ActorInteractionType interactionType)
+    public void OnExitInteract()
     {
         
     }
 
-    public void OnInteract(ActorInteractionType interactionType)
+    public bool OnInteract(ActorInteractionType interactionType)
     {
-        if (interactionType != ActorInteractionType.OnMove) return;
+        if (interactionType != ActorInteractionType.OnMove) return false;
 
-        if (collected) return;
+        if (collected) return false;
+
         collected = true;
         Debug.Log("MESSAGE COLLECTED");
         messageSystem.Collect(messageIndex);
 
         //animation Collect
         transform.localScale = Vector3.zero;
+
+        return false;
     }
 
 

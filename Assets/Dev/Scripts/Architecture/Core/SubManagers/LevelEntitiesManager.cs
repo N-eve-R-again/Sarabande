@@ -17,27 +17,19 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
 
     public MessageSystem GetMessageSystem() => messageSystem;
 
-    private void SubscribeToEvents()
+    private void Init()
     {
         // S'abonner aux events
         interactionSystem = new InteractionSystem();
+        interactionSystem.SubscribeToEvents();
 
-        LevelEntityEvents.OnListenerRegistry += interactionSystem.RegisterListener;
-        LevelEntityEvents.OnListenerTryCallTrigger += interactionSystem.SendEventToTriggerable;
-        LevelEntityEvents.OnTryTriggerLinkRegistry += interactionSystem.RegisterTriggerLink;
-        LevelEntityEvents.OnTriggerableRegistry += interactionSystem.RegisterTriggerable;
-        ActorEvents.OnActorMove += interactionSystem.ActorMoved;
         Debug.Log("LEM Subscribed to LevelEntityEvents");
     }
 
     private void OnDisable()
     {
-        // Se désabonner (important pour éviter les fuites mémoire!)
-        LevelEntityEvents.OnListenerRegistry -= interactionSystem.RegisterListener;
-        LevelEntityEvents.OnListenerTryCallTrigger -= interactionSystem.SendEventToTriggerable;
-        LevelEntityEvents.OnTryTriggerLinkRegistry -= interactionSystem.RegisterTriggerLink;
-        LevelEntityEvents.OnTriggerableRegistry -= interactionSystem.RegisterTriggerable;
-        ActorEvents.OnActorMove -= interactionSystem.ActorMoved;
+        interactionSystem.UnSubscribeToEvents();
+
         Debug.Log("LEM Unsubscribed to LevelEntityEvents");
     }
 
@@ -45,7 +37,7 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
     {
         if(messageSystem == null) throw new MissingReferenceException("MessageSystem");
         Instance = this;
-        SubscribeToEvents();
+        Init();
     }
 
     public void ClearObject()

@@ -47,19 +47,19 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
         UnDiscover(); 
     }
 
-    public void OnInteract(ActorInteractionType interactionType)
+    public bool OnInteract(ActorInteractionType interactionType)
     {
-        if (interactionType != ActorInteractionType.OnIntent) return;
+        if (interactionType != ActorInteractionType.OnIntent) return false;
+
         if (!revealed)
         {
             Discovered();
         }
+
+        return true;
     }
-    public void OnExitInteract(ActorInteractionType interactionType)
+    public void OnExitInteract()
     {
-        if (revealed)
-        {
-            //UnDiscover();
-        }
+
     }
 }

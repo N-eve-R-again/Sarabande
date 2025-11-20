@@ -1,0 +1,36 @@
+using Sarabande.Core;
+using Sarabande.Levels;
+using UnityEngine;
+
+public class LeverEntity : MonoBehaviour, IListener, IResettable
+{
+    [SerializeField] private ListenerInteractionLayer interactsWith;
+    public LeverConfig config;
+    public ListenerInteractionLayer interactionLayer => interactsWith;
+
+
+    public void Init(LeverConfig _config, string _name)
+    {
+        config = _config;
+        ListenerCreationHelper.SetupListenerEntity(this, this, _config.cell, _name);
+
+        //transform.localScale = SetSize();
+
+        RegistryEvents.NotifyTryTriggerLinkRegistry(config.triggerKey, this);
+    }
+
+    public bool OnInteract(ActorInteractionType interactionType)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public void OnExitInteract()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public void ResetToInitial()
+    {
+        throw new System.NotImplementedException();
+    }
+}

@@ -11,7 +11,7 @@ public class TestTriggerable : MonoBehaviour, ITriggerable
         gameObject.name = _name;
         triggerableKey = _key;
         transform.position = SetPosition(_gridCoord);
-        LevelEntityEvents.NotifyTriggerableRegistry(_key, this);
+        RegistryEvents.NotifyTriggerableRegistry(_key, this);
 
     }
     private Vector3 SetPosition(GridCoord c)

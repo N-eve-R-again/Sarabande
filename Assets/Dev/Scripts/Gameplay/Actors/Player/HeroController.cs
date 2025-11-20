@@ -275,7 +275,8 @@ namespace Sarabande.Player
 
                 if (ratio >= validateMoveTime && !actionvalidated)
                 {
-                    ActorEvents.NotifyActorMove(target, this, ActorInteractionType.OnMove);
+                    ActorEvents.NotifyActorMove(FromCell, this, ActorInteractionType.OnLeave);
+                    ActorEvents.NotifyActorMove(ToCell, this, ActorInteractionType.OnMove);
                     actionvalidated = true;
                 }
                     // position prévue à cette frame
@@ -299,7 +300,6 @@ namespace Sarabande.Player
                     MoveProgress = 0f;
                     
                     FromCell = ToCell = _gridPos;      // on reste logiquement sur la case d’origine
-                    ActorEvents.NotifyActorMove(ToCell, this, ActorInteractionType.OnCancelIntent);
                     _readyAtTime = Time.time + interStepPause;
                     yield break;
                 }
@@ -372,7 +372,7 @@ namespace Sarabande.Player
                 transform.position = Vector3.Lerp(start, start + bumpVector, lerpT);
                 yield return null;
             }
-            ActorEvents.NotifyActorMove(_gridPos, this, ActorInteractionType.OnBump);
+            ActorEvents.NotifyActorMove(_gridPos + dir, this, ActorInteractionType.OnBump);
             // Retour
             lerpT = 0f;
             while (lerpT < 1f)

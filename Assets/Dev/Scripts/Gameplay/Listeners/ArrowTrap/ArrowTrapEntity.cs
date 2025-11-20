@@ -5,7 +5,6 @@ using UnityEngine;
 public class ArrowTrapEntity : MonoBehaviour, ITriggerable
 {
     public int triggerableKey;
-
     [SerializeField] private ArrowTrapConfig config;
     [SerializeField] private bool armed = true;
     [SerializeField] private ArrowTrapVisual visual;
@@ -16,8 +15,24 @@ public class ArrowTrapEntity : MonoBehaviour, ITriggerable
         gameObject.name = _name;
         triggerableKey = config.triggerKey;
         transform.position = SetPosition(config.cell);
-        LevelEntityEvents.NotifyTriggerableRegistry(triggerableKey, this);
 
+        RegistryEvents.NotifyTriggerableRegistry(triggerableKey, this);
+
+    }
+    private float timer = 0;
+    private void Update()
+    {
+        if (!armed)
+        {
+            timer += Time.deltaTime;
+            if (timer > 1f)
+            {
+                armed = true;
+                timer = 0f;
+                visual.SetArmed(armed);
+                LevelEntityEvents.NotifyTriggerableCallback(this);
+            }
+        }
     }
     private Vector3 SetPosition(GridCoord c)
     {
@@ -33,6 +48,7 @@ public class ArrowTrapEntity : MonoBehaviour, ITriggerable
             armed = false;
             Debug.Log($"ARROW SPAWNED BY {gameObject.name}");
             visual.SetArmed(armed);
+
         }
     }
 }
