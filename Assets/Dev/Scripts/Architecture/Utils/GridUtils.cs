@@ -13,13 +13,13 @@ namespace Sarabande.Core
         // --- Géométrie grille ---
         public static Vector3 Center(Vector2Int c, float cellSize)
             => new Vector3((c.x + 0.5f) * cellSize, 0f, (c.y + 0.5f) * cellSize);
-        public static Vector3 CenterGrid(GridCoord c, float cellSize = 1f)
+        public static Vector3 CenterGrid(Vector2Int c, float cellSize = 1f)
             => Center(c, cellSize);
 
-        public static Vector3 CenterXZ(GridCoord cell)
+        public static Vector3 CenterXZ(Vector2Int cell)
         {
             float x = (cell.x + 0.5f) * LevelGlobalSettings.cellSize;
-            float z = (cell.z + 0.5f) * LevelGlobalSettings.cellSize;
+            float z = (cell.y + 0.5f) * LevelGlobalSettings.cellSize;
             return new Vector3(x, 0f, z);
         }
 

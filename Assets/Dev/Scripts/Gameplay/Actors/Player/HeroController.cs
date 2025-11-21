@@ -148,7 +148,7 @@ namespace Sarabande.Player
             BuildCollisionSets();
 
             _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            ActorSpawn spawn = levelData.newHeroSpawn;
+            ActorSpawn spawn = levelData.heroSpawnConfig;
             // Coord grille du spawn (ex. D8)
             _gridPos = (Vector2Int)spawn.spawnCell;
 

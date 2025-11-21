@@ -1,17 +1,20 @@
 using Sarabande.Core;
 using Sarabande.Levels;
 using UnityEngine;
+using static UnityEngine.Rendering.STP;
 public class WallVisual : MonoBehaviour
 {
+    [SerializeField] Obstacle config;
+
     [SerializeField, Min(0f)] private float wallInset = 0.05f;
     [SerializeField, Min(0.1f)] private float wallHeight = 1f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public void Init(GridCoord _coord, string _name)
+    public void Init(Obstacle _config, string _name)
     {
         gameObject.name = _name;
-
-        transform.position = SetPosition(_coord);
+        config = _config;
+        transform.position = SetPosition(config.cell);
         transform.localScale = SetSize();
 
         LevelGlobalSettings.SetLayerForObstacle(gameObject);
@@ -24,10 +27,8 @@ public class WallVisual : MonoBehaviour
         return initScale;
     }
 
-    private Vector3 SetPosition(GridCoord _coord)
+    private Vector3 SetPosition(Vector2Int _coord)
     {
-        float x = (_coord.x + 0.5f) * LevelGlobalSettings.cellSize;
-        float z = (_coord.z + 0.5f) * LevelGlobalSettings.cellSize;
-        return new Vector3(x, wallHeight * 0.5f,z);
+        return GridUtils.CenterXZ(_coord) + Vector3.up *  (wallHeight * 0.5f);
     }
 }

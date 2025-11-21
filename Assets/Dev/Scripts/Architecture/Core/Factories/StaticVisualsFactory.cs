@@ -1,7 +1,9 @@
 using Sarabande.Core;
 using Sarabande.Levels;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEngine;
+using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class StaticVisualsFactory : MonoBehaviour, IClearable
 {
@@ -35,8 +37,7 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
         CreateFolders();
 
         BuildGridLines(_levelData);
-        BuildWalls(_levelData);
-        BuildThinWalls(_levelData);
+        BuildObstacles(_levelData);
 
         jobDone = true;
     }
@@ -77,62 +78,38 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
         thinWallsParent.SetParent(staticVisualsFolder, false);
     }
 
-    private void BuildWalls(LevelData _levelData)
+    private void BuildObstacles(LevelData _levelData)
     {
 
         // Dé-duplication pour éviter les doublons saisis par erreur
-        var set = new HashSet<(int x, int z)>();
+        var set = new HashSet<(int x, int y)>();
 
-        foreach (var coord in _levelData.nonWalkables)
+        foreach (var obstacle in _levelData.obstacles)
         {
-            if (!set.Add((coord.x, coord.z)))
+            if (!set.Add((obstacle.cell.x, obstacle.cell.y)))
             {
-                Debug.LogWarning($"[LevelLoader] Doublon nonWalkable ignoré en ({coord.x},{coord.z})."); continue;
+                Debug.LogWarning($"[LevelLoader] Doublon nonWalkable ignoré en ({obstacle.cell.ToString()})."); continue;
             }
 
-            GameObject temp = Instantiate(wallPrefab, wallsParent);
-            WallVisual visual = temp.GetComponent<WallVisual>();
+            if( obstacle.type == Obstacle.ObstacleType.Wall)
+            {
+                GameObject temp = Instantiate(wallPrefab, wallsParent);
+                WallVisual visual = temp.GetComponent<WallVisual>();
 
-            visual.Init(coord, $"Wall_{coord.ToString()}");
+                visual.Init(obstacle, $"Wall_{obstacle.cell.ToString()}");
+            }
+            else
+            {
 
+                GameObject temp = Instantiate(thinWallPrefab, Vector3.zero, Quaternion.identity, thinWallsParent);
+                ThinWallVisual visual = temp.GetComponent<ThinWallVisual>();
+
+                visual.Init(obstacle, $"Thin_{obstacle.cell.ToString()}");
+            }
         }
     }
 
-    private void BuildThinWalls(LevelData _levelData)
-    {
-        // Dé-duplication (un même segment ajouté deux fois)
-        var seen = new HashSet<(int ax, int az, int bx, int bz)>();
-
-        foreach (var edgeCoord in _levelData.thinWalls)
-        {
-            // Normaliser l'ordre pour la HashSet
-            var key = (ax: Mathf.Min(edgeCoord.a.x, edgeCoord.b.x), az: Mathf.Min(edgeCoord.a.z, edgeCoord.b.z),
-                       bx: Mathf.Max(edgeCoord.a.x, edgeCoord.b.x), bz: Mathf.Max(edgeCoord.a.z, edgeCoord.b.z));
-
-            if (!seen.Add(key))
-            {
-                Debug.LogWarning($"[LevelLoader] Doublon thinWall ignoré entre ({edgeCoord.a.x},{edgeCoord.a.z}) et ({edgeCoord.b.x},{edgeCoord.b.z}).");
-                continue;
-            }
-
-            // Vérification adjacency (même x ou même z, distance 1)
-            bool sameX = edgeCoord.a.x == edgeCoord.b.x && Mathf.Abs(edgeCoord.a.z - edgeCoord.b.z) == 1;
-            bool sameZ = edgeCoord.a.z == edgeCoord.b.z && Mathf.Abs(edgeCoord.a.x - edgeCoord.b.x) == 1;
-            bool vertical = sameX;
-
-            if (!sameX && !sameZ)
-            {
-                Debug.LogError($"[LevelLoader] thinWall non-adjacent entre ({edgeCoord.a.x},{edgeCoord.a.z}) et ({edgeCoord.b.x},{edgeCoord.b.z})");
-                continue;
-            }
-
-            GameObject temp = Instantiate(thinWallPrefab, Vector3.zero, Quaternion.identity, thinWallsParent);
-            ThinWallVisual visual = temp.GetComponent<ThinWallVisual>();
-
-            visual.Init(edgeCoord, $"Thin_{edgeCoord.a.ToString()}_{edgeCoord.b.ToString()}", vertical);
-
-        }
-    }
+  
 
     private void BuildGridLines(LevelData _levelData)
     {

@@ -2,30 +2,31 @@ using Sarabande.Core;
 using Sarabande.Levels;
 using UnityEngine;
 
+
 public class ThinWallVisual : MonoBehaviour
 {
+    [SerializeField] Obstacle config;
 
     [SerializeField, Min(0.1f)] private float wallHeight = 1f;
     [SerializeField, Min(0.01f)] private float thinThickness = 0.10f;
-    [SerializeField] private bool isVertical = false;
-
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public void Init(EdgeBlocker _coord, string _name, bool vertical)
+    public void Init(Obstacle _config, string _name)
     {
         gameObject.name = _name;
-        isVertical = vertical;
 
-        transform.position = SetPosition(isVertical, _coord);
-        transform.localScale = SetSize();
+        config = _config;
+
+        transform.position = SetPosition(config.direction, config.cell);
+        transform.localScale = SetSize(config.direction);
 
         LevelGlobalSettings.SetLayerForObstacle(gameObject);
     }
 
-    private Vector3 SetSize()
+    private Vector3 SetSize(CardinalDirection dir)
     {
         Vector3 size = Vector3.zero;
 
-        if (isVertical) // Séparation verticale entre deux Z donc thin sur l'axe Z
+        if (dir == CardinalDirection.North || dir == CardinalDirection.South) // Séparation verticale entre deux Z donc thin sur l'axe Z
         {
             size = new Vector3(LevelGlobalSettings.cellSize, wallHeight, thinThickness);
         }
@@ -37,21 +38,16 @@ public class ThinWallVisual : MonoBehaviour
         return size;
     }
 
-    private Vector3 SetPosition(bool vertical, EdgeBlocker coord)
+    private Vector3 SetPosition(CardinalDirection dir, Vector2Int cell)
     {
-        float x; float z;
 
-        if (isVertical)// Séparation horizontale entre deux rangées : x au centre de la colonne, z sur la ligne entre les 2 cases
-        {
-            x = coord.a.x * LevelGlobalSettings.cellSize + LevelGlobalSettings.cellSize * 0.5f;
-            z = Mathf.Min(coord.a.z, coord.b.z) * LevelGlobalSettings.cellSize + LevelGlobalSettings.cellSize; // ligne entre z et z+1
-        }
-        else // Séparation verticale entre deux colonnes : z au centre de la rangée, x sur la ligne entre les 2 cases
-        {
-            x = Mathf.Min(coord.a.x, coord.b.x) * LevelGlobalSettings.cellSize + LevelGlobalSettings.cellSize; // ligne entre x et x+1
-            z = coord.a.z * LevelGlobalSettings.cellSize + LevelGlobalSettings.cellSize * 0.5f;
-        }
+        Vector2Int vecDir = GridUtils.DirToVec(dir);
 
-        return new Vector3(x, wallHeight * 0.5f, z);
+        float offset = LevelGlobalSettings.cellSize * 0.5f;
+
+        Vector3 vecDir3 = new Vector3(vecDir.x, 0f, vecDir.y);
+
+        
+        return GridUtils.CenterGrid(cell) + vecDir3 * offset;
     }
 }

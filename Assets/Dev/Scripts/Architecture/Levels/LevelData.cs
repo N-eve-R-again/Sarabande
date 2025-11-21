@@ -20,6 +20,7 @@
 using Sarabande.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 using static Sarabande.Levels.LevelData;
 
@@ -39,6 +40,10 @@ namespace Sarabande.Levels
         [Min(1)] public int width = 8;     // colonnes (A..H)
         [Min(1)] public int height = 8;    // rangées  (1..8)
 
+        [Header("Obstacle")]
+        public List<Obstacle> obstacles = new List<Obstacle>();
+
+        [Header("Legacy Obstacles")]
         [Tooltip("Cases non-walkable (murs pleins). Coordonnées sur la grille (x,z).")]
         public List<GridCoord> nonWalkables = new();
 
@@ -50,8 +55,9 @@ namespace Sarabande.Levels
         // ?????????????????????????????????????????????????????????????????????????????
 
         [Header("Spawns")]
-        public ActorSpawn newHeroSpawn;
+        public ActorSpawn heroSpawnConfig;
 
+        [Header("Legacy Spawns")]
         public GridCoord heroSpawn;  // D8 = (3,7)
 
         [Tooltip("Liste des cellules de spawn des ennemis. Vide = 0 ennemi.")]
@@ -60,7 +66,7 @@ namespace Sarabande.Levels
         [Tooltip("Facing par NME (optionnel). Même index que nmeSpawns. Si manquant, on garde initialFacing du prefab.")]
         public List<CardinalDirection> nmeFacings = new();
 
-        [Header("Entry")]
+        [Header("Legacy Entry")]
         [Tooltip("Depuis quel bord le héros arrive pour son entry step.")]
         public CardinalDirection heroEntry = CardinalDirection.North;
 
@@ -115,8 +121,26 @@ namespace Sarabande.Levels
         [ContextMenu("Upgrade HeroSpawn to New Version")]
         public void UpdateHeroSpawn()
         {
-            newHeroSpawn = new ActorSpawn(heroSpawn,heroEntry);
+            heroSpawnConfig = new ActorSpawn(heroSpawn,heroEntry);
         }
+
+        [ContextMenu("Upgrade Obstacles to New Version")]
+        public void UpdateObstacles()
+        {
+            obstacles.Clear();
+            foreach (var item in nonWalkables)
+            {
+                obstacles.Add(new Obstacle(Obstacle.ObstacleType.Wall, item, CardinalDirection.North));
+            }
+
+            foreach (var item in thinWalls)
+            {
+                obstacles.Add((Obstacle)item);
+            }
+
+
+        }
+
 
         [ContextMenu("Upgrade ALL LEVEL DATA to New Version")]
         public void PortLevelDataToNewVersion()
@@ -248,36 +272,15 @@ namespace Sarabande.Levels
         // Triggers génériques (Pads + Routage)
         // ?????????????????????????????????????????????????????????????????????????????
 
-        [System.Serializable]
-        public class TriggerPadSpec
-        {
-            public GridCoord cell;                      // case de la dalle
-            public bool canBeTriggeredByNME = true;     // le NME peut l'activer 
-            public string triggerId;                    // identifiant logique (ex: "OPEN_EXIT_DOOR")
-        }
-        public List<TriggerPadSpec> triggerPads = new();
 
-        public enum TriggerActionKind
-        {
-            TimedDoorOpen = 0,
-            // (plus tard : ArrowTrapFire, DiscoStart, MessageShow, etc.)
-        }
 
-        [System.Serializable]
-        public class TriggerBinding
-        {
-            public string id;                   // doit matcher TriggerPadSpec.triggerId (ou un levier, si voulu)
-            public TriggerActionKind action;    // pour l’instant : TimedDoorOpen
-            public int targetIndex = -1;        // index de la porte (TimedDoorSpec) si action = TimedDoorOpen
-            public float secondsOverride = -1f; // < 0 => utilise la durée de la porte; sinon override
-        }
-        public List<TriggerBinding> triggerBindings = new();
+
     }
 
     [System.Serializable]
     public class MessageConfig
     {
-        public GridCoord cell;        // coordonnées (utilise x/z comme partout)
+        public Vector2Int cell;        // coordonnées (utilise x/z comme partout)
         [TextArea(2, 5)] public string text;
         [Min(0.1f)] public float displaySeconds = 3f;
         public AudioClip voiceClip;
@@ -292,6 +295,7 @@ namespace Sarabande.Levels
         public CardinalDirection attachedToSide = CardinalDirection.North;
         public GridCoord cell;
         public int triggerKey = -1;
+        ListenerInteractionLayer interactionLayer = new ListenerInteractionLayer(true, false);
 
         public LeverConfig(bool _oneShot, GridCoord _cell, int _triggerKey)
         {
@@ -310,8 +314,10 @@ namespace Sarabande.Levels
         public bool oneShot = true;
 
         [Tooltip("si -1 alors attendra le callback du triggerable")] [Min(-1f)] public float timeToRearm = 1f;
-        public GridCoord cell;
+        public Vector2Int cell;
         public int triggerKey = -1;
+
+        ListenerInteractionLayer interactionLayer = new ListenerInteractionLayer(true, true);
 
         public TriggerPadConfig(bool _invisible, bool _oneShot, GridCoord _cell, int _triggerKey)
         {
@@ -326,7 +332,7 @@ namespace Sarabande.Levels
     [System.Serializable]
     public class ArrowTrapConfig
     {
-        public GridCoord cell;             // première case dans la map que la flèche traverse
+        public Vector2Int cell;             // première case dans la map que la flèche traverse
         public CardinalDirection travelDir;         // direction de déplacement (N/E/S/W)
         [Min(0.1f)] public float arrowSpeed;   // vitesse (unités monde / seconde)
 
@@ -352,7 +358,7 @@ namespace Sarabande.Levels
     [System.Serializable]
     public class ActorSpawn
     {
-        public GridCoord spawnCell;
+        public Vector2Int spawnCell;
         public CardinalDirection spawnDirection;
 
         public ActorSpawn(GridCoord spawnCell, CardinalDirection spawnDirection)
@@ -373,6 +379,49 @@ namespace Sarabande.Levels
             this.key = key;
             this.entityType = entityType;
         }
+    }
+
+    [Serializable]
+    public class Obstacle
+    {
+        public enum ObstacleType
+        {
+            Wall,
+            ThinWall
+        }
+
+        public ObstacleType type;
+        public Vector2Int cell;
+
+        [Space]
+        [ConditionalHide("type",ObstacleType.ThinWall, "ThinWall Config")]
+        public CardinalDirection direction;
+
+        public Obstacle(ObstacleType type, Vector2Int cell, CardinalDirection direction)
+        {
+            this.type = type;
+            this.cell = cell;
+            this.direction = direction;
+        }
+
+        public static explicit operator Obstacle(EdgeBlocker edgeBlocker) {
+
+            CardinalDirection dir = CardinalDirection.North;
+            Vector2Int cell = edgeBlocker.a;
+            if (edgeBlocker.a.x == edgeBlocker.b.x) {
+                dir = CardinalDirection.North;
+                cell = Vector2Int.Min(edgeBlocker.a, edgeBlocker.b);
+            }
+            if (edgeBlocker.a.z == edgeBlocker.b.z) {
+                dir = CardinalDirection.East;
+                cell = Vector2Int.Min(edgeBlocker.a, edgeBlocker.b);
+            }
+
+
+            return new Obstacle(ObstacleType.ThinWall, cell,dir);
+        }
+
+
     }
 }
 

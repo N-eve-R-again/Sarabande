@@ -211,7 +211,7 @@ Transform:
   m_GameObject: {fileID: 187714652}
   serializedVersion: 2
   m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalPosition: {x: -1.77, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1088,9 +1088,9 @@ MonoBehaviour:
   heroSprite: {fileID: 2800000, guid: 68a8c99671a70944da82317fd17ef147, type: 3}
   heroStartSprite: {fileID: 2800000, guid: 471ae3782442b2f4d869b9bed1741c8f, type: 3}
   triggerpadsize: {x: 0.8, y: 0.1, z: 0.8}
-  gizmosOffsets: {x: 0, y: 0.5, z: 0}
+  gizmosOffsets: {x: 0, y: 0.1, z: 0}
   arrowtraplinesize: 0.565
-  arrowtrapsize: 0.068
+  arrowtrapsize: 0.126
   walls:
   - {x: 0.5, y: 0.5, z: 7.5}
   - {x: 1.5, y: 0.5, z: 7.5}
@@ -1111,6 +1111,11 @@ MonoBehaviour:
   - {x: 5.5, y: 0.5, z: 3.5}
   - {x: 6.5, y: 0.5, z: 3.5}
   - {x: 7.5, y: 0.5, z: 3.5}
+  thinwalls:
+  - {x: 3.5, y: 0.5, z: 1.5}
+  - {x: 5.5, y: 0.5, z: 1.5}
+  - {x: 5.5, y: 0.5, z: 0.5}
+  thinwallsdirs: 010000000100000001000000
   triggerpads:
   - {x: 5.5, y: 0.05, z: 5.5}
   - {x: 0.5, y: 0.05, z: 2.5}
@@ -1134,16 +1139,18 @@ MonoBehaviour:
   - {x: 0.5, y: 0.5, z: 0}
   - {x: 1.5, y: 0.5, z: 0}
   - {x: 2.5, y: 0.5, z: 0}
+  - {x: 2.5, y: 0.5, z: 0}
   - {x: 4.5, y: 0.5, z: 0}
   - {x: 5.5, y: 0.5, z: 0}
   - {x: 7.5, y: 0.5, z: 0}
   messages:
-  - {x: 0.5, y: 0.5, z: 6.5}
-  - {x: 1.5, y: 0.5, z: 1.5}
-  - {x: 7.5, y: 0.5, z: 2.5}
+  - {x: 0.5, y: 0.1, z: 0.5}
+  - {x: 1.5, y: 0.1, z: 0.5}
+  - {x: 7.5, y: 0.1, z: 0.5}
   fakewalls:
   - {x: 0.5, y: 0.5, z: 5.5}
   arrowtrapdirections:
+  - 0
   - 0
   - 0
   - 0
@@ -1156,10 +1163,9 @@ MonoBehaviour:
   - {x: 0, y: 0.2, z: 8}
   - {x: 8, y: 0.2, z: 8}
   - {x: 8, y: 0.2, z: 0}
+  transparent: {r: 1, g: 1, b: 1, a: 0.2901961}
   herospawn:
-    spawnCell:
-      x: 3
-      z: 7
+    spawnCell: {x: 3, y: 7}
     spawnDirection: 0
 --- !u!1 &653965775
 GameObject:
@@ -2023,7 +2029,7 @@ Transform:
   m_GameObject: {fileID: 1078807560}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.361607, y: 2.002537, z: 2.4188802}
+  m_LocalPosition: {x: -2.97, y: 2.002537, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2170,7 +2176,7 @@ Transform:
   m_GameObject: {fileID: 1116510829}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.64, y: 0, z: 0}
+  m_LocalPosition: {x: -4.82, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
