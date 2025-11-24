@@ -26,14 +26,14 @@ public static class RegistryEvents
 
 
     // Quand un triggerable est créé
-    public static event Action<int, ITriggerable> OnTriggerableRegistry; // Event
-    public static void NotifyTriggerableRegistry(int triggerableKey, ITriggerable triggerable) // Fonction Call
+    public static event Action<string, ITriggerable> OnTriggerableRegistry; // Event
+    public static void NotifyTriggerableRegistry(string triggerableKey, ITriggerable triggerable) // Fonction Call
     => OnTriggerableRegistry?.Invoke(triggerableKey, triggerable);
 
 
     // Quand un listener veut créer un triggerlink
-    public static event Action<int, IListener> OnTryTriggerLinkRegistry; // Event
-    public static void NotifyTryTriggerLinkRegistry(int _triggerKey, IListener listener) // Fonction Call
+    public static event Action<string, IListener> OnTryTriggerLinkRegistry; // Event
+    public static void NotifyTryTriggerLinkRegistry(string _triggerKey, IListener listener) // Fonction Call
     => OnTryTriggerLinkRegistry?.Invoke(_triggerKey, listener);
 }
 

@@ -3,6 +3,7 @@ using UnityEngine;
 
 public interface IActor
 {
+    
     public ActorType type { get; }
 }
 

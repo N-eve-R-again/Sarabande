@@ -4,7 +4,7 @@ using UnityEngine;
 public class InteractionSystem
 {
     private Dictionary<Vector2Int, IListener> listeners = new();
-    private Dictionary<int, ITriggerable> triggerables = new();
+    private Dictionary<string, ITriggerable> triggerables = new();
 
     private Dictionary<IListener, ITriggerable> triggerLinks = new();
     private Dictionary<ITriggerable, IListenerWithCallback> callbackLinks = new();
@@ -43,9 +43,9 @@ public class InteractionSystem
 
     private void RegisterListener(Vector2Int _gridCoord, IListener _listener) => listeners[_gridCoord] = _listener;
 
-    private void RegisterTriggerable(int _triggerableKey, ITriggerable _triggerable) => triggerables[_triggerableKey] = (_triggerable);
+    private void RegisterTriggerable(string _triggerableKey, ITriggerable _triggerable) => triggerables[_triggerableKey] = (_triggerable);
 
-    private void RegisterTriggerLink(int triggerKey, IListener _listener)
+    private void RegisterTriggerLink(string triggerKey, IListener _listener)
     {
         if (triggerables.TryGetValue(triggerKey, out ITriggerable triggerable))
         {

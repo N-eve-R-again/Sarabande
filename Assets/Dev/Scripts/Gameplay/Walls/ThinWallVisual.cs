@@ -5,19 +5,19 @@ using UnityEngine;
 
 public class ThinWallVisual : MonoBehaviour
 {
-    [SerializeField] Obstacle config;
+    [SerializeField] ObstacleData config;
 
     [SerializeField, Min(0.1f)] private float wallHeight = 1f;
     [SerializeField, Min(0.01f)] private float thinThickness = 0.10f;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public void Init(Obstacle _config, string _name)
+    public void Init(ObstacleData _config, string _name)
     {
         gameObject.name = _name;
 
         config = _config;
 
-        transform.position = SetPosition(config.direction, config.cell);
-        transform.localScale = SetSize(config.direction);
+        transform.position = SetPosition(config.thinWallDirection, config.cell);
+        transform.localScale = SetSize(config.thinWallDirection);
 
         LevelGlobalSettings.SetLayerForObstacle(gameObject);
     }
@@ -45,7 +45,7 @@ public class ThinWallVisual : MonoBehaviour
 
         float offset = LevelGlobalSettings.cellSize * 0.5f;
 
-        Vector3 vecDir3 = new Vector3(vecDir.x, 0f, vecDir.y);
+        Vector3 vecDir3 = new Vector3(vecDir.x, wallHeight, vecDir.y);
 
         
         return GridUtils.CenterGrid(cell) + vecDir3 * offset;

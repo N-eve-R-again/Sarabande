@@ -20,9 +20,9 @@
 using Sarabande.Core;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+
 using UnityEngine;
-using static Sarabande.Levels.LevelData;
+
 
 namespace Sarabande.Levels
 {
@@ -37,18 +37,20 @@ namespace Sarabande.Levels
         // Grille & obstacles statiques
         // ?????????????????????????????????????????????????????????????????????????????
 
+        [Header("Level Parameters")]
+
         [Min(1)] public int width = 8;     // colonnes (A..H)
         [Min(1)] public int height = 8;    // rangées  (1..8)
+        public EdgeExit exit;
 
-        [Header("Obstacle")]
-        public List<Obstacle> obstacles = new List<Obstacle>();
+        [Header("ObstacleData")]
+        public List<ObstacleData> obstacles = new List<ObstacleData>();
 
-        [Header("Legacy Obstacles")]
-        [Tooltip("Cases non-walkable (murs pleins). Coordonnées sur la grille (x,z).")]
-        public List<GridCoord> nonWalkables = new();
+        [Header("Listeners")]
+        public List<TriggerObjectConfig> triggerObjects = new List<TriggerObjectConfig>();
+        public List<Vector2Int> fakeWalls = new List<Vector2Int>();
 
-        [Tooltip("Murs fins entre deux cases adjacentes (arêtes bloquantes).")]
-        public List<EdgeBlocker> thinWalls = new();
+
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Spawns & entrée/sortie
@@ -56,6 +58,13 @@ namespace Sarabande.Levels
 
         [Header("Spawns")]
         public ActorSpawn heroSpawnConfig;
+
+        [Header("Legacy Obstacles")]
+        [Tooltip("Cases non-walkable (murs pleins). Coordonnées sur la grille (x,z).")]
+        public List<GridCoord> nonWalkables = new();
+
+        [Tooltip("Murs fins entre deux cases adjacentes (arêtes bloquantes).")]
+        public List<EdgeBlocker> thinWalls = new();
 
         [Header("Legacy Spawns")]
         public GridCoord heroSpawn;  // D8 = (3,7)
@@ -70,8 +79,7 @@ namespace Sarabande.Levels
         [Tooltip("Depuis quel bord le héros arrive pour son entry step.")]
         public CardinalDirection heroEntry = CardinalDirection.North;
 
-        [Header("Sortie")]
-        public EdgeExit exit;        // Exemple : fromCell = H1, direction = East
+        // Exemple : fromCell = H1, direction = East
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Décor (visuel traversable)
@@ -79,6 +87,7 @@ namespace Sarabande.Levels
 
         [Header("Décor (murs traversables)")]
         [Tooltip("Décor purement visuel : n'arrête ni le Héros/NME ni les flèches, ni la LOS.")]
+        [System.Obsolete]
         public List<GridCoord> passThroughWalls = new();  // ex: A6, etc.
 
         // ?????????????????????????????????????????????????????????????????????????????
@@ -87,20 +96,26 @@ namespace Sarabande.Levels
 
         [Header("New Version")]
         public List<ArrowTrapConfig> newArrowTraps = new();
-        public List<TriggerPadConfig> newTriggerPads = new();
+
         public List<TriggerKey> triggerKeys = new();
 
         [ContextMenu("Upgrade Arrow Traps to New Version")]
         public void ImportLegacyArrowTraps()
         {
             newArrowTraps.Clear();
-            newTriggerPads.Clear();
+            triggerObjects.Clear();
             int i = 0;
             foreach (ArrowTrapSpec item in arrowTraps)
             {
-                TriggerPadConfig triggerPad = new TriggerPadConfig(false, item.canRearm, item.triggerCell, i);
-                ArrowTrapConfig arrowTrap = new ArrowTrapConfig(item.startCell,item.travelDir,item.arrowSpeed,item.canRearm,item.rearmDelay,i);
-                newTriggerPads.Add(triggerPad);
+                RearmParameter temp = new RearmParameter(!item.canRearm,false,item.rearmDelay);
+                string key = $"arrowTrap_{i}";
+                string[] triggerobjectkey = new string[1]
+                {
+                    key
+                };
+                TriggerObjectConfig triggerPad = new TriggerObjectConfig(TriggerObjectType.TriggerPad, triggerobjectkey, item.triggerCell,temp);
+                ArrowTrapConfig arrowTrap = new ArrowTrapConfig(item.startCell,item.travelDir,item.arrowSpeed,!item.canRearm,item.rearmDelay, key);
+                triggerObjects.Add(triggerPad);
                 newArrowTraps.Add(arrowTrap);
                 i++;
             }
@@ -115,6 +130,9 @@ namespace Sarabande.Levels
             {
                 triggerKeys.Add(new TriggerKey(item.triggerKey, $"arrowTrap {item.cell}"));
             }
+
+            //FindFirstObjectByType<LevelEditor>()?.ReImportLevel();
+
         }
 
 
@@ -130,12 +148,12 @@ namespace Sarabande.Levels
             obstacles.Clear();
             foreach (var item in nonWalkables)
             {
-                obstacles.Add(new Obstacle(Obstacle.ObstacleType.Wall, item, CardinalDirection.North));
+                obstacles.Add(new ObstacleData(ObstacleData.ObstacleType.Wall, item, CardinalDirection.North));
             }
 
             foreach (var item in thinWalls)
             {
-                obstacles.Add((Obstacle)item);
+                obstacles.Add((ObstacleData)item);
             }
 
 
@@ -272,9 +290,19 @@ namespace Sarabande.Levels
         // Triggers génériques (Pads + Routage)
         // ?????????????????????????????????????????????????????????????????????????????
 
+        public LevelData Clone()
+        {
+            // Sérialise en JSON
+            string json = JsonUtility.ToJson(this);
 
+            // Crée une nouvelle instance
+            LevelData copy = CreateInstance<LevelData>();
 
+            // Désérialise dans la copie
+            JsonUtility.FromJsonOverwrite(json, copy);
 
+            return copy;
+        }
     }
 
     [System.Serializable]
@@ -286,47 +314,57 @@ namespace Sarabande.Levels
         public AudioClip voiceClip;
     }
 
+    public enum TriggerObjectType
+    {
+        InvisibleTrigger,
+        TriggerPad,
+        Lever
+    }
+
     [Serializable]
-    public class LeverConfig
+    public class TriggerObjectConfig
     {
-        public bool oneShot = true;
-        [Tooltip("si -1 alors attendra le callback du triggerable")][Min(-1f)] public float timeToRearm = 1f;
 
-        public CardinalDirection attachedToSide = CardinalDirection.North;
-        public GridCoord cell;
-        public int triggerKey = -1;
-        ListenerInteractionLayer interactionLayer = new ListenerInteractionLayer(true, false);
 
-        public LeverConfig(bool _oneShot, GridCoord _cell, int _triggerKey)
-        {
-            oneShot = _oneShot;
-            cell = _cell;
-            triggerKey = _triggerKey;
-               
-        }
-    }
-    
-
-    [System.Serializable]
-    public class TriggerPadConfig
-    {
-        public bool invisible = false;
-        public bool oneShot = true;
-
-        [Tooltip("si -1 alors attendra le callback du triggerable")] [Min(-1f)] public float timeToRearm = 1f;
+        [Header("Core Config")]
+        public TriggerObjectType type;
+        public string[] triggerKeys = new string[0];
         public Vector2Int cell;
-        public int triggerKey = -1;
 
-        ListenerInteractionLayer interactionLayer = new ListenerInteractionLayer(true, true);
+        [ConditionalHide("type", TriggerObjectType.Lever)]
+        public CardinalDirection attachedTo = CardinalDirection.South;
 
-        public TriggerPadConfig(bool _invisible, bool _oneShot, GridCoord _cell, int _triggerKey)
+        [Header("Rearm Behaviour")]
+        public RearmParameter rearmParameter;
+        
+        public TriggerObjectConfig(TriggerObjectType type, string[] triggerKeys, Vector2Int cell, RearmParameter rearmParameter, CardinalDirection attachedTo = CardinalDirection.North)
         {
-            invisible = _invisible;
-            oneShot = _oneShot;
-            cell = _cell;
-            triggerKey = _triggerKey;
+            this.type = type;
+            this.triggerKeys = triggerKeys;
+            this.cell = cell;
+            this.attachedTo = attachedTo;
+            this.rearmParameter = rearmParameter;
+
+        }
+
+    }
+
+    [Serializable]
+    public class RearmParameter
+    {
+        public bool oneShot = true;
+        public bool waitForCallback = false;
+        [Min(0f)] public float timeToRearm = 1f;
+
+        public RearmParameter(bool oneShot, bool waitForCallback, float timeToRearm)
+        {
+            this.oneShot = oneShot;
+            this.waitForCallback = waitForCallback;
+            this.timeToRearm = timeToRearm;
         }
     }
+
+
 
 
     [System.Serializable]
@@ -340,9 +378,9 @@ namespace Sarabande.Levels
         public bool canRearm;                   // si true, le piège se réarme
         [Min(0f)] public float rearmTimeDelay = 1f;      // délai avant réarmement (secondes)
 
-        public int triggerKey = -1;
+        public string triggerKey;
 
-        public ArrowTrapConfig(GridCoord cell, CardinalDirection travelDir, float arrowSpeed, bool canRearm, float rearmDelay, int triggerKey)
+        public ArrowTrapConfig(GridCoord cell, CardinalDirection travelDir, float arrowSpeed, bool canRearm, float rearmDelay, string triggerKey)
         {
             this.cell = cell;
             this.travelDir = travelDir;
@@ -359,6 +397,7 @@ namespace Sarabande.Levels
     public class ActorSpawn
     {
         public Vector2Int spawnCell;
+        [EnumButtons]
         public CardinalDirection spawnDirection;
 
         public ActorSpawn(GridCoord spawnCell, CardinalDirection spawnDirection)
@@ -371,10 +410,10 @@ namespace Sarabande.Levels
     [System.Serializable]
     public class TriggerKey
     {
-        public int key;
+        public string key;
         public string entityType;
 
-        public TriggerKey(int key, string entityType)
+        public TriggerKey(string key, string entityType)
         {
             this.key = key;
             this.entityType = entityType;
@@ -382,29 +421,29 @@ namespace Sarabande.Levels
     }
 
     [Serializable]
-    public class Obstacle
+    public class ObstacleData
     {
+
         public enum ObstacleType
         {
             Wall,
             ThinWall
         }
-
-        public ObstacleType type;
         public Vector2Int cell;
 
-        [Space]
-        [ConditionalHide("type",ObstacleType.ThinWall, "ThinWall Config")]
-        public CardinalDirection direction;
+        public ObstacleType type;
 
-        public Obstacle(ObstacleType type, Vector2Int cell, CardinalDirection direction)
+        //[ConditionalHide("type", ObstacleType.ThinWall)]
+        public CardinalDirection thinWallDirection = CardinalDirection.North;
+
+        public ObstacleData(ObstacleType type, Vector2Int cell, CardinalDirection thinWallDirection)
         {
             this.type = type;
             this.cell = cell;
-            this.direction = direction;
+            this.thinWallDirection = thinWallDirection;
         }
 
-        public static explicit operator Obstacle(EdgeBlocker edgeBlocker) {
+        public static explicit operator ObstacleData(EdgeBlocker edgeBlocker) {
 
             CardinalDirection dir = CardinalDirection.North;
             Vector2Int cell = edgeBlocker.a;
@@ -416,13 +455,12 @@ namespace Sarabande.Levels
                 dir = CardinalDirection.East;
                 cell = Vector2Int.Min(edgeBlocker.a, edgeBlocker.b);
             }
-
-
-            return new Obstacle(ObstacleType.ThinWall, cell,dir);
+            return new ObstacleData(ObstacleType.ThinWall, cell,dir);
         }
 
 
     }
+
 }
 
 

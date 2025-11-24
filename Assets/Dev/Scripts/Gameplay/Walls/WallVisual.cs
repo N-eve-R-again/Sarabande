@@ -4,13 +4,13 @@ using UnityEngine;
 using static UnityEngine.Rendering.STP;
 public class WallVisual : MonoBehaviour
 {
-    [SerializeField] Obstacle config;
+    [SerializeField] ObstacleData config;
 
     [SerializeField, Min(0f)] private float wallInset = 0.05f;
     [SerializeField, Min(0.1f)] private float wallHeight = 1f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public void Init(Obstacle _config, string _name)
+    public void Init(ObstacleData _config, string _name)
     {
         gameObject.name = _name;
         config = _config;

@@ -45,18 +45,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69a2ef0a720605a4090ddd2e8e2cf037, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridPosition: {x: 0, y: 0}
   collected: 0
   messageIndex: -1
   specs:
-    cell:
-      x: 0
-      z: 0
+    cell: {x: 0, y: 0}
     text: 
     displaySeconds: 3
     voiceClip: {fileID: 0}
   messageSystem: {fileID: 0}
-  markerY: 0.02
+  markerY: 0.1
   fitToCell: 1
   spriteScale: 1
   interactsWith:

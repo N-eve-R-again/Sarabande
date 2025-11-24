@@ -5,10 +5,9 @@ public class ConditionalHideAttribute : PropertyAttribute
     public object CompareValue;
     public string Header;
 
-    public ConditionalHideAttribute(string conditionalSourceField, object compareValue, string header = null)
+    public ConditionalHideAttribute(string conditionalSourceField, object compareValue)
     {
         ConditionalSourceField = conditionalSourceField;
         CompareValue = compareValue;
-        Header = header;
     }
 }

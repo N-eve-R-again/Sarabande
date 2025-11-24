@@ -13,9 +13,10 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
 
     [SerializeField] private ListenerInteractionLayer interactsWith;
 
-    [SerializeField] private TriggerPadConfig config;
+    [SerializeField] private TriggerObjectConfig config;
     [SerializeField] private TriggerPadVisual visual;
-    public bool needsCallback => !config.oneShot && config.timeToRearm < 0;
+    [SerializeField] private RearmParameter rearmParameter;
+    public bool needsCallback => !rearmParameter.oneShot && rearmParameter.timeToRearm < 0;
 
     [Header("State")]
     [SerializeField] private PadState state = PadState.Armed;
@@ -26,15 +27,15 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
     ListenerInteractionLayer IListener.interactionLayer => interactsWith;
     bool IListenerWithCallback.wantsCallback => needsCallback;
 
-    public void Init(TriggerPadConfig _config, string _name)
+    public void Init(TriggerObjectConfig _config, string _name)
     {
         config = _config; //je recupere ma config
-
+        rearmParameter = config.rearmParameter;
         ListenerCreationHelper.SetupListenerEntity(this, this, _config.cell, _name); //comportment de base de setup
 
         visual.InitVisual(); //initialisation du visuel
 
-        RegistryEvents.NotifyTryTriggerLinkRegistry(config.triggerKey,this); //j'enregistre mon triggerLink
+        RegistryEvents.NotifyTryTriggerLinkRegistry(config.triggerKeys[0],this); //j'enregistre mon triggerLink
     }
 
 
@@ -108,7 +109,7 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
 
         LevelEntityEvents.NotifyListenerTryCallTrigger(this);
 
-        if (!config.oneShot)
+        if (!rearmParameter.oneShot)
         {
             if (!needsCallback)
                 StartTimerRearm();
@@ -123,7 +124,7 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
     }
     private void StartTimerRearm()
     {
-        timer = config.timeToRearm;
+        timer = rearmParameter.timeToRearm;
         state = PadState.WaitingRearm;
     }
 

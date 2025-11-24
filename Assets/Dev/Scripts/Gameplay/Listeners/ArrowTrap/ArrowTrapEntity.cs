@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ArrowTrapEntity : MonoBehaviour, ITriggerable
 {
-    public int triggerableKey;
+    public string triggerableKey;
     [SerializeField] private ArrowTrapConfig config;
     [SerializeField] private bool armed = true;
     [SerializeField] private ArrowTrapVisual visual;

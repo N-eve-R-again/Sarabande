@@ -11,15 +11,7 @@ public class ConditionalHideDrawer : PropertyDrawer
 
         if (enabled)
         {
-            // Dessiner le header personnalisé s'il existe
-            if (!string.IsNullOrEmpty(condHide.Header))
-            {
-                var headerRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
-                EditorGUI.LabelField(headerRect, condHide.Header, EditorStyles.boldLabel);
-                position.y += EditorGUIUtility.singleLineHeight + 2;
-                position.height -= EditorGUIUtility.singleLineHeight + 2;
-            }
-
+            var headerRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
             EditorGUI.PropertyField(position, property, label, true);
         }
     }
@@ -33,7 +25,6 @@ public class ConditionalHideDrawer : PropertyDrawer
         {
             float height = EditorGUI.GetPropertyHeight(property, label);
 
-            // Ajouter la hauteur du header personnalisé s'il existe
             if (!string.IsNullOrEmpty(condHide.Header))
             {
                 height += EditorGUIUtility.singleLineHeight + 2;

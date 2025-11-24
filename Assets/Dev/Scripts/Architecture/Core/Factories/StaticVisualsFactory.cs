@@ -91,7 +91,7 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
                 Debug.LogWarning($"[LevelLoader] Doublon nonWalkable ignoré en ({obstacle.cell.ToString()})."); continue;
             }
 
-            if( obstacle.type == Obstacle.ObstacleType.Wall)
+            if( obstacle.type == ObstacleData.ObstacleType.Wall)
             {
                 GameObject temp = Instantiate(wallPrefab, wallsParent);
                 WallVisual visual = temp.GetComponent<WallVisual>();

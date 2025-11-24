@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class TestTriggerable : MonoBehaviour, ITriggerable
 {
-    public int triggerableKey;
+    public string triggerableKey;
 
-    public void Init(GridCoord _gridCoord, int _key, string _name)
+    public void Init(GridCoord _gridCoord, string _key, string _name)
     {
         gameObject.name = _name;
         triggerableKey = _key;

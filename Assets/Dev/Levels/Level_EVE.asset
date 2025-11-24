@@ -14,73 +14,154 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 8
   height: 8
+  exit:
+    fromCell: {x: 7, y: 0}
+    direction: 1
   obstacles:
-  - type: 0
-    cell: {x: 0, y: 7}
-    direction: 0
-  - type: 0
-    cell: {x: 1, y: 7}
-    direction: 0
-  - type: 0
-    cell: {x: 2, y: 7}
-    direction: 0
-  - type: 0
-    cell: {x: 4, y: 7}
-    direction: 0
-  - type: 0
-    cell: {x: 5, y: 7}
-    direction: 0
-  - type: 0
-    cell: {x: 6, y: 7}
-    direction: 0
-  - type: 0
-    cell: {x: 7, y: 7}
-    direction: 0
-  - type: 0
-    cell: {x: 1, y: 5}
-    direction: 0
-  - type: 0
-    cell: {x: 2, y: 5}
-    direction: 0
-  - type: 0
-    cell: {x: 3, y: 5}
-    direction: 0
-  - type: 0
-    cell: {x: 4, y: 5}
-    direction: 0
-  - type: 0
-    cell: {x: 6, y: 5}
-    direction: 0
-  - type: 0
-    cell: {x: 1, y: 3}
-    direction: 0
-  - type: 0
-    cell: {x: 2, y: 3}
-    direction: 0
-  - type: 0
-    cell: {x: 3, y: 3}
-    direction: 0
-  - type: 0
-    cell: {x: 4, y: 3}
-    direction: 0
-  - type: 0
-    cell: {x: 5, y: 3}
-    direction: 0
-  - type: 0
-    cell: {x: 6, y: 3}
-    direction: 0
-  - type: 0
-    cell: {x: 7, y: 3}
-    direction: 0
+  - cell: {x: 0, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 1, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 2, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 4, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 5, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 6, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 7, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 1, y: 5}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 2, y: 5}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 3, y: 5}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 4, y: 5}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 6, y: 5}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 1, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 2, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 3, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 4, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 5, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 6, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 7, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 3, y: 1}
+    type: 1
+    thinWallDirection: 1
+  - cell: {x: 5, y: 1}
+    type: 1
+    thinWallDirection: 1
+  - cell: {x: 5, y: 0}
+    type: 1
+    thinWallDirection: 1
+  triggerObjects:
   - type: 1
-    cell: {x: 3, y: 1}
-    direction: 1
+    triggerKeys:
+    - arrowTrap_0
+    cell: {x: 5, y: 5}
+    attachedTo: 0
+    rearmParameter:
+      oneShot: 1
+      waitForCallback: 0
+      timeToRearm: 0
   - type: 1
+    triggerKeys:
+    - arrowTrap_1
+    cell: {x: 0, y: 2}
+    attachedTo: 0
+    rearmParameter:
+      oneShot: 1
+      waitForCallback: 0
+      timeToRearm: 0
+  - type: 1
+    triggerKeys:
+    - arrowTrap_2
+    cell: {x: 1, y: 0}
+    attachedTo: 0
+    rearmParameter:
+      oneShot: 1
+      waitForCallback: 0
+      timeToRearm: 0
+  - type: 1
+    triggerKeys:
+    - arrowTrap_3
+    cell: {x: 2, y: 2}
+    attachedTo: 0
+    rearmParameter:
+      oneShot: 1
+      waitForCallback: 0
+      timeToRearm: 0
+  - type: 1
+    triggerKeys:
+    - arrowTrap_4
+    cell: {x: 2, y: 0}
+    attachedTo: 0
+    rearmParameter:
+      oneShot: 1
+      waitForCallback: 0
+      timeToRearm: 0
+  - type: 1
+    triggerKeys:
+    - arrowTrap_5
+    cell: {x: 4, y: 1}
+    attachedTo: 0
+    rearmParameter:
+      oneShot: 1
+      waitForCallback: 0
+      timeToRearm: 0
+  - type: 1
+    triggerKeys:
+    - arrowTrap_6
     cell: {x: 5, y: 1}
-    direction: 1
+    attachedTo: 0
+    rearmParameter:
+      oneShot: 1
+      waitForCallback: 0
+      timeToRearm: 0
   - type: 1
-    cell: {x: 5, y: 0}
-    direction: 1
+    triggerKeys:
+    - arrowTrap_7
+    cell: {x: 7, y: 1}
+    attachedTo: 0
+    rearmParameter:
+      oneShot: 1
+      waitForCallback: 0
+      timeToRearm: 0
+  fakeWalls:
+  - {x: 0, y: 5}
+  heroSpawnConfig:
+    spawnCell: {x: 3, y: 7}
+    spawnDirection: 0
   nonWalkables:
   - x: 0
     z: 7
@@ -139,9 +220,6 @@ MonoBehaviour:
     b:
       x: 6
       z: 0
-  heroSpawnConfig:
-    spawnCell: {x: 3, y: 7}
-    spawnDirection: 0
   heroSpawn:
     x: 3
     z: 7
@@ -150,11 +228,6 @@ MonoBehaviour:
     z: 6
   nmeFacings: 
   heroEntry: 0
-  exit:
-    fromCell:
-      x: 7
-      z: 0
-    direction: 1
   passThroughWalls:
   - x: 0
     z: 5
@@ -162,108 +235,67 @@ MonoBehaviour:
   - cell: {x: 5, y: 4}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 0
+    canRearm: 1
     rearmTimeDelay: 0
-    triggerKey: 0
+    triggerKey: arrowTrap_0
   - cell: {x: 0, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 0
+    canRearm: 1
     rearmTimeDelay: 0
-    triggerKey: 1
+    triggerKey: arrowTrap_1
   - cell: {x: 1, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 0
+    canRearm: 1
     rearmTimeDelay: 0
-    triggerKey: 2
+    triggerKey: arrowTrap_2
   - cell: {x: 2, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 0
+    canRearm: 1
     rearmTimeDelay: 0
-    triggerKey: 3
+    triggerKey: arrowTrap_3
   - cell: {x: 2, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 0
+    canRearm: 1
     rearmTimeDelay: 0
-    triggerKey: 4
+    triggerKey: arrowTrap_4
   - cell: {x: 4, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 0
+    canRearm: 1
     rearmTimeDelay: 0
-    triggerKey: 5
+    triggerKey: arrowTrap_5
   - cell: {x: 5, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 0
+    canRearm: 1
     rearmTimeDelay: 0
-    triggerKey: 6
+    triggerKey: arrowTrap_6
   - cell: {x: 7, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 0
+    canRearm: 1
     rearmTimeDelay: 0
-    triggerKey: 7
-  newTriggerPads:
-  - invisible: 0
-    oneShot: 0
-    timeToRearm: 1
-    cell: {x: 5, y: 5}
-    triggerKey: 0
-  - invisible: 0
-    oneShot: 0
-    timeToRearm: 1
-    cell: {x: 0, y: 2}
-    triggerKey: 1
-  - invisible: 0
-    oneShot: 0
-    timeToRearm: 1
-    cell: {x: 1, y: 0}
-    triggerKey: 2
-  - invisible: 0
-    oneShot: 0
-    timeToRearm: 1
-    cell: {x: 2, y: 2}
-    triggerKey: 3
-  - invisible: 0
-    oneShot: 0
-    timeToRearm: 1
-    cell: {x: 2, y: 0}
-    triggerKey: 4
-  - invisible: 0
-    oneShot: 0
-    timeToRearm: 1
-    cell: {x: 4, y: 1}
-    triggerKey: 5
-  - invisible: 0
-    oneShot: 0
-    timeToRearm: 1
-    cell: {x: 5, y: 1}
-    triggerKey: 6
-  - invisible: 0
-    oneShot: 0
-    timeToRearm: 1
-    cell: {x: 7, y: 1}
-    triggerKey: 7
+    triggerKey: arrowTrap_7
   triggerKeys:
-  - key: 0
+  - key: arrowTrap_0
     entityType: arrowTrap (5, 4)
-  - key: 1
+  - key: arrowTrap_1
     entityType: arrowTrap (0, 0)
-  - key: 2
+  - key: arrowTrap_2
     entityType: arrowTrap (1, 0)
-  - key: 3
+  - key: arrowTrap_3
     entityType: arrowTrap (2, 0)
-  - key: 4
+  - key: arrowTrap_4
     entityType: arrowTrap (2, 0)
-  - key: 5
+  - key: arrowTrap_5
     entityType: arrowTrap (4, 0)
-  - key: 6
+  - key: arrowTrap_6
     entityType: arrowTrap (5, 0)
-  - key: 7
+  - key: arrowTrap_7
     entityType: arrowTrap (7, 0)
   arrowTraps:
   - triggerCell:
@@ -374,15 +406,15 @@ MonoBehaviour:
     requireFacing: 0
     linkedDoorIndex: 0
   messages:
-  - cell: {x: 0, y: 0}
+  - cell: {x: 0, y: 6}
     text: "Cet endroit respire... ou plut\xF4t soupire..."
     displaySeconds: 4
     voiceClip: {fileID: 8300000, guid: 21124b32ac434bf4f91102c015b56fe3, type: 3}
-  - cell: {x: 1, y: 0}
+  - cell: {x: 1, y: 2}
     text: "Allez bouge moi ce boule, \xE7a vient du bas..."
     displaySeconds: 4
     voiceClip: {fileID: 8300000, guid: a1221e28227fa5c4598a321b5ee6dcb9, type: 3}
-  - cell: {x: 7, y: 0}
+  - cell: {x: 7, y: 2}
     text: Tout est affaire de sensation, suivre le rythme et les pulsions.
     displaySeconds: 6
     voiceClip: {fileID: 8300000, guid: 97edbf8a9daad764eadd66ad422e0648, type: 3}

@@ -62,7 +62,7 @@ public class ListenerFactory : MonoBehaviour, IClearable
     {
         if (_levelData.arrowTraps == null) return;
 
-        foreach (TriggerPadConfig config in _levelData.newTriggerPads)
+        foreach (TriggerObjectConfig config in _levelData.triggerObjects)
         {
 
             GameObject temp = Instantiate(pressurePadPrefab, pressurePadsParent);
@@ -90,16 +90,16 @@ public class ListenerFactory : MonoBehaviour, IClearable
 
     private void CreateFakeWalls(LevelData _levelData)
     {
-        if (_levelData.passThroughWalls == null) return;
+        if (_levelData.fakeWalls == null) return;
 
         // dé-duplication légère au cas où
-        var set = new HashSet<(int x, int z)>();
+        var set = new HashSet<(int x, int y)>();
 
-        foreach (var coord in _levelData.passThroughWalls)
+        foreach (var coord in _levelData.fakeWalls)
         {
-            if (!set.Add((coord.x, coord.z)))
+            if (!set.Add((coord.x, coord.y)))
             {
-                Debug.LogWarning($"[LevelLoader] Doublon passThrough ignoré en ({coord.x},{coord.z}).");
+                Debug.LogWarning($"[LevelLoader] Doublon passThrough ignoré en ({coord}).");
                 continue;
             }
 
