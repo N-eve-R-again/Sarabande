@@ -114,13 +114,13 @@ namespace Sarabande.Levels
                     key
                 };
                 TriggerObjectConfig triggerPad = new TriggerObjectConfig(TriggerObjectType.TriggerPad, triggerobjectkey, item.triggerCell,temp);
-                ArrowTrapConfig arrowTrap = new ArrowTrapConfig(item.startCell,item.travelDir,item.arrowSpeed,!item.canRearm,item.rearmDelay, key);
+                ArrowTrapConfig arrowTrap = new ArrowTrapConfig(item.startCell,item.travelDir,item.arrowSpeed,item.canRearm,item.rearmDelay, key);
                 triggerObjects.Add(triggerPad);
                 newArrowTraps.Add(arrowTrap);
                 i++;
             }
 
-
+             
         }
 
         private void OnValidate()

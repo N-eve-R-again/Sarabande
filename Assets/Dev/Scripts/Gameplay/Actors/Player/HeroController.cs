@@ -599,7 +599,7 @@ namespace Sarabande.Player
         private bool IsExitMove(Vector2Int from, Vector2Int dir)
         {
             var exit = levelData;
-            var exitCell = new Vector2Int(exit.exit.fromCell.x, exit.exit.fromCell.y);
+            var exitCell = new Vector2Int(exit.exit.fromCell.x, exit.exit.fromCell.z);
             return from == exitCell && dir == DirToVec(exit.exit.direction);
         }
 

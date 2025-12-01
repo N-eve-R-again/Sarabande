@@ -16,7 +16,7 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
     [SerializeField] private TriggerObjectConfig config;
     [SerializeField] private TriggerPadVisual visual;
     [SerializeField] private RearmParameter rearmParameter;
-    public bool needsCallback => !rearmParameter.oneShot && rearmParameter.timeToRearm < 0;
+    public bool needsCallback => rearmParameter.waitForCallback;
 
     [Header("State")]
     [SerializeField] private PadState state = PadState.Armed;
@@ -45,16 +45,12 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
 
         if (needsCallback)
         {
-            TryCallbackRearm();
+            AttemptRearm();
         }
         else
         {
             UpdateTimerRearm();
         }
-    }
-    private void TryCallbackRearm()
-    {
-        AttemptRearm();
     }
 
     private void AttemptRearm()

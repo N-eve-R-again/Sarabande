@@ -10,12 +10,14 @@ public class ListenerFactory : MonoBehaviour, IClearable
     private Transform fakeWallsParent;
     private Transform messagesParent;
     private Transform pressurePadsParent;
+    private Transform leversParent;
     private Transform listenerFolder;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject fakeWallPrefab;
     [SerializeField] private GameObject messagePrefab;
     [SerializeField] private GameObject pressurePadPrefab;
+    [SerializeField] private GameObject leverPrefab;
 
 
     [SerializeField] private bool jobDone = false;
@@ -34,7 +36,7 @@ public class ListenerFactory : MonoBehaviour, IClearable
 
         CreateFakeWalls(_levelData);
         CreateMessages(_levelData);
-        CreatePressurePads(_levelData);
+        CreateTriggerObjects(_levelData);
         //tiles
 
         jobDone = true;
@@ -58,17 +60,27 @@ public class ListenerFactory : MonoBehaviour, IClearable
         return valid;
     }
 
-    private void CreatePressurePads(LevelData _levelData)
+    private void CreateTriggerObjects(LevelData _levelData)
     {
-        if (_levelData.arrowTraps == null) return;
 
         foreach (TriggerObjectConfig config in _levelData.triggerObjects)
         {
+            if(config.type == TriggerObjectType.TriggerPad)
+            {
+                GameObject temp = Instantiate(pressurePadPrefab, pressurePadsParent);
+                TriggerPadEntity entity = temp.GetComponent<TriggerPadEntity>();
 
-            GameObject temp = Instantiate(pressurePadPrefab, pressurePadsParent);
-            TriggerPadEntity entity = temp.GetComponent<TriggerPadEntity>();
+                entity.Init(config, $"PressurePad_{config.cell.ToString()}");
+            }
 
-            entity.Init(config, $"PressurePad_{config.cell.ToString()}");
+            if(config.type == TriggerObjectType.Lever)
+            {
+                GameObject temp = Instantiate(leverPrefab, leversParent);
+                LeverEntity entity = temp.GetComponent<LeverEntity>();
+
+                entity.Init(config, $"Lever_{config.cell.ToString()}");
+            }
+
 
         }
     }
@@ -86,6 +98,10 @@ public class ListenerFactory : MonoBehaviour, IClearable
 
         pressurePadsParent = new GameObject("PressurePads").transform;
         pressurePadsParent.SetParent(listenerFolder, false);
+
+
+        leversParent = new GameObject("Levers").transform;
+        leversParent.SetParent(listenerFolder, false);
     }
 
     private void CreateFakeWalls(LevelData _levelData)

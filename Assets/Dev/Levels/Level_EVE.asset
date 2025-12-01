@@ -15,7 +15,9 @@ MonoBehaviour:
   width: 8
   height: 8
   exit:
-    fromCell: {x: 7, y: 0}
+    fromCell:
+      x: 7
+      z: 0
     direction: 1
   obstacles:
   - cell: {x: 0, y: 7}
@@ -157,6 +159,15 @@ MonoBehaviour:
       oneShot: 1
       waitForCallback: 0
       timeToRearm: 0
+  - type: 2
+    triggerKeys:
+    - arrowTrap_0
+    cell: {x: 5, y: 7}
+    attachedTo: 2
+    rearmParameter:
+      oneShot: 0
+      waitForCallback: 1
+      timeToRearm: 0
   fakeWalls:
   - {x: 0, y: 5}
   heroSpawnConfig:
@@ -235,49 +246,49 @@ MonoBehaviour:
   - cell: {x: 5, y: 4}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 1
+    canRearm: 0
     rearmTimeDelay: 0
     triggerKey: arrowTrap_0
   - cell: {x: 0, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 1
+    canRearm: 0
     rearmTimeDelay: 0
     triggerKey: arrowTrap_1
   - cell: {x: 1, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 1
+    canRearm: 0
     rearmTimeDelay: 0
     triggerKey: arrowTrap_2
   - cell: {x: 2, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 1
+    canRearm: 0
     rearmTimeDelay: 0
     triggerKey: arrowTrap_3
   - cell: {x: 2, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 1
+    canRearm: 0
     rearmTimeDelay: 0
     triggerKey: arrowTrap_4
   - cell: {x: 4, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 1
+    canRearm: 0
     rearmTimeDelay: 0
     triggerKey: arrowTrap_5
   - cell: {x: 5, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 1
+    canRearm: 0
     rearmTimeDelay: 0
     triggerKey: arrowTrap_6
   - cell: {x: 7, y: 0}
     travelDir: 0
     arrowSpeed: 6
-    canRearm: 1
+    canRearm: 0
     rearmTimeDelay: 0
     triggerKey: arrowTrap_7
   triggerKeys:
