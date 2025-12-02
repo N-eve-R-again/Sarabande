@@ -20,67 +20,67 @@ MonoBehaviour:
       z: 0
     direction: 1
   obstacles:
-  - cell: {x: 0, y: 7}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 1, y: 7}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 2, y: 7}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 4, y: 7}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 5, y: 7}
+  - cell: {x: 7, y: 7}
     type: 0
     thinWallDirection: 0
   - cell: {x: 6, y: 7}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 7, y: 7}
+  - cell: {x: 5, y: 7}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 1, y: 5}
+  - cell: {x: 4, y: 7}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 2, y: 5}
+  - cell: {x: 2, y: 7}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 3, y: 5}
+  - cell: {x: 1, y: 7}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 4, y: 5}
+  - cell: {x: 0, y: 7}
     type: 0
     thinWallDirection: 0
   - cell: {x: 6, y: 5}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 1, y: 3}
+  - cell: {x: 4, y: 5}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 2, y: 3}
+  - cell: {x: 3, y: 5}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 3, y: 3}
+  - cell: {x: 2, y: 5}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 4, y: 3}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 5, y: 3}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 6, y: 3}
+  - cell: {x: 1, y: 5}
     type: 0
     thinWallDirection: 0
   - cell: {x: 7, y: 3}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 3, y: 1}
+  - cell: {x: 6, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 5, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 4, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 3, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 2, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 1, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 5, y: 1}
     type: 1
     thinWallDirection: 1
-  - cell: {x: 5, y: 1}
+  - cell: {x: 3, y: 1}
     type: 1
     thinWallDirection: 1
   - cell: {x: 5, y: 0}

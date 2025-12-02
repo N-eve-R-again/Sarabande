@@ -3,6 +3,7 @@ using Sarabande.Levels;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
+using UnityEditor;
 using UnityEngine;
 using static UnityEditor.Progress;
 
@@ -30,15 +31,15 @@ public class LevelEditor : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
 
     public LevelData levelData;
-    public LevelData levelDataCopy;
+    public LevelData dataCopy;
     public bool hotCopyCreated;
     public bool hotCopyModified;
 
-    public List<ObstacleData> obstacles;
+    /*public List<ObstacleData> obstacles;
     public List<MessageConfig> messageConfigs;
     public List<TriggerObjectConfig> triggerObjects;
-    public int2 levelDim = new int2();
-    public bool solidify = false;
+    public int2 levelDim = new int2();*/
+
 
     [Header("SELECTED OBJECT")]
     public bool objectIsSelected;
@@ -53,7 +54,7 @@ public class LevelEditor : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (levelDataCopy == null) return;
+        if (dataCopy == null) return;
 
         if (!enabled) return;
         if (!hotCopyCreated) return;
@@ -70,13 +71,13 @@ public class LevelEditor : MonoBehaviour
 
 
 
-        foreach (var item in obstacles)
+        foreach (var item in dataCopy.obstacles)
         {
             DrawObstacle(item);
         }
 
 
-        foreach (var item in messageConfigs)
+        foreach (var item in dataCopy.messages)
         {
             DrawSpriteIcon("Gizmo_Message", item.cell, Color.yellow);
         }
@@ -86,13 +87,13 @@ public class LevelEditor : MonoBehaviour
         {
             if(selectedObjectType == SelectedObjectType.Obstacle)
             {
-                DrawObstacle(obstacles[selectedObjectIndex], true);
+                DrawObstacle(dataCopy.obstacles[selectedObjectIndex], true);
                 return;
             }
 
             if (selectedObjectType == SelectedObjectType.Message)
             {
-                DrawSpriteIcon("Gizmo_Message",messageConfigs[selectedObjectIndex].cell, selectedColor, true);
+                DrawSpriteIcon("Gizmo_Message", dataCopy.messages[selectedObjectIndex].cell, selectedColor, true);
                 return;
             }
 
@@ -211,12 +212,12 @@ public class LevelEditor : MonoBehaviour
     }
     public bool CellOccuped(Vector2Int targetcell)
     {
-        foreach (var item in obstacles)
+        foreach (var item in dataCopy.obstacles)
         {
             if (item.cell == targetcell) return true;
 
         }
-        foreach (var item in messageConfigs)
+        foreach (var item in dataCopy.messages)
         {
             if (item.cell == targetcell) return true;
         }
@@ -226,7 +227,7 @@ public class LevelEditor : MonoBehaviour
 
     public bool InsideBounds(Vector2Int targetcell)
     {
-        return (targetcell.x >= 0 && targetcell.x < levelDim.x && targetcell.y >= 0 && targetcell.y < levelDim.y);
+        return (targetcell.x >= 0 && targetcell.x < dataCopy.width && targetcell.y >= 0 && targetcell.y < dataCopy.height);
     }
 
     /*public Vector2Int GetBounds()
@@ -244,37 +245,96 @@ public class LevelEditor : MonoBehaviour
     {
         bounds = new Vector3[] {
             Vector3.zero,
-            Vector3.forward * levelDim.y,
+            Vector3.forward * dataCopy.height,
 
             Vector3.zero,
-            Vector3.right * levelDim.x,
+            Vector3.right * dataCopy.width,
 
-            Vector3.forward * levelDim.y,
-            Vector3.forward * levelDim.y + Vector3.right * levelDim.x,
+            Vector3.forward * dataCopy.height,
+            Vector3.forward * dataCopy.height + Vector3.right * dataCopy.width,
 
-            Vector3.right * levelDim.x,
-            Vector3.forward * levelDim.y + Vector3.right * levelDim.x,
+            Vector3.right * dataCopy.width,
+            Vector3.forward * dataCopy.height + Vector3.right * dataCopy.width,
 
         };
     }
 
     public Vector3[] GetBounds() => bounds;
 
-    public List<ObstacleData> GetObstacles() => obstacles;
-
-    public void ReImportLevel()
+    private void ReImportLevel()
     {
         if (levelData == null) return;
 
         DeleteWorkingCopy();
         hotCopyCreated = true;
-        levelDataCopy = levelData.Clone();
+        dataCopy = levelData.Clone();
+        dataCopy.name = "copy_" + levelData.name;
+        EditorUtility.SetDirty(dataCopy);
         RefreshCopy();
+    }
+    public void LoadLevel()
+    {
+        ReImportLevel();
+    }
+    public void UnloadLevel()
+    {
+        if (hotCopyModified)
+        {
+            bool confirm = EditorUtility.DisplayDialog(
+                "Unsaved Changes",
+                "You have unsaved changes. Unload anyway?",
+                "Unload",
+                "Cancel"
+            );
+
+            if (!confirm) return; // Annule l'action
+        }
+
+        DeleteWorkingCopy(); // Continue
+    }
+
+    public void DiscardChanges()
+    {
+        bool confirm = EditorUtility.DisplayDialog(
+            "Discard Changes",
+            "This will lose all your modifications. Continue?",
+            "Discard",
+            "Cancel"
+        );
+
+        if (confirm)
+        {
+            ReImportLevel(); // Recharge depuis le fichier original
+        }
+    }
+    public void CreateNewFile()
+    {
+
+    }
+
+    public void SaveFile()
+    {
+        dataCopy.name = levelData.name;
+        EditorUtility.SetDirty(dataCopy);
+
+        EditorUtility.CopySerialized(dataCopy, levelData); // Copie toutes les données
+        EditorUtility.SetDirty(levelData);
+        AssetDatabase.SaveAssets();
+
+        // Réinitialise le JSON pour la détection de changements
+        //originalJson = JsonUtility.ToJson(dataCopy);
+        hotCopyModified = false;
+        ReImportLevel();
+    }
+
+    public void SaveAsNew()
+    {
+
     }
 
     public void DeleteWorkingCopy()
     {
-        levelDataCopy = null;
+        dataCopy = null;
         hotCopyCreated = false;
         hotCopyModified= false;
 
@@ -284,7 +344,7 @@ public class LevelEditor : MonoBehaviour
     public void SelectCell(Vector2Int cell)
     {
 
-        foreach (var item in obstacles)
+        foreach (var item in dataCopy.obstacles)
         {
             if (item.cell == cell) {
 
@@ -297,7 +357,7 @@ public class LevelEditor : MonoBehaviour
 
 
         }
-        foreach (var item in messageConfigs)
+        foreach (var item in dataCopy.messages)
         {
             if(item.cell == cell)
             {
@@ -330,20 +390,20 @@ public class LevelEditor : MonoBehaviour
         {
             objectIsSelected = true;
             selectedObjectType = SelectedObjectType.Obstacle;
-            selectedObjectIndex = obstacles.IndexOf((ObstacleData)obj);
+            selectedObjectIndex = dataCopy.obstacles.IndexOf((ObstacleData)obj);
         }
         else if (obj is MessageConfig)
         {
             objectIsSelected = true;
             selectedObjectType = SelectedObjectType.Message;
-            selectedObjectIndex = messageConfigs.IndexOf((MessageConfig)obj);
+            selectedObjectIndex = dataCopy.messages.IndexOf((MessageConfig)obj);
         }
     }
 
 
     public void DeleteCell(Vector2Int cell)
     {
-        obstacles.RemoveAll(buffer =>  // Pour chaque buffer
+        dataCopy.obstacles.RemoveAll(buffer =>  // Pour chaque buffer
         {
             // Si les conditions sont remplies :
             if (buffer.cell == cell)
@@ -365,7 +425,7 @@ public class LevelEditor : MonoBehaviour
     public void CreateCell(Vector2Int cell)
     {
         ObstacleData temp = new ObstacleData(ObstacleData.ObstacleType.Wall, cell,CardinalDirection.North );
-        obstacles.Add(temp);
+        dataCopy.obstacles.Add(temp);
         ReorderList();
 
         hotCopyModified = true;
@@ -373,19 +433,15 @@ public class LevelEditor : MonoBehaviour
 
     private void ReorderList()
     {
-        var sortedObstacles = obstacles
+        var sortedObstacles = dataCopy.obstacles
           .OrderByDescending(o => o.cell.y) // Plus loin en premier
           .ThenByDescending(o => o.cell.x);
-        obstacles = new List<ObstacleData>(sortedObstacles);
+        dataCopy.obstacles = new List<ObstacleData>(sortedObstacles);
     }
 
-    public void RefreshCopy()
+    private void RefreshCopy()
     {
-        levelDim = new int2(levelDataCopy.width, levelData.height);
         hotCopyModified = false;
-        obstacles = levelDataCopy.obstacles;
-        messageConfigs = levelDataCopy.messages;
-
         objectIsSelected = false;
         ReorderList();
         Updatebounds();
