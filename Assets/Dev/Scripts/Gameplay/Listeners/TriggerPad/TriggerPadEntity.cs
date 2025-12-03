@@ -15,8 +15,7 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
 
     [SerializeField] private TriggerObjectConfig config;
     [SerializeField] private TriggerPadVisual visual;
-    [SerializeField] private RearmParameter rearmParameter;
-    public bool needsCallback => rearmParameter.waitForCallback;
+    public bool needsCallback => config.rearmType == RearmType.CallBack;
 
     [Header("State")]
     [SerializeField] private PadState state = PadState.Armed;
@@ -30,7 +29,6 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
     public void Init(TriggerObjectConfig _config, string _name)
     {
         config = _config; //je recupere ma config
-        rearmParameter = config.rearmParameter;
         ListenerCreationHelper.SetupListenerEntity(this, this, _config.cell, _name); //comportment de base de setup
 
         visual.InitVisual(); //initialisation du visuel
@@ -105,10 +103,9 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
 
         LevelEntityEvents.NotifyListenerTryCallTrigger(this);
 
-        if (!rearmParameter.oneShot)
+        if (config.rearmType == RearmType.Timer)
         {
-            if (!needsCallback)
-                StartTimerRearm();
+            StartTimerRearm();
         }
     }
 
@@ -120,7 +117,7 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
     }
     private void StartTimerRearm()
     {
-        timer = rearmParameter.timeToRearm;
+        timer = config.timeToRearm;
         state = PadState.WaitingRearm;
     }
 

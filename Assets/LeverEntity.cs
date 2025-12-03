@@ -15,7 +15,6 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
     [SerializeField] private ListenerInteractionLayer interactsWith;
     public TriggerObjectConfig config;
     public LeverVisual visual;
-    [SerializeField] private RearmParameter rearmParameter;
     public bool needsCallback => true;
 
     ListenerInteractionLayer IListener.interactionLayer => interactsWith;

@@ -121,6 +121,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a27b89d2c1965745a55e958a3b2bf0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wallInset: 0.05
-  wallHeight: 1
-  thinThickness: 0.1
+  config:
+    cell: {x: 0, y: 0}
+    type: 0
+    thinWallDirection: 0
+  wallInset: 0
+  wallHeight: 0.8

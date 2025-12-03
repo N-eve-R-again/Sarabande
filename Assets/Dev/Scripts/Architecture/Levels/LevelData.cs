@@ -59,10 +59,12 @@ namespace Sarabande.Levels
         [Header("Spawns")]
         public ActorSpawn heroSpawnConfig;
 
+        [System.Obsolete]
         [Header("Legacy Obstacles")]
         [Tooltip("Cases non-walkable (murs pleins). Coordonnées sur la grille (x,z).")]
         public List<GridCoord> nonWalkables = new();
 
+        [System.Obsolete]
         [Tooltip("Murs fins entre deux cases adjacentes (arêtes bloquantes).")]
         public List<EdgeBlocker> thinWalls = new();
 
@@ -107,13 +109,13 @@ namespace Sarabande.Levels
             int i = 0;
             foreach (ArrowTrapSpec item in arrowTraps)
             {
-                RearmParameter temp = new RearmParameter(!item.canRearm,false,item.rearmDelay);
+
                 string key = $"arrowTrap_{i}";
                 string[] triggerobjectkey = new string[1]
                 {
                     key
                 };
-                TriggerObjectConfig triggerPad = new TriggerObjectConfig(TriggerObjectType.TriggerPad, triggerobjectkey, item.triggerCell,temp);
+                TriggerObjectConfig triggerPad = new TriggerObjectConfig(TriggerObjectType.TriggerPad, triggerobjectkey, item.triggerCell,!item.canRearm,false,1f);
                 ArrowTrapConfig arrowTrap = new ArrowTrapConfig(item.startCell,item.travelDir,item.arrowSpeed,item.canRearm,item.rearmDelay, key);
                 triggerObjects.Add(triggerPad);
                 newArrowTraps.Add(arrowTrap);
@@ -321,6 +323,13 @@ namespace Sarabande.Levels
         Lever
     }
 
+    public enum RearmType
+    {
+        OneShot,
+        CallBack,
+        Timer
+    }
+
     [Serializable]
     public class TriggerObjectConfig
     {
@@ -335,33 +344,34 @@ namespace Sarabande.Levels
         public CardinalDirection attachedTo = CardinalDirection.South;
 
         [Header("Rearm Behaviour")]
-        public RearmParameter rearmParameter;
-        
-        public TriggerObjectConfig(TriggerObjectType type, string[] triggerKeys, Vector2Int cell, RearmParameter rearmParameter, CardinalDirection attachedTo = CardinalDirection.North)
+
+        public RearmType rearmType;
+        [Min(0f)] public float timeToRearm = 1f;
+
+        public TriggerObjectConfig(TriggerObjectType type, string[] triggerKeys, Vector2Int cell, bool oneShot, bool waitForCallback, float timeToRearm, CardinalDirection attachedTo = CardinalDirection.North)
         {
+            if (oneShot)
+            {
+                rearmType = RearmType.OneShot;
+            }
+            else if (waitForCallback)
+            {
+                rearmType = RearmType.CallBack;
+            }
+            else
+            {
+                rearmType = RearmType.Timer;
+                this.timeToRearm = timeToRearm;
+            }
+            this.timeToRearm = 0f;
             this.type = type;
             this.triggerKeys = triggerKeys;
             this.cell = cell;
             this.attachedTo = attachedTo;
-            this.rearmParameter = rearmParameter;
+
 
         }
 
-    }
-
-    [Serializable]
-    public class RearmParameter
-    {
-        public bool oneShot = true;
-        public bool waitForCallback = false;
-        [Min(0f)] public float timeToRearm = 1f;
-
-        public RearmParameter(bool oneShot, bool waitForCallback, float timeToRearm)
-        {
-            this.oneShot = oneShot;
-            this.waitForCallback = waitForCallback;
-            this.timeToRearm = timeToRearm;
-        }
     }
 
 
