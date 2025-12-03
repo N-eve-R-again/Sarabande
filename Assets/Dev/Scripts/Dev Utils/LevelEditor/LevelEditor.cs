@@ -21,6 +21,7 @@ public enum SelectedObjectType
     None,
     Obstacle,
     Message,
+    TriggerObject
 }
 
 public class LevelEditor : MonoBehaviour
@@ -35,25 +36,32 @@ public class LevelEditor : MonoBehaviour
     public bool hotCopyCreated;
     public bool hotCopyModified;
 
-    /*public List<ObstacleData> obstacles;
-    public List<MessageConfig> messageConfigs;
-    public List<TriggerObjectConfig> triggerObjects;
-    public int2 levelDim = new int2();*/
-
-
     [Header("SELECTED OBJECT")]
     public bool objectIsSelected;
     public Color selectedColor;
 
     public SelectedObjectType selectedObjectType;
     public int selectedObjectIndex;
-
+    public List<object> conflictedSelection;
     public Vector2Int selectedCell;
+
+    public Dictionary<Vector2Int,List<object>> lookupTable = new();
 
     Vector3[] bounds;
 
+    private void OnEnable()
+    {
+
+    }
+
     private void OnDrawGizmos()
     {
+        if(lookupTable.Count == 0)
+        {
+            UpdateLookUpList();
+            Debug.Log("refreshedLookup");
+        }
+
         if (dataCopy == null) return;
 
         if (!enabled) return;
@@ -70,18 +78,29 @@ public class LevelEditor : MonoBehaviour
         DrawBounds();
 
 
-
-        foreach (var item in dataCopy.obstacles)
+        foreach (var space in lookupTable)
         {
-            DrawObstacle(item);
+            foreach (var item in space.Value)
+            {
+                switch (item)
+                {
+                    case ObstacleData obstacle:
+
+                        DrawObstacle(obstacle);
+                        break;
+                    case MessageConfig message:
+
+                        DrawSpriteIcon("Gizmo_Message", message.cell, Color.yellow);
+                        break;
+                    case TriggerObjectConfig triggerObject:
+                        DrawTriggerObject(triggerObject); 
+                        break;
+                    default:
+                        // Type inconnu
+                        break;
+                }
+            }
         }
-
-
-        foreach (var item in dataCopy.messages)
-        {
-            DrawSpriteIcon("Gizmo_Message", item.cell, Color.yellow);
-        }
-
 
         if (objectIsSelected && currentTool == EditorToolType.Edit)
         {
@@ -95,6 +114,11 @@ public class LevelEditor : MonoBehaviour
             {
                 DrawSpriteIcon("Gizmo_Message", dataCopy.messages[selectedObjectIndex].cell, selectedColor, true);
                 return;
+            }
+
+            if(selectedObjectType == SelectedObjectType.TriggerObject)
+            {
+                DrawTriggerObject(dataCopy.triggerObjects[selectedObjectIndex],true);
             }
 
         }
@@ -120,7 +144,7 @@ public class LevelEditor : MonoBehaviour
         Gizmos.color = Color.white;
     }
 
-    private void DrawObstacle(ObstacleData obstacle, bool selectionGizmo = false)
+    private void DrawObstacle(ObstacleData obstacle,  bool selectionGizmo = false)
     {
         if(selectionGizmo)
         {
@@ -139,6 +163,60 @@ public class LevelEditor : MonoBehaviour
         {
             DrawThinWallAt(obstacle.cell, obstacle.thinWallDirection, selectionGizmo);
         }
+    }
+
+    public void DrawTriggerObject(TriggerObjectConfig triggerObject, bool selectionGizmo = false)
+    {
+        if (selectionGizmo)
+        {
+            Gizmos.color = selectedColor;
+        }
+        else
+        {
+
+            Gizmos.color = new Color(0.2f, 0.9f, 0.9f);
+
+        }
+
+        DrawPressurePadAt(triggerObject.cell,selectionGizmo);
+    }
+
+    private void DrawPressurePadAt(Vector2Int cell, bool wire)
+    {
+
+        Vector3 size = new Vector3(1f,0.1f,1f);
+
+        float halfcell = LevelGlobalSettings.cellSize * 0.5f;
+
+        size *= LevelGlobalSettings.cellSize;
+
+        Vector3 pos = new Vector3(cell.x * LevelGlobalSettings.cellSize, 0, cell.y * LevelGlobalSettings.cellSize);
+
+        pos += new Vector3(halfcell, size.y * 0.5f, halfcell);
+
+        Gizmos.DrawWireCube(pos, size*0.5f);
+        Gizmos.DrawWireCube(pos, size*0.25f);
+        Gizmos.DrawWireCube(pos, size*0.75f);
+        if (wire)
+        {
+            Gizmos.DrawCube(pos, size * 0.75f);
+
+        }
+    }
+
+    public void MoveSelectedObject(Vector2Int dir)
+    {
+        switch (selectedObjectType)
+        {
+            case SelectedObjectType.Obstacle:
+                selectedCell = dataCopy.obstacles[selectedObjectIndex].cell += dir; break;
+                
+            case SelectedObjectType.Message:
+                selectedCell = dataCopy.messages[selectedObjectIndex].cell += dir; break;
+            case SelectedObjectType.TriggerObject:
+                selectedCell = dataCopy.triggerObjects[selectedObjectIndex].cell += dir; break;
+        }
+        UpdateLookUpList();
     }
 
     void DrawBounds()
@@ -212,33 +290,69 @@ public class LevelEditor : MonoBehaviour
     }
     public bool CellOccuped(Vector2Int targetcell)
     {
-        foreach (var item in dataCopy.obstacles)
+        if (lookupTable.TryGetValue(targetcell, out var objects))
         {
-            if (item.cell == targetcell) return true;
+            return true; 
 
-        }
-        foreach (var item in dataCopy.messages)
-        {
-            if (item.cell == targetcell) return true;
+
         }
         return false;
+    }
 
+    private void ReorderList()
+    {
+        var sortedObstacles = dataCopy.obstacles
+          .OrderByDescending(o => o.cell.y) // Plus loin en premier
+          .ThenByDescending(o => o.cell.x);
+        dataCopy.obstacles = new List<ObstacleData>(sortedObstacles);
+    }
+
+    private void RefreshCopy()
+    {
+        hotCopyModified = false;
+        objectIsSelected = false;
+        ReorderList();
+        Updatebounds();
+        UpdateLookUpList();
+    }
+
+    private void UpdateLookUpList()
+    {
+        lookupTable.Clear();
+
+        foreach (var item in dataCopy.obstacles)
+        {
+            if (!lookupTable.TryGetValue(item.cell, out var list))
+            {
+                list = new List<object>();
+                lookupTable[item.cell] = list;
+            }
+            list.Add(item);
+        }
+
+        foreach (var item in dataCopy.messages)
+        {
+            if (!lookupTable.TryGetValue(item.cell, out var list))
+            {
+                list = new List<object>();
+                lookupTable[item.cell] = list;
+            }
+            list.Add(item);
+        }
+        foreach (var item in dataCopy.triggerObjects)
+        {
+            if (!lookupTable.TryGetValue(item.cell, out var list))
+            {
+                list = new List<object>();
+                lookupTable[item.cell] = list;
+            }
+            list.Add(item);
+        }
     }
 
     public bool InsideBounds(Vector2Int targetcell)
     {
         return (targetcell.x >= 0 && targetcell.x < dataCopy.width && targetcell.y >= 0 && targetcell.y < dataCopy.height);
-    }
-
-    /*public Vector2Int GetBounds()
-    {
-        return new Vector2Int(levelDataCopy.width, levelDataCopy.height);
-
-    }*/
-
-    public void SetLevelSize(int add, int width)
-    {
-        //if()
     }
 
     public void Updatebounds()
@@ -341,63 +455,72 @@ public class LevelEditor : MonoBehaviour
         objectIsSelected = false;
     }
 
-    public void SelectCell(Vector2Int cell)
+    public bool SelectCell(Vector2Int cell)
     {
-
-        foreach (var item in dataCopy.obstacles)
-        {
-            if (item.cell == cell) {
-
-                SelectObject(item);
-
-                objectIsSelected = true;
-                hotCopyModified = true;
-                return;
-            }
-
-
-        }
-        foreach (var item in dataCopy.messages)
-        {
-            if(item.cell == cell)
+        if(lookupTable.TryGetValue(cell, out var table)){
+            if(table.Count > 1)
             {
-                SelectObject(item);
-
-
+                Debug.Log("Multiple objects");
+                conflictedSelection = table;
+                return true;
+            }
+            else
+            {
+                SelectObject(table[0]);
+                conflictedSelection = null;
                 objectIsSelected = true;
                 hotCopyModified = true;
-                return;
+                selectedCell = cell;
+                return false;
             }
         }
+
         objectIsSelected = false;
+        conflictedSelection = null;
         SelectObject(null);
         selectedCell = new Vector2Int(-1, -1);
 
+        return false;
+    }
 
+    public void ResolveConflictedSelection(object obj)
+    {
+        SelectObject(obj);
+        conflictedSelection = null;
+        objectIsSelected = true;
+        hotCopyModified = true;
     }
 
     public void SelectObject(object obj)
     {
-        if (obj == null)
+        switch (obj)
         {
-            selectedObjectType = SelectedObjectType.None;
-            selectedObjectIndex = -1;
-            objectIsSelected= false;
-            return;
+            case null:
+                selectedObjectType = SelectedObjectType.None;
+                selectedObjectIndex = -1;
+                objectIsSelected = false;
+                selectedCell = new Vector2Int(-1, -1);
+                break;
+            case ObstacleData:
+                objectIsSelected = true;
+                selectedObjectType = SelectedObjectType.Obstacle;
+                selectedObjectIndex = dataCopy.obstacles.IndexOf((ObstacleData)obj);
+                selectedCell = dataCopy.obstacles[selectedObjectIndex].cell;
+                break;
+            case MessageConfig:
+                objectIsSelected = true;
+                selectedObjectType = SelectedObjectType.Message;
+                selectedObjectIndex = dataCopy.messages.IndexOf((MessageConfig)obj);
+                selectedCell = dataCopy.messages[selectedObjectIndex].cell;
+                break;
+            case TriggerObjectConfig:
+                objectIsSelected = true;
+                selectedObjectType = SelectedObjectType.TriggerObject;
+                selectedObjectIndex = dataCopy.triggerObjects.IndexOf((TriggerObjectConfig)obj);
+                selectedCell = dataCopy.triggerObjects[selectedObjectIndex].cell;
+                break;
         }
 
-        if (obj is ObstacleData)
-        {
-            objectIsSelected = true;
-            selectedObjectType = SelectedObjectType.Obstacle;
-            selectedObjectIndex = dataCopy.obstacles.IndexOf((ObstacleData)obj);
-        }
-        else if (obj is MessageConfig)
-        {
-            objectIsSelected = true;
-            selectedObjectType = SelectedObjectType.Message;
-            selectedObjectIndex = dataCopy.messages.IndexOf((MessageConfig)obj);
-        }
     }
 
 
@@ -419,6 +542,7 @@ public class LevelEditor : MonoBehaviour
             return false;  // buffer gardé et ignoré
         });
         ReorderList();
+        UpdateLookUpList();
     }
 
 
@@ -427,25 +551,10 @@ public class LevelEditor : MonoBehaviour
         ObstacleData temp = new ObstacleData(ObstacleData.ObstacleType.Wall, cell,CardinalDirection.North );
         dataCopy.obstacles.Add(temp);
         ReorderList();
-
+        UpdateLookUpList();
         hotCopyModified = true;
     }
 
-    private void ReorderList()
-    {
-        var sortedObstacles = dataCopy.obstacles
-          .OrderByDescending(o => o.cell.y) // Plus loin en premier
-          .ThenByDescending(o => o.cell.x);
-        dataCopy.obstacles = new List<ObstacleData>(sortedObstacles);
-    }
-
-    private void RefreshCopy()
-    {
-        hotCopyModified = false;
-        objectIsSelected = false;
-        ReorderList();
-        Updatebounds();
-    }
 }
 
 

@@ -1,3 +1,4 @@
+using Sarabande.Core;
 using Sarabande.Levels;
 using UnityEditor;
 using UnityEngine;
@@ -27,6 +28,7 @@ public partial class LevelEditorInspector
             return;
         }
 
+
         switch (editor.currentTool)
         {
             case EditorToolType.Edit: SelectTool(e, gridPos); break;
@@ -53,6 +55,10 @@ public partial class LevelEditorInspector
     private void SelectTool(Event e, Vector2Int gridPos)
     {
 
+        if (editor.objectIsSelected)
+        {
+            DrawMoveHandles(editor.selectedCell);
+        }
         // Ta logique ici 
         if (editor.CellOccuped(gridPos))
         {
@@ -61,7 +67,11 @@ public partial class LevelEditorInspector
 
             if (e.type == EventType.MouseDown)
             {
-                editor.SelectCell(gridPos);
+                if (editor.SelectCell(gridPos))
+                {
+                    ShowSelectionMenu();
+                }
+
             }
         }
         else
@@ -74,7 +84,92 @@ public partial class LevelEditorInspector
             }
         }
 
+
     }
+
+    void DrawMoveHandles(Vector2Int cell)
+    {
+        Vector3 center = GridUtils.CenterXZ(cell) + LevelGlobalSettings.cellSize * Vector3.up * 0.5f;
+        float offsetfromCenter = 0.3f;
+        float handleSize = 0.25f;
+
+        Handles.color = Color.blue;
+
+        // Flèche haut
+        if(editor.InsideBounds(cell + Vector2Int.up))
+        {
+            if (Handles.Button(center + Vector3.forward * offsetfromCenter, Quaternion.LookRotation(Vector3.forward), handleSize, handleSize, Handles.ConeHandleCap))
+                editor.MoveSelectedObject(Vector2Int.up);
+        }
+        if (editor.InsideBounds(cell + Vector2Int.right))
+        {
+            // Flèche droite
+            if (Handles.Button(center + Vector3.right * offsetfromCenter, Quaternion.LookRotation(Vector3.right), handleSize, handleSize, Handles.ConeHandleCap))
+                editor.MoveSelectedObject(Vector2Int.right);
+        }
+        if (editor.InsideBounds(cell + Vector2Int.down))
+        {
+            // Flèche bas
+            if (Handles.Button(center + Vector3.back * offsetfromCenter, Quaternion.LookRotation(Vector3.back), handleSize, handleSize, Handles.ConeHandleCap))
+                editor.MoveSelectedObject(Vector2Int.down);
+        }
+        if (editor.InsideBounds(cell + Vector2Int.left))
+        {
+            // Flèche gauche
+            if (Handles.Button(center + Vector3.left * offsetfromCenter, Quaternion.LookRotation(Vector3.left), handleSize, handleSize, Handles.ConeHandleCap))
+                editor.MoveSelectedObject(Vector2Int.left);
+        }
+
+
+
+
+
+
+        Handles.color = Color.white;
+        // Pareil pour droite, bas, gauche
+    }
+
+    void ShowSelectionMenu()
+    {
+        GenericMenu menu = new GenericMenu();
+
+        int i = 0;
+
+        foreach (var item in editor.conflictedSelection)
+        {
+            switch (item)
+            {
+                case ObstacleData obstacle:
+                    menu.AddItem(
+                        new GUIContent($"[{i}] Obstacle - {obstacle.type}"),
+                        false,
+                        () => editor.ResolveConflictedSelection(obstacle)
+                    );
+                    break;
+
+                case MessageConfig message:
+                    menu.AddItem(
+                        new GUIContent($"[{i}] Message - {message.text}"),
+                        false,
+                        () => editor.ResolveConflictedSelection(message)
+                    );
+                    break;
+
+                case TriggerObjectConfig triggerObject:
+                    menu.AddItem(
+                        new GUIContent($"[{i}] TriggerObject - {triggerObject.type}"),
+                        false,
+                        () => editor.ResolveConflictedSelection(triggerObject)
+                    );
+                    break;
+            }
+            i++;
+        }
+
+        menu.ShowAsContext();
+    }
+
+
     private void RemoveTool(Event e, Vector2Int gridPos)
     {
         if (editor.InsideBounds(gridPos))

@@ -29,7 +29,7 @@ MonoBehaviour:
   - cell: {x: 5, y: 7}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 4, y: 7}
+  - cell: {x: 4, y: 6}
     type: 0
     thinWallDirection: 0
   - cell: {x: 2, y: 7}

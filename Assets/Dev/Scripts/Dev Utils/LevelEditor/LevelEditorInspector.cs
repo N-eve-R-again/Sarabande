@@ -5,12 +5,15 @@ using UnityEngine;
 [CustomEditor(typeof(LevelEditor))]
 public partial class LevelEditorInspector : Editor
 {
+    public static string versionName = "0.1b";
+
 
     private LevelEditor editor;
    
     void OnEnable()
     {
         editor = (LevelEditor)target;
+
     }
 
     // Pour l'Inspector UI
@@ -20,7 +23,7 @@ public partial class LevelEditorInspector : Editor
         serializedObject.Update();
         GUI.contentColor = Color.white;
 
-        EditorGUILayout.LabelField("♥ ♥ ♥ GROOVY Level Editor - prototype v0.1 ♥ ♥ ♥", EditorStyles.centeredGreyMiniLabel);
+        EditorGUILayout.LabelField($"♥ ♥ ♥  GROOVY Level Editor - prototype v{versionName}  ♥ ♥ ♥", EditorStyles.centeredGreyMiniLabel);
 
         GUIStyle windowStyle = new GUIStyle(GUI.skin.window);
         windowStyle.padding = new RectOffset(10, 10, 10, 10);
@@ -163,6 +166,7 @@ public partial class LevelEditorInspector : Editor
             {
                 SelectedObjectType.Obstacle => "obstacles",
                 SelectedObjectType.Message => "messages",
+                SelectedObjectType.TriggerObject => "triggerObjects",
 
                 _ => null
             };
@@ -189,6 +193,7 @@ public partial class LevelEditorInspector : Editor
                         {
                             case SelectedObjectType.Obstacle: InspectObstacle(itemProp); break;
                             case SelectedObjectType.Message: InspectMessage(itemProp); break;
+                            case SelectedObjectType.TriggerObject: InspectTriggerObject(itemProp); break;
 
                         }
 
@@ -245,6 +250,10 @@ public partial class LevelEditorInspector : Editor
         EditorGUILayout.PropertyField(item, GUIContent.none);
     }
 
+    private void InspectTriggerObject(SerializedProperty item)
+    {
+        EditorGUILayout.PropertyField(item, GUIContent.none);
+    }
    
 
 }
