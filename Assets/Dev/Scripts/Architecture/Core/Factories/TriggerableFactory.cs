@@ -35,9 +35,21 @@ public class TriggerableFactory : MonoBehaviour, IClearable
     }
     public void BuildTriggerables(LevelData _levelData)
     {
+
         CreateFolders();
-        CreateArrowTraps(_levelData);
-        CreateGates(_levelData);
+
+        foreach (var triggerable in _levelData.triggerables)
+        {
+            switch (triggerable)
+            {
+                case ArrowTrapConfig arrowTrap:
+                    CreateArrowTrap(arrowTrap);
+                    break;
+                case GateConfig gate:
+                    CreateGate(gate);
+                    break;
+            }
+        }
         //arrow traps
         //doors et timed doors
         //grilles
@@ -45,31 +57,22 @@ public class TriggerableFactory : MonoBehaviour, IClearable
         jobDone = true; 
 
     }
-    private void CreateGates(LevelData _levelData)
+    private void CreateGate(GateConfig gate)
     {
-        if (_levelData.gates == null) return;
 
-        foreach (var gate in _levelData.gates)
-        {
-            GameObject temp = Instantiate(gatePrefab, gatesParent);
-            GateEntity entity = temp.GetComponent<GateEntity>();
-
-            entity.Init(gate, $"Gate_{gate.cell.ToString()}");
-
-        }
+        GameObject temp = Instantiate(gatePrefab, gatesParent);
+        GateEntity entity = temp.GetComponent<GateEntity>();
+        entity.Init(gate, $"Gate_{gate.cell.ToString()}");
     }
 
-    private void CreateArrowTraps(LevelData _levelData)
+    private void CreateArrowTrap(ArrowTrapConfig config)
     {
-        if (_levelData.arrowTraps == null) return;
 
-        foreach (ArrowTrapConfig config in _levelData.newArrowTraps)
-        {
             GridCoord c = config.cell;
             GameObject temp = Instantiate(arrowTrapPrefab, arrowTrapsParent);
             ArrowTrapEntity entity = temp.GetComponent<ArrowTrapEntity>();
 
             entity.Init(config, $"ArrowTrap_{c.ToString()}");
-        }
+
     }
 }

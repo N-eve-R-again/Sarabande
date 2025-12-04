@@ -22,13 +22,13 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
     ListenerInteractionLayer IListener.interactionLayer => interactsWith;
 
 
-    public void Init(MessageConfig _specs, string _name)
+    public void Init(MessageConfig _specs)
     {
         specs = _specs;
 
         messageSystem = LEM.I.GetMessageSystem();
 
-        ListenerCreationHelper.SetupListenerEntity(this,this,specs.cell, _name);
+        ListenerCreationHelper.SetupListenerEntity(this,this,_specs);
 
         SetPosition();
         transform.localScale = SetSize();

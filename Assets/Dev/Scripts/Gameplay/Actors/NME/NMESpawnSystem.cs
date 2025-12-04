@@ -93,6 +93,7 @@ namespace Sarabande.NME
         /// </summary>
         private void Rebuild()
         {
+            return;
             EnsureParent();
             ClearSpawned();
 
@@ -136,13 +137,13 @@ namespace Sarabande.NME
                 foreach (var n in _spawned) if (n) gates.ReapplyBlocksTo(n);
 
             // 2) Timed Doors : refresh caches (héros+NME) puis re-pousser toutes les cases bloquées
-            var doors = FindFirstObjectByType<Sarabande.Doors.TimedDoorSystem>(FindObjectsInactive.Include);
+            /*var doors = FindFirstObjectByType<Sarabande.Doors.TimedDoorSystem>(FindObjectsInactive.Include);
             if (doors != null)
             {
                 doors.RefreshActorCaches();
                 foreach (var n in _spawned) if (n) doors.ReapplyBlocksTo(n);
             }
-
+            */
             // Les PressurePads écoutent AfterRebuild pour rafraîchir leurs caches
             AfterRebuild?.Invoke();
         }

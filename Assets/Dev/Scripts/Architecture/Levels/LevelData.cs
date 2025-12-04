@@ -17,10 +17,11 @@
 // - Utilisé par : HeroController, NMESpawnSystem, GridGateSystem, TimedDoorSystem, LeverSystem,
 //                 PressurePadSystem/TriggerRouter, ArrowTrapSystem, DiscoSequenceSystem, MessageSystem, etc.
 
+using NUnit.Framework;
 using Sarabande.Core;
 using System;
 using System.Collections.Generic;
-
+using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -47,11 +48,11 @@ namespace Sarabande.Levels
         public List<ObstacleData> obstacles = new List<ObstacleData>();
 
         [Header("Listeners")]
-        public List<TriggerObjectConfig> triggerObjects = new List<TriggerObjectConfig>();
-        public List<Vector2Int> fakeWalls = new List<Vector2Int>();
+        [SerializeReference] public List<ListenerData> listeners = new List<ListenerData>();
+        //public List<Vector2Int> fakeWalls = new List<Vector2Int>();
 
         [Header("Triggerables")]
-        public List<GateConfig> gates = new List<GateConfig>();
+        [SerializeReference] public List<TriggerableData> triggerables = new List<TriggerableData>();
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Spawns & entrée/sortie
@@ -97,16 +98,10 @@ namespace Sarabande.Levels
         // Arrow Traps (proto)
         // ?????????????????????????????????????????????????????????????????????????????
 
-        [Header("New Version")]
-        public List<ArrowTrapConfig> newArrowTraps = new();
 
-        public List<TriggerKey> triggerKeys = new();
-
-        [ContextMenu("Upgrade Arrow Traps to New Version")]
         public void ImportLegacyArrowTraps()
         {
-            newArrowTraps.Clear();
-            triggerObjects.Clear();
+
             int i = 0;
             foreach (ArrowTrapSpec item in arrowTraps)
             {
@@ -118,31 +113,38 @@ namespace Sarabande.Levels
                 };
                 TriggerObjectConfig triggerPad = new TriggerObjectConfig(TriggerObjectType.TriggerPad, triggerobjectkey, item.triggerCell,!item.canRearm,false,1f);
                 ArrowTrapConfig arrowTrap = new ArrowTrapConfig(item.startCell,item.travelDir,item.arrowSpeed,item.canRearm,item.rearmDelay, key);
-                triggerObjects.Add(triggerPad);
-                newArrowTraps.Add(arrowTrap);
+                listeners.Add(triggerPad);
+                triggerables.Add(arrowTrap);
                 i++;
             }
 
              
         }
-
-        [ContextMenu("Upgrade Levers")]
-        public void ImportLegacyLevers()
+        [ContextMenu("Upgrade All")]
+        public void UpgradeLevelData()
         {
-            triggerObjects.RemoveAll(buffer =>  // Pour chaque buffer
+            listeners.Clear();
+            triggerables.Clear();
+            UpdateHeroSpawn();
+            ImportLegacyArrowTraps();
+            ImportLegacyGates();
+            ImportLegacyLevers();
+            ImportObstacles();
+
+
+            foreach (var item in messages)
             {
-                // Si les conditions sont remplies :
+                listeners.Add(item);
+            }
+            foreach (var item in passThroughWalls)
+            {
+                listeners.Add(new FakeWallData(item));
+            }
+        }
 
-                if (buffer.type == TriggerObjectType.Lever)
-                {
 
-                    return true;  // buffer supprimé
-
-                }
-
-
-                return false;  // buffer gardé et ignoré
-            });
+        private void ImportLegacyLevers()
+        {
 
             int i = 0;
             foreach (var item in levers)
@@ -154,15 +156,14 @@ namespace Sarabande.Levels
                 };
                 Vector2Int newcell = item.cell + GridUtils.DirToVec2(item.requireFacing);
                 TriggerObjectConfig temp = new TriggerObjectConfig(TriggerObjectType.Lever, triggerobjectkey, newcell, false, true, 0f, GridUtils.Opposite(item.requireFacing));
-                triggerObjects.Add(temp);
+                listeners.Add(temp);
                 i++;
             }
         }
 
-        [ContextMenu("Upgrade Door and Gates")]
         public void ImportLegacyGates()
         {
-            gates.Clear();
+
             int i = 0;
 
             foreach (var item in timedDoors)
@@ -174,32 +175,17 @@ namespace Sarabande.Levels
                 };
                 
                 GateConfig temp = new GateConfig(GateType.Timer, CardinalDirection.West, key, item.cell, item.openSeconds);
-                gates.Add(temp);
+                triggerables.Add(temp);
                 i++;
             }
         }
 
-        private void OnValidate()
-        {
-            triggerKeys.Clear();
-            foreach (var item in newArrowTraps)
-            {
-                triggerKeys.Add(new TriggerKey(item.triggerKey, $"arrowTrap {item.cell}"));
-            }
-
-            //FindFirstObjectByType<LevelEditor>()?.ReImportLevel();
-
-        }
-
-
-        [ContextMenu("Upgrade HeroSpawn to New Version")]
         public void UpdateHeroSpawn()
         {
             heroSpawnConfig = new ActorSpawn(heroSpawn,heroEntry);
         }
 
-        [ContextMenu("Upgrade Obstacles to New Version")]
-        public void UpdateObstacles()
+        public void ImportObstacles()
         {
             obstacles.Clear();
             foreach (var item in nonWalkables)
@@ -212,17 +198,9 @@ namespace Sarabande.Levels
                 obstacles.Add((ObstacleData)item);
             }
 
-
         }
 
-
-        [ContextMenu("Upgrade ALL LEVEL DATA to New Version")]
-        public void PortLevelDataToNewVersion()
-        {
-            UpdateHeroSpawn();
-            ImportLegacyArrowTraps();
-        }
-
+        [System.Obsolete]
         [System.Serializable]
         public struct ArrowTrapSpec
         {
@@ -278,6 +256,7 @@ namespace Sarabande.Levels
         // Timed Doors & Levers
         // ?????????????????????????????????????????????????????????????????????????????
 
+        [System.Obsolete]
         [System.Serializable]
         public class TimedDoorSpec
         {
@@ -286,7 +265,7 @@ namespace Sarabande.Levels
         }
         public List<TimedDoorSpec> timedDoors = new();
 
-
+        [System.Obsolete]
         [System.Serializable]
         public class LeverSpec
         {
@@ -363,9 +342,9 @@ namespace Sarabande.Levels
     }
 
     [System.Serializable]
-    public class MessageConfig
-    {
-        public Vector2Int cell;        // coordonnées (utilise x/z comme partout)
+    public class MessageConfig : ListenerData
+    {       
+        // coordonnées (utilise x/z comme partout)
         [TextArea(2, 5)] public string text;
         [Min(0.1f)] public float displaySeconds = 3f;
         public AudioClip voiceClip;
@@ -393,14 +372,13 @@ namespace Sarabande.Levels
     }
 
     [System.Serializable]
-    public class GateConfig
+    public class GateConfig : TriggerableData
     {
         public GateType type;
         public CardinalDirection direction;
-        public string triggerKey;
-        public Vector2Int cell;
-        public float timer;
 
+        public float timer;
+        public bool startopen = false;
         public GateConfig(GateType type, CardinalDirection direction, string triggerKey, Vector2Int cell, float timer)
         {
             this.type = type;
@@ -412,14 +390,12 @@ namespace Sarabande.Levels
     }
 
     [Serializable]
-    public class TriggerObjectConfig
+    public class TriggerObjectConfig : ListenerData
     {
 
 
         [Header("Core Config")]
         public TriggerObjectType type;
-        public string[] triggerKeys = new string[0];
-        public Vector2Int cell;
 
         [ConditionalHide("type", TriggerObjectType.Lever)]
         public CardinalDirection attachedTo = CardinalDirection.South;
@@ -454,14 +430,36 @@ namespace Sarabande.Levels
         }
 
     }
-
-
+    [System.Serializable]
+    public class FakeWallData : ListenerData
+    {
+        public FakeWallData(Vector2Int cell) {
+        this.cell = cell;
+        }
+    }
 
 
     [System.Serializable]
-    public class ArrowTrapConfig
+    public abstract class TriggerableData
     {
-        public Vector2Int cell;             // première case dans la map que la flèche traverse
+        public Vector2Int cell;
+        public string triggerKey;
+
+    }
+
+    [System.Serializable]
+    public abstract class ListenerData
+    {
+        public Vector2Int cell;
+        public string[] triggerKeys = new string[0];
+        
+    }
+
+
+    [System.Serializable]
+    public class ArrowTrapConfig : TriggerableData
+    {
+           // première case dans la map que la flèche traverse
         public CardinalDirection travelDir;         // direction de déplacement (N/E/S/W)
         [Min(0.1f)] public float arrowSpeed;   // vitesse (unités monde / seconde)
 
@@ -469,7 +467,6 @@ namespace Sarabande.Levels
         public bool canRearm;                   // si true, le piège se réarme
         [Min(0f)] public float rearmTimeDelay = 1f;      // délai avant réarmement (secondes)
 
-        public string triggerKey;
 
         public ArrowTrapConfig(GridCoord cell, CardinalDirection travelDir, float arrowSpeed, bool canRearm, float rearmDelay, string triggerKey)
         {

@@ -26,14 +26,12 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
     ListenerInteractionLayer IListener.interactionLayer => interactsWith;
     bool IListenerWithCallback.wantsCallback => needsCallback;
 
-    public void Init(TriggerObjectConfig _config, string _name)
+    public void Init(TriggerObjectConfig _config)
     {
         config = _config; //je recupere ma config
-        ListenerCreationHelper.SetupListenerEntity(this, this, _config.cell, _name); //comportment de base de setup
+        ListenerCreationHelper.SetupListenerEntity(this, this, _config); //comportment de base de setup
 
         visual.InitVisual(); //initialisation du visuel
-
-        RegistryEvents.NotifyTryTriggerLinkRegistry(config.triggerKeys[0],this); //j'enregistre mon triggerLink
     }
 
 

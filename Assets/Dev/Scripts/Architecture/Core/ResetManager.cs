@@ -147,7 +147,6 @@ namespace Sarabande.Core
 
             // Priorité 1: systèmes d’arêtes bloquantes et de cheminement.
             if (resettable is Sarabande.Gates.GridGateSystem) return 1;
-            if (resettable is Sarabande.Doors.TimedDoorSystem) return 1;
 
             // Priorité 2: tout le reste.
             return 2;

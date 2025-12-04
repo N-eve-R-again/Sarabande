@@ -149,15 +149,16 @@ MonoBehaviour:
     cell: {x: 4, y: 7}
     attachedTo: 2
     rearmType: 1
-    timeToRearm: 0
+    timeToRearm: 0.25
   fakeWalls:
   - {x: 0, y: 5}
   gates:
-  - type: 1
+  - type: 0
     direction: 3
     triggerKey: door0
     cell: {x: 1, y: 4}
     timer: 4
+    startopen: 1
   heroSpawnConfig:
     spawnCell: {x: 3, y: 7}
     spawnDirection: 0

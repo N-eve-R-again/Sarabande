@@ -34,9 +34,22 @@ public class ListenerFactory : MonoBehaviour, IClearable
 
         CreateFolders();
 
-        CreateFakeWalls(_levelData);
-        CreateMessages(_levelData);
-        CreateTriggerObjects(_levelData);
+        foreach (var item in _levelData.listeners)
+        {
+            switch (item)
+            {
+                case FakeWallData fakeWallData :
+                    CreateFakeWall(fakeWallData);
+                    break;
+                case MessageConfig messageConfig :
+                    CreateMessage(messageConfig);
+                    break;
+                case TriggerObjectConfig triggerObjectConfig :
+                    CreateTriggerObject(triggerObjectConfig);
+                    break;
+            }
+        }
+
         //tiles
 
         jobDone = true;
@@ -60,29 +73,25 @@ public class ListenerFactory : MonoBehaviour, IClearable
         return valid;
     }
 
-    private void CreateTriggerObjects(LevelData _levelData)
+    private void CreateTriggerObject(TriggerObjectConfig config)
     {
 
-        foreach (TriggerObjectConfig config in _levelData.triggerObjects)
+        switch (config.type)
         {
-            if(config.type == TriggerObjectType.TriggerPad)
-            {
-                GameObject temp = Instantiate(pressurePadPrefab, pressurePadsParent);
-                TriggerPadEntity entity = temp.GetComponent<TriggerPadEntity>();
+            case TriggerObjectType.InvisibleTrigger:
+                break;
 
-                entity.Init(config, $"PressurePad_{config.cell.ToString()}");
-            }
+            case TriggerObjectType.TriggerPad:
+                GameObject triggerpad = Instantiate(pressurePadPrefab, pressurePadsParent);
+                triggerpad.GetComponent<TriggerPadEntity>().Init(config);
+                break;
 
-            if(config.type == TriggerObjectType.Lever)
-            {
-                GameObject temp = Instantiate(leverPrefab, leversParent);
-                LeverEntity entity = temp.GetComponent<LeverEntity>();
-
-                entity.Init(config, $"Lever_{config.cell.ToString()}");
-            }
-
-
+            case TriggerObjectType.Lever:
+                GameObject lever = Instantiate(leverPrefab, leversParent);
+                lever.GetComponent<LeverEntity>().Init(config);
+                break;
         }
+        
     }
 
     private void CreateFolders()
@@ -104,40 +113,17 @@ public class ListenerFactory : MonoBehaviour, IClearable
         leversParent.SetParent(listenerFolder, false);
     }
 
-    private void CreateFakeWalls(LevelData _levelData)
+    private void CreateFakeWall(FakeWallData fk)
     {
-        if (_levelData.fakeWalls == null) return;
-
-        // dé-duplication légère au cas où
-        var set = new HashSet<(int x, int y)>();
-
-        foreach (var coord in _levelData.fakeWalls)
-        {
-            if (!set.Add((coord.x, coord.y)))
-            {
-                Debug.LogWarning($"[LevelLoader] Doublon passThrough ignoré en ({coord}).");
-                continue;
-            }
-
-            GameObject temp = Instantiate(fakeWallPrefab, fakeWallsParent);
-            FakeWallEntity entity = temp.GetComponent<FakeWallEntity>();
-
-            entity.Init(coord, $"FakeWall_{coord.ToString()}");
-
-        }
+        GameObject temp = Instantiate(fakeWallPrefab, fakeWallsParent);
+        FakeWallEntity entity = temp.GetComponent<FakeWallEntity>();
+        entity.Init(fk);
     }
 
-    private void CreateMessages(LevelData levelData)
+    private void CreateMessage(MessageConfig msg)
     {
-        if (levelData.messages == null) return;
-
-        foreach(MessageConfig msg in levelData.messages)
-        {
-            GameObject temp = Instantiate(messagePrefab, messagesParent);
-            MessageCollectibleEntity entity = temp.GetComponent<MessageCollectibleEntity>();
-
-            entity.Init(msg, $"Message_{msg.cell.ToString()}");
-        }
-
+        GameObject temp = Instantiate(messagePrefab, messagesParent);
+        MessageCollectibleEntity entity = temp.GetComponent<MessageCollectibleEntity>();
+        entity.Init(msg);
     }
 }

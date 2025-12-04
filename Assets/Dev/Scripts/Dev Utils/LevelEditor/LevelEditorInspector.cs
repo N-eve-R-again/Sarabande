@@ -165,10 +165,8 @@ public partial class LevelEditorInspector : Editor
             string basePath = editor.selectedObjectType switch
             {
                 SelectedObjectType.Obstacle => "obstacles",
-                SelectedObjectType.Message => "messages",
-                SelectedObjectType.TriggerObject => "triggerObjects",
-                SelectedObjectType.ArrowTrap => "newArrowTraps",
-                SelectedObjectType.Gate => "gates",
+                SelectedObjectType.Listener => "listeners",
+                SelectedObjectType.Triggerable => "triggerables",
 
                 _ => null
             };
@@ -194,17 +192,14 @@ public partial class LevelEditorInspector : Editor
                         switch (editor.selectedObjectType)
                         {
                             case SelectedObjectType.Obstacle: InspectObstacle(itemProp); break;
-                            case SelectedObjectType.Message: InspectMessage(itemProp); break;
-                            case SelectedObjectType.TriggerObject: InspectTriggerObject(itemProp); break;
-                            case SelectedObjectType.Gate: InspectGate(itemProp); break;
-                            case SelectedObjectType.ArrowTrap: InspectArrowTrap(itemProp); break;
-
+                            case SelectedObjectType.Listener: InspectListener(itemProp); break;
+                            case SelectedObjectType.Triggerable: InspectTriggerable(itemProp); break;
                         }
 
                         EditorGUILayout.EndVertical();
                     }
                     dataCopySO.ApplyModifiedProperties();
-                    if(editor.selectedObjectType == SelectedObjectType.TriggerObject)
+                    if(editor.selectedObjectType == SelectedObjectType.Listener)
                     {
                         editor.UpdateLinks();
                     }
@@ -220,7 +215,18 @@ public partial class LevelEditorInspector : Editor
             EditorGUILayout.LabelField("No Object Selected - Click on an object to see its properties", EditorStyles.helpBox);
         }
     }
+    private void InspectTriggerable(SerializedProperty item)
+    {
+        item.isExpanded = true;
+        EditorGUILayout.PropertyField(item, GUIContent.none, true);
 
+    }
+
+    private void InspectListener(SerializedProperty item)
+    {
+        item.isExpanded = true;
+        EditorGUILayout.PropertyField(item, GUIContent.none,true);
+    }
     private void InspectObstacle(SerializedProperty item)
     {
 

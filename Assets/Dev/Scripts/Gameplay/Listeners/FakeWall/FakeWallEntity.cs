@@ -15,9 +15,9 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
     [SerializeField] private ListenerInteractionLayer interactsWith;
     public ListenerInteractionLayer interactionLayer => interactsWith;
 
-    public void Init(GridCoord _coord, string _name)
+    public void Init(FakeWallData _config)
     {
-        ListenerCreationHelper.SetupListenerEntity(this, this, _coord, _name);
+        ListenerCreationHelper.SetupListenerEntity(this, this, _config);
         SetSize(); //bientot dans le visual
         SetPosition();
     }

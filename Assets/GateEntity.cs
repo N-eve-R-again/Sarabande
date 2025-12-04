@@ -14,36 +14,60 @@ public class GateEntity : MonoBehaviour, ITriggerable
     public void Init(GateConfig _config, string _name)
     {
         config = _config;
+
         visual.InitVisual(config.direction);
         gameObject.name = _name;
         triggerableKey = config.triggerKey;
         transform.position = GridUtils.CenterXZ(config.cell);
-
+        if (config.startopen) OpenDoor();
         RegistryEvents.NotifyTriggerableRegistry(triggerableKey, this);
 
     }
-    public void Trigger()
+
+    private void OpenDoor()
     {
         visual.DownAnim();
-        if (config.type == GateType.Timer) {
+        down = true;
+        if (config.type == GateType.Timer)
+        {
             timer = config.timer;
-            down = true;
         }
+    }
 
+    private void CloseDoor()
+    {
+        visual.UpAnim();
+        LevelEntityEvents.NotifyTriggerableCallback(this);
+        down = false;
+    }
+
+    public void Trigger()
+    {
+        
+        if (!down)
+        {
+            OpenDoor();
+
+        }
+        else if (config.type == GateType.Toggle)
+        {
+
+            CloseDoor();
+        }
 
     }
 
     private void Update()
     {
+
+        if (config.type != GateType.Timer) return;
         if (down)
         {
             timer -= Time.deltaTime;
             if (timer < 0)
             {
                 timer = 0;
-                down = false;
-                LevelEntityEvents.NotifyTriggerableCallback(this);
-                visual.UpAnim();
+                CloseDoor();
             }
         }
 
