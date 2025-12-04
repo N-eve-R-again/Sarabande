@@ -24,7 +24,7 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
     {
         config = _config;
         ListenerCreationHelper.SetupListenerEntity(this, this, _config.cell, _name);
-        visual.InitVisual(_config.attachedTo);
+        visual.InitVisual(_config.attachedTo,config.rearmType == RearmType.CallBack);
         //transform.localScale = SetSize();
 
         RegistryEvents.NotifyTryTriggerLinkRegistry(config.triggerKeys[0], this);
@@ -34,7 +34,7 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
     public bool OnInteract(ActorInteractionData _interaction)
     {
         if(_interaction.interactionType != ActorInteractionType.OnBump) return false;
-
+        if(config.attachedTo != GridUtils.Opposite(_interaction.directionality)) return false;
         if (state == LeverState.Desactivated)
             OnPressed();
 
@@ -45,7 +45,7 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
     private void OnPressed()
     {
         state = LeverState.Activated;
-        visual.SetActivated(true);
+        visual.PressAnim();
         LevelEntityEvents.NotifyListenerTryCallTrigger(this);
 
     }
@@ -53,7 +53,7 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
     private void Rearm()
     {
         state = LeverState.Desactivated;
-        visual.SetActivated(false);
+        visual.ResetAnim();
     }
 
 

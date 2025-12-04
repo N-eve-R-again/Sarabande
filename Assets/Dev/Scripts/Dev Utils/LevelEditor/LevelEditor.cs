@@ -3,8 +3,10 @@ using Sarabande.Levels;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 using static UnityEditor.Progress;
 
 
@@ -21,7 +23,26 @@ public enum SelectedObjectType
     None,
     Obstacle,
     Message,
-    TriggerObject
+    TriggerObject,
+    Gate,
+    ArrowTrap
+}
+
+public class TriggerLink
+{
+    public Vector2Int cellA;
+    public Vector2Int cellB;
+
+    public TriggerLink(Vector2Int _cellA, Vector2Int _cellB)
+    {
+        this.cellA = _cellA;
+        this.cellB = _cellB;
+    }
+
+    public bool valid()
+    {
+        return cellB != -Vector2Int.one;
+    }
 }
 
 public class LevelEditor : MonoBehaviour
@@ -46,6 +67,9 @@ public class LevelEditor : MonoBehaviour
     public Vector2Int selectedCell;
 
     public Dictionary<Vector2Int,List<object>> lookupTable = new();
+    public List<TriggerLink> links = new();
+    public Dictionary<string, Vector2Int> availableKeys = new();
+
 
     Vector3[] bounds;
 
@@ -56,7 +80,7 @@ public class LevelEditor : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if(lookupTable.Count == 0)
+        if(lookupTable.Count == 0 && dataCopy != null)
         {
             UpdateLookUpList();
             Debug.Log("refreshedLookup");
@@ -95,12 +119,36 @@ public class LevelEditor : MonoBehaviour
                     case TriggerObjectConfig triggerObject:
                         DrawTriggerObject(triggerObject); 
                         break;
+                    case GateConfig gateConfig:
+                        DrawGate(gateConfig,false);
+                        break;
+                    case ArrowTrapConfig arrowTrapConfig:
+                        Gizmos.color = Color.magenta;
+                        DrawCubeAtCell(arrowTrapConfig.cell, true);
+                        break;
                     default:
-                        // Type inconnu
+
                         break;
                 }
             }
         }
+
+
+        foreach (var item in links)
+        {
+            if (item.valid())
+            {
+                Gizmos.color = new Color(1, 0.5f, 0);
+                Gizmos.DrawLine(GridUtils.CenterXZ(item.cellA), GridUtils.CenterInCell(item.cellB));
+            }
+            else
+            {
+                Gizmos.color =Color.red;
+                Gizmos.DrawLine(GridUtils.CenterXZ(item.cellA), GridUtils.CenterXZ(item.cellA) + Vector3.up * 0.4f);
+            }
+
+        }
+        Gizmos.color = Color.white;
 
         if (objectIsSelected && currentTool == EditorToolType.Edit)
         {
@@ -119,6 +167,14 @@ public class LevelEditor : MonoBehaviour
             if(selectedObjectType == SelectedObjectType.TriggerObject)
             {
                 DrawTriggerObject(dataCopy.triggerObjects[selectedObjectIndex],true);
+            }
+            if(selectedObjectType == SelectedObjectType.Gate)
+            {
+                DrawGate(dataCopy.gates[selectedObjectIndex],true);
+            }
+            if(selectedObjectType == SelectedObjectType.ArrowTrap)
+            {
+                //DrawTriggerObject(dataCopy.triggerObjects[selectedObjectIndex],true);
             }
 
         }
@@ -165,6 +221,20 @@ public class LevelEditor : MonoBehaviour
         }
     }
 
+    private void DrawGate(GateConfig gate, bool selectionGizmo = false)
+    {
+        if (selectionGizmo)
+        {
+            Gizmos.color = selectedColor;
+        }
+        else
+        {
+            Gizmos.color = Color.yellow;
+        
+        }
+        DrawGateAt(gate.cell,gate.direction,selectionGizmo);
+    }
+
     public void DrawTriggerObject(TriggerObjectConfig triggerObject, bool selectionGizmo = false)
     {
         if (selectionGizmo)
@@ -177,9 +247,19 @@ public class LevelEditor : MonoBehaviour
             Gizmos.color = new Color(0.2f, 0.9f, 0.9f);
 
         }
+        if(triggerObject.type == TriggerObjectType.TriggerPad)
+        {
+            DrawPressurePadAt(triggerObject.cell, selectionGizmo);
+        }
+        else
+        {
+            DrawLeverAt(triggerObject.cell,triggerObject.attachedTo, selectionGizmo);
+        }
 
-        DrawPressurePadAt(triggerObject.cell,selectionGizmo);
+
     }
+
+
 
     private void DrawPressurePadAt(Vector2Int cell, bool wire)
     {
@@ -195,13 +275,32 @@ public class LevelEditor : MonoBehaviour
         pos += new Vector3(halfcell, size.y * 0.5f, halfcell);
 
         Gizmos.DrawWireCube(pos, size*0.5f);
-        Gizmos.DrawWireCube(pos, size*0.25f);
+        Gizmos.DrawCube(pos, size*0.25f);
         Gizmos.DrawWireCube(pos, size*0.75f);
         if (wire)
         {
             Gizmos.DrawCube(pos, size * 0.75f);
 
         }
+    }
+
+    private void DrawLeverAt(Vector2Int cell,CardinalDirection dir, bool wire)
+    {
+        Vector3 cellpos = GridUtils.CenterInCell(cell);
+        Vector3 vecDir3 = GridUtils.DirToVec3(dir);
+
+
+
+        float offset = LevelGlobalSettings.cellSize * 0.5f;
+
+        vecDir3 *= offset;
+
+        Vector3 size = new Vector3(0.3f, 0.1f, 0.3f);
+        //Gizmos.DrawCube(cellpos, size);
+        Gizmos.DrawWireCube(cellpos, new Vector3(0.8f,0.8f,0.8f));
+        Gizmos.DrawLine(cellpos, cellpos+ vecDir3);
+        Gizmos.DrawWireCube(cellpos + vecDir3,Vector3.one * 0.2f);
+        Gizmos.DrawCube(cellpos + vecDir3,Vector3.one * 0.18f);
     }
 
     public void MoveSelectedObject(Vector2Int dir)
@@ -215,6 +314,11 @@ public class LevelEditor : MonoBehaviour
                 selectedCell = dataCopy.messages[selectedObjectIndex].cell += dir; break;
             case SelectedObjectType.TriggerObject:
                 selectedCell = dataCopy.triggerObjects[selectedObjectIndex].cell += dir; break;
+            case SelectedObjectType.Gate:
+                selectedCell = dataCopy.gates[selectedObjectIndex].cell += dir; break;
+            case SelectedObjectType.ArrowTrap:
+                selectedCell = dataCopy.newArrowTraps[selectedObjectIndex].cell += dir; break;
+
         }
         UpdateLookUpList();
     }
@@ -236,22 +340,16 @@ public class LevelEditor : MonoBehaviour
         {
             size = new Vector3(0.15f, LevelGlobalSettings.cellSize, LevelGlobalSettings.cellSize);
         }
-        Vector3 pos = new Vector3(cell.x * LevelGlobalSettings.cellSize, 0, cell.y * LevelGlobalSettings.cellSize);
 
 
-        Vector3 cellpos = GridUtils.CenterXZ(cell);
-        pos = cellpos;
-
-        Vector2Int vecDir = GridUtils.DirToVec(dir);
-
+        Vector3 cellpos = GridUtils.CenterInCell(cell);
+        
         float offset = LevelGlobalSettings.cellSize * 0.5f;
 
-        Vector3 vecDir3 = new Vector3(vecDir.x, 1f, vecDir.y);
+        Vector3 vecDir3 = GridUtils.DirToVec3(dir);
 
-              
-        pos += vecDir3 * offset;
-
-
+        Vector3 pos = cellpos + vecDir3* offset;
+        
 
         Gizmos.DrawCube(cellpos, Vector3.one * 0.2f);
         Gizmos.DrawLine(cellpos, pos);
@@ -263,6 +361,40 @@ public class LevelEditor : MonoBehaviour
             
             Gizmos.DrawWireCube(pos, size);
         }
+    }
+
+    private void DrawGateAt(Vector2Int cell, CardinalDirection dir, bool wire)
+    {
+        Vector3 size = Vector3.zero;
+
+        if (dir == CardinalDirection.North || dir == CardinalDirection.South) // Séparation verticale entre deux Z donc thin sur l'axe Z
+        {
+            size = new Vector3(LevelGlobalSettings.cellSize, LevelGlobalSettings.cellSize, 0.15f);
+        }
+        else    // Séparation horizontale entre deux X donc thin sur l'axe X
+        {
+            size = new Vector3(0.15f, LevelGlobalSettings.cellSize, LevelGlobalSettings.cellSize);
+        }
+
+        Vector3 cellpos = GridUtils.CenterInCell(cell);
+
+        float offset = (LevelGlobalSettings.cellSize * 0.5f) - 0.15f * 0.5f;
+
+        Vector3 vecDir3 = GridUtils.DirToVec3(dir);
+
+        Vector3 pos = cellpos + vecDir3 * offset;
+
+        Gizmos.DrawWireCube(GridUtils.CenterXZ(cell),( Vector3.forward + Vector3.right) * 0.99f);
+        Gizmos.DrawLine(GridUtils.CenterXZ(cell), pos);
+        Gizmos.DrawWireCube(pos, size);
+        Gizmos.DrawWireCube(pos, size * 0.8f);
+
+        if (wire)
+        {
+
+            Gizmos.DrawCube(pos, size);
+        }
+
     }
 
 
@@ -319,6 +451,7 @@ public class LevelEditor : MonoBehaviour
     private void UpdateLookUpList()
     {
         lookupTable.Clear();
+        availableKeys.Clear();
 
         foreach (var item in dataCopy.obstacles)
         {
@@ -339,14 +472,69 @@ public class LevelEditor : MonoBehaviour
             }
             list.Add(item);
         }
+
+        foreach (var item in dataCopy.gates)
+        {
+            if (!lookupTable.TryGetValue(item.cell, out var list))
+            {
+                list = new List<object>();
+                lookupTable[item.cell] = list;
+
+            }
+            availableKeys[item.triggerKey] = item.cell;
+            list.Add(item);
+        }
+        foreach (var item in dataCopy.newArrowTraps)
+        {
+            if (!lookupTable.TryGetValue(item.cell, out var list))
+            {
+                list = new List<object>();
+                lookupTable[item.cell] = list;
+
+            }
+            availableKeys[item.triggerKey] = item.cell;
+            list.Add(item);
+        }
+
         foreach (var item in dataCopy.triggerObjects)
         {
             if (!lookupTable.TryGetValue(item.cell, out var list))
             {
                 list = new List<object>();
                 lookupTable[item.cell] = list;
+
+            }
+            if (availableKeys.TryGetValue(item.triggerKeys[0], out Vector2Int linkcell))
+            {
+                TriggerLink triggerLink = new TriggerLink(item.cell, linkcell);
+                links.Add(triggerLink);
+            }
+            else
+            {
+                TriggerLink triggerLink = new TriggerLink(item.cell, -Vector2Int.one);
+                links.Add(triggerLink);
             }
             list.Add(item);
+        }
+        UpdateLinks();
+    }
+
+    public void UpdateLinks()
+    {
+        links.Clear();
+        foreach (var item in dataCopy.triggerObjects)
+        {
+
+            if (availableKeys.TryGetValue(item.triggerKeys[0], out Vector2Int linkcell))
+            {
+                TriggerLink triggerLink = new TriggerLink(item.cell, linkcell);
+                links.Add(triggerLink);
+            }
+            else
+            {
+                TriggerLink triggerLink = new TriggerLink(item.cell, -Vector2Int.one);
+                links.Add(triggerLink);
+            }
         }
     }
 
@@ -519,6 +707,25 @@ public class LevelEditor : MonoBehaviour
                 selectedObjectIndex = dataCopy.triggerObjects.IndexOf((TriggerObjectConfig)obj);
                 selectedCell = dataCopy.triggerObjects[selectedObjectIndex].cell;
                 break;
+            case GateConfig:
+                objectIsSelected = true;
+                selectedObjectType = SelectedObjectType.Gate;
+                selectedObjectIndex = dataCopy.gates.IndexOf((GateConfig)obj);
+                selectedCell = dataCopy.gates[selectedObjectIndex].cell;
+                break;
+            case ArrowTrapConfig:
+                objectIsSelected = true;
+                selectedObjectType = SelectedObjectType.ArrowTrap;
+                selectedObjectIndex = dataCopy.newArrowTraps.IndexOf((ArrowTrapConfig)obj);
+                selectedCell = dataCopy.newArrowTraps[selectedObjectIndex].cell;
+                break;
+            default:
+                selectedObjectType = SelectedObjectType.None;
+                selectedObjectIndex = -1;
+                objectIsSelected = false;
+                selectedCell = new Vector2Int(-1, -1);
+                break;
+
         }
 
     }

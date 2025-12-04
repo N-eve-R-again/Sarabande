@@ -494,7 +494,7 @@ namespace Sarabande.Player
         public void AddDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
         {
             EnsureSets();
-            _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec(side)));
+            _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec2(side)));
         }
 
         /// <summary>
@@ -512,7 +512,7 @@ namespace Sarabande.Player
         public void RemoveDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
         {
             EnsureSets();
-            _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));
+            _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec2(side)));
         }
 
         /// <summary>
@@ -600,7 +600,7 @@ namespace Sarabande.Player
         {
             var exit = levelData;
             var exitCell = new Vector2Int(exit.exit.fromCell.x, exit.exit.fromCell.z);
-            return from == exitCell && dir == DirToVec(exit.exit.direction);
+            return from == exitCell && dir == DirToVec2(exit.exit.direction);
         }
 
         // ?????????????????????????????????????????????????????????????????????????????

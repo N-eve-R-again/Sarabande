@@ -41,7 +41,7 @@ public class ThinWallVisual : MonoBehaviour
     private Vector3 SetPosition(CardinalDirection dir, Vector2Int cell)
     {
 
-        Vector2Int vecDir = GridUtils.DirToVec(dir);
+        Vector2Int vecDir = GridUtils.DirToVec2(dir);
 
         float offset = LevelGlobalSettings.cellSize * 0.5f;
 

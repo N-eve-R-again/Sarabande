@@ -3,20 +3,31 @@ using UnityEngine;
 
 public class LeverVisual : MonoBehaviour
 {
+    public Animator animator;
     public Transform pivot;
     public GameObject debug;
+    private bool pressed = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public void InitVisual(CardinalDirection dir)
+    public void InitVisual(CardinalDirection dir, bool callback)
     {
         SetRotation(dir);
+        animator.SetBool("Callback", callback);
     }
 
-    public void SetActivated(bool activated)
+    public void PressAnim()
     {
-        debug.SetActive(activated);
+        if (pressed) return;
+        pressed = true;
+        animator.SetTrigger("Press");
     }
 
+    public void ResetAnim()
+    {
+        if (!pressed) return;
+        pressed = false;
+        animator.SetTrigger("Reset");
+    }
     private void SetRotation(CardinalDirection dir)
     {
 
@@ -30,6 +41,6 @@ public class LeverVisual : MonoBehaviour
             case CardinalDirection.East: yRot = 270f; break;
 
         }
-        transform.rotation = Quaternion.Euler(0f, yRot, 0f);
+        pivot.rotation = Quaternion.Euler(0f, yRot, 0f);
     }
 }

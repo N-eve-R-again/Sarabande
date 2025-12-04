@@ -5,7 +5,7 @@ using UnityEngine;
 [CustomEditor(typeof(LevelEditor))]
 public partial class LevelEditorInspector : Editor
 {
-    public static string versionName = "0.1b";
+    public static string versionName = "0.1c";
 
 
     private LevelEditor editor;
@@ -167,6 +167,8 @@ public partial class LevelEditorInspector : Editor
                 SelectedObjectType.Obstacle => "obstacles",
                 SelectedObjectType.Message => "messages",
                 SelectedObjectType.TriggerObject => "triggerObjects",
+                SelectedObjectType.ArrowTrap => "newArrowTraps",
+                SelectedObjectType.Gate => "gates",
 
                 _ => null
             };
@@ -194,12 +196,19 @@ public partial class LevelEditorInspector : Editor
                             case SelectedObjectType.Obstacle: InspectObstacle(itemProp); break;
                             case SelectedObjectType.Message: InspectMessage(itemProp); break;
                             case SelectedObjectType.TriggerObject: InspectTriggerObject(itemProp); break;
+                            case SelectedObjectType.Gate: InspectGate(itemProp); break;
+                            case SelectedObjectType.ArrowTrap: InspectArrowTrap(itemProp); break;
 
                         }
 
                         EditorGUILayout.EndVertical();
                     }
                     dataCopySO.ApplyModifiedProperties();
+                    if(editor.selectedObjectType == SelectedObjectType.TriggerObject)
+                    {
+                        editor.UpdateLinks();
+                    }
+
                 }
 
 
@@ -246,6 +255,14 @@ public partial class LevelEditorInspector : Editor
     }
 
     private void InspectMessage(SerializedProperty item)
+    {
+        EditorGUILayout.PropertyField(item, GUIContent.none);
+    }
+    private void InspectArrowTrap(SerializedProperty item)
+    {
+        EditorGUILayout.PropertyField(item, GUIContent.none);
+    }
+    private void InspectGate(SerializedProperty item)
     {
         EditorGUILayout.PropertyField(item, GUIContent.none);
     }

@@ -22,7 +22,7 @@ public class ArrowTrapEntity : MonoBehaviour, ITriggerable
     private float timer = 0;
     private void Update()
     {
-        if (!armed)
+        if (!armed && config.canRearm)
         {
             timer += Time.deltaTime;
             if (timer > 1f)
@@ -44,6 +44,7 @@ public class ArrowTrapEntity : MonoBehaviour, ITriggerable
 
     public void Trigger()
     {
+
         if (armed) {
             armed = false;
             //Debug.Log($"ARROW SPAWNED BY {gameObject.name}");

@@ -91,7 +91,7 @@ public partial class LevelEditorInspector
     {
         Vector3 center = GridUtils.CenterXZ(cell) + LevelGlobalSettings.cellSize * Vector3.up * 0.5f;
         float offsetfromCenter = 0.3f;
-        float handleSize = 0.25f;
+        float handleSize = 0.15f;
 
         Handles.color = Color.blue;
 
@@ -160,6 +160,20 @@ public partial class LevelEditorInspector
                         new GUIContent($"[{i}] TriggerObject - {triggerObject.type}"),
                         false,
                         () => editor.ResolveConflictedSelection(triggerObject)
+                    );
+                    break;
+                case ArrowTrapConfig arrowtrap:
+                    menu.AddItem(
+                        new GUIContent($"[{i}] ArrowTrap - {arrowtrap.triggerKey}"),
+                        false,
+                        () => editor.ResolveConflictedSelection(arrowtrap)
+                    );
+                    break;
+                case GateConfig gate:
+                    menu.AddItem(
+                        new GUIContent($"[{i}] TriggerObject - {gate.triggerKey}"),
+                        false,
+                        () => editor.ResolveConflictedSelection(gate)
                     );
                     break;
             }

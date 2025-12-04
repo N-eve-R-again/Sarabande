@@ -77,9 +77,9 @@ MonoBehaviour:
   - cell: {x: 1, y: 3}
     type: 0
     thinWallDirection: 0
-  - cell: {x: 5, y: 1}
+  - cell: {x: 6, y: 1}
     type: 1
-    thinWallDirection: 1
+    thinWallDirection: 3
   - cell: {x: 3, y: 1}
     type: 1
     thinWallDirection: 1
@@ -91,68 +91,73 @@ MonoBehaviour:
     triggerKeys:
     - arrowTrap_0
     cell: {x: 5, y: 5}
-    attachedTo: 0
-    rearmParameter:
-      rearmType: 0
-      timeToRearm: 0
+    attachedTo: 3
+    rearmType: 0
+    timeToRearm: 0
   - type: 1
     triggerKeys:
     - arrowTrap_1
     cell: {x: 0, y: 2}
     attachedTo: 0
-    rearmParameter:
-      rearmType: 0
-      timeToRearm: 0
+    rearmType: 0
+    timeToRearm: 0
   - type: 1
     triggerKeys:
     - arrowTrap_2
     cell: {x: 1, y: 0}
     attachedTo: 0
-    rearmParameter:
-      rearmType: 0
-      timeToRearm: 0
+    rearmType: 0
+    timeToRearm: 0
   - type: 1
     triggerKeys:
     - arrowTrap_3
     cell: {x: 2, y: 2}
     attachedTo: 0
-    rearmParameter:
-      rearmType: 0
-      timeToRearm: 0
+    rearmType: 0
+    timeToRearm: 0
   - type: 1
     triggerKeys:
     - arrowTrap_4
     cell: {x: 2, y: 0}
     attachedTo: 0
-    rearmParameter:
-      rearmType: 0
-      timeToRearm: 0
+    rearmType: 0
+    timeToRearm: 0
   - type: 1
     triggerKeys:
     - arrowTrap_5
     cell: {x: 4, y: 1}
     attachedTo: 0
-    rearmParameter:
-      rearmType: 0
-      timeToRearm: 0
+    rearmType: 0
+    timeToRearm: 0
   - type: 1
     triggerKeys:
     - arrowTrap_6
     cell: {x: 5, y: 1}
     attachedTo: 0
-    rearmParameter:
-      rearmType: 0
-      timeToRearm: 0
+    rearmType: 0
+    timeToRearm: 0
   - type: 1
     triggerKeys:
     - arrowTrap_7
     cell: {x: 7, y: 1}
     attachedTo: 0
-    rearmParameter:
-      rearmType: 0
-      timeToRearm: 0
+    rearmType: 0
+    timeToRearm: 0
+  - type: 2
+    triggerKeys:
+    - door0
+    cell: {x: 4, y: 7}
+    attachedTo: 2
+    rearmType: 1
+    timeToRearm: 0
   fakeWalls:
   - {x: 0, y: 5}
+  gates:
+  - type: 1
+    direction: 3
+    triggerKey: door0
+    cell: {x: 1, y: 4}
+    timer: 4
   heroSpawnConfig:
     spawnCell: {x: 3, y: 7}
     spawnDirection: 0

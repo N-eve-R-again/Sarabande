@@ -109,7 +109,7 @@ namespace Sarabande.Gates
             {
                 var spec = levelData.gridGates[i];
                 var a = new Vector2Int(spec.cell.x, spec.cell.z);
-                var b = a + DirToVec(spec.side);
+                var b = a + DirToVec2(spec.side);
 
                 // Visuel: mince "barre" posée AU MILIEU de l’arête A-B
                 Vector3 edgeMidpointWorld = (Center(a, cellSize) + Center(b, cellSize)) * 0.5f;

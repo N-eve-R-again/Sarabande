@@ -22,6 +22,13 @@ namespace Sarabande.Core
             float z = (cell.y + 0.5f) * LevelGlobalSettings.cellSize;
             return new Vector3(x, 0f, z);
         }
+        public static Vector3 CenterInCell(Vector2Int cell)
+        {
+            float x = (cell.x + 0.5f) * LevelGlobalSettings.cellSize;
+            float y = (0.5f) * LevelGlobalSettings.cellSize;
+            float z = (cell.y + 0.5f) * LevelGlobalSettings.cellSize;
+            return new Vector3(x, y, z);
+        }
 
         public static CardinalDirection GetCardinalDirection(GridCoord coord)
         {
@@ -57,13 +64,22 @@ namespace Sarabande.Core
         }
 
         // --- Directions ---
-        public static Vector2Int DirToVec(CardinalDirection d) => d switch
+        public static Vector2Int DirToVec2(CardinalDirection d) => d switch
         {
             CardinalDirection.North => Vector2Int.up,
             CardinalDirection.East => Vector2Int.right,
             CardinalDirection.South => Vector2Int.down,
             CardinalDirection.West => Vector2Int.left,
             _ => Vector2Int.zero
+        };
+
+        public static Vector3 DirToVec3(CardinalDirection d) => d switch
+        {
+            CardinalDirection.North => Vector3.forward,
+            CardinalDirection.East => Vector3.right,
+            CardinalDirection.South => Vector3.back,
+            CardinalDirection.West => Vector3.left,
+            _ => Vector3.zero
         };
 
         public static Vector3 DirToWorld(CardinalDirection d) => d switch
@@ -94,7 +110,7 @@ namespace Sarabande.Core
         }
 
         public static (Vector2Int a, Vector2Int b) EdgeOf(Vector2Int a, CardinalDirection side)
-            => NormalizeEdge(a, a + DirToVec(side));
+            => NormalizeEdge(a, a + DirToVec2(side));
 
         public static bool IsAdjacentCardinal(Vector2Int a, Vector2Int b)
             => Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) == 1;

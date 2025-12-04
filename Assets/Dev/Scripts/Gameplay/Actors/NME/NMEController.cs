@@ -918,7 +918,7 @@ namespace Sarabande.NME
         public void AddDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
         {
             EnsureSets();
-            _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec(side)));
+            _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec2(side)));
         }
         public void RemoveDynamicEdgeBlock(Vector2Int a, Vector2Int b)
         {
@@ -928,7 +928,7 @@ namespace Sarabande.NME
         public void RemoveDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
         {
             EnsureSets();
-            _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec(side)));
+            _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec2(side)));
         }
 
         // ?????????????????????????????????????????????????????????????????????????????

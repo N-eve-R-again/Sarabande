@@ -7,7 +7,7 @@ public class GateVisual : MonoBehaviour
     [SerializeField] Transform pivot;
     private bool up = true;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void InitVisual(CardinalDirection dir)
+    public void InitVisual(CardinalDirection dir)
     {
         SetRotation(dir);
     }

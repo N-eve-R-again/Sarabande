@@ -108,87 +108,16 @@ namespace Sarabande.Doors
             _parent = new GameObject("TimedDoors").transform;
             _parent.SetParent(transform, false);
 
-            Build();
+            //Build();
         }
 
-        // ?????????????????????????????????????????????????????????????????????????????
-        // Build & visuals
-        // ?????????????????????????????????????????????????????????????????????????????
 
-        /// <summary>
-        /// Construit toutes les portes à partir du LevelData et applique l’état initial (FERMÉ).
-        /// </summary>
-        private void Build()
-        {
-            _doors.Clear();
-            if (levelData.timedDoors == null) return;
-
-            foreach (var spec in levelData.timedDoors)
-            {
-                var cell = new Vector2Int(spec.cell.x, spec.cell.z);
-
-                // Visuel “bouchon fermé”
-                var blockerGO = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                blockerGO.name = $"Door_{cell.x}_{cell.y}";
-                blockerGO.transform.SetParent(_parent, false);
-
-                Vector3 cellCenterWorld = Center(cell, cellSize);
-                blockerGO.transform.position = new Vector3(cellCenterWorld.x, wallHeight * 0.5f, cellCenterWorld.z);
-                blockerGO.transform.localScale = new Vector3(cellSize, wallHeight, cellSize);
-
-                // matériau, layer, collider
-                var meshRenderer = blockerGO.GetComponent<MeshRenderer>();
-                if (meshRenderer)
-                {
-                    meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    meshRenderer.receiveShadows = false;
-                    if (doorMaterial) meshRenderer.sharedMaterial = doorMaterial;
-                }
-                int obstaclesLayer = LayerMask.NameToLayer(obstaclesLayerName);
-                if (obstaclesLayer != -1) blockerGO.layer = obstaclesLayer;
-
-                var doorRuntime = new DoorRuntime
-                {
-                    index = _doors.Count,
-                    cell = cell,
-                    baseOpenSeconds = Mathf.Max(0.1f, spec.openSeconds),
-                    state = DoorState.Closed,
-                    blockerGO = blockerGO,
-                    timerCo = null,
-                    tickCo = null
-                };
-                _doors.Add(doorRuntime);
-
-                SetBlockerVisible(doorRuntime, true);   // affiche le "bouchon" + layer Obstacles
-                AddDynamicBlock(doorRuntime.cell);      // BLOQUE la case côté Hero/NME
-            }
-        }
-
-        // ?????????????????????????????????????????????????????????????????????????????
-        // API publique (appelée par les leviers/routers)
-        // ?????????????????????????????????????????????????????????????????????????????
 
         /// <summary>
         /// Bascule l’état d’une porte par index.
         /// - Closed ? Open (avec timer)
         /// - Open / OpeningTimer ? fermeture immédiate
         /// </summary>
-        public void ToggleDoor(int doorIndex)
-        {
-            if (doorIndex < 0 || doorIndex >= _doors.Count) return;
-            var d = _doors[doorIndex];
-            switch (d.state)
-            {
-                case DoorState.Closed:
-                    OpenDoor(doorIndex, d.baseOpenSeconds);
-                    break;
-                case DoorState.Open:
-                case DoorState.OpeningTimer:
-                    // Fermeture immédiate
-                    ForceClose(doorIndex);
-                    break;
-            }
-        }
 
         /// <summary>
         /// Ouvre la porte pendant <paramref name="seconds"/> secondes.
@@ -201,173 +130,13 @@ namespace Sarabande.Doors
             if (doorIndex < 0 || doorIndex >= _doors.Count) return;
             var d = _doors[doorIndex];
 
-            // Déjà en timer ? refresh timer + tic-tac
-            if (d.state == DoorState.OpeningTimer && d.timerCo != null)
-            {
-                StopCoroutine(d.timerCo);
-                d.timerCo = StartCoroutine(OpenTimerRoutine(d, seconds));
-                StartTickFor(d, seconds);
-                return;
-            }
-            // Déjà ouvert sans timer ? passe en OpeningTimer (sans woosh, mais avec tick)
-            if (d.state == DoorState.Open)
-            {
-                d.timerCo = StartCoroutine(OpenTimerRoutine(d, seconds));
-                d.state = DoorState.OpeningTimer;
-                StartTickFor(d, seconds);
-                return;
-            }
-
-            // Fermée ? OUVERT
-            d.state = DoorState.OpeningTimer;
-            SetBlockerVisible(d, false);
             RemoveDynamicBlock(d.cell);  // autorise le passage
 
-            // AUDIO
-            PlayWooshOpen(d);
-            StartTickFor(d, seconds);
-
-            d.timerCo = StartCoroutine(OpenTimerRoutine(d, seconds));
+            //d.timerCo = StartCoroutine(OpenTimerRoutine(d, seconds));
             DoorOpened?.Invoke(d.index);
         }
 
-        /// <summary>
-        /// Force la fermeture immédiate (coupe timer + ticks) puis tente de refermer
-        /// ou de différer la fermeture si un acteur occupe/entre dans la cellule.
-        /// </summary>
-        public void ForceClose(int doorIndex)
-        {
-            if (doorIndex < 0 || doorIndex >= _doors.Count) return;
-            var d = _doors[doorIndex];
-            if (d.timerCo != null) { StopCoroutine(d.timerCo); d.timerCo = null; }
-            StopTickFor(d); // coupe le tic-tac planifié
 
-            TryCloseOrDefer(d);
-        }
-
-        // ?????????????????????????????????????????????????????????????????????????????
-        // Routines & logique d’ouverture/fermeture
-        // ?????????????????????????????????????????????????????????????????????????????
-
-        /// <summary>
-        /// Timer d’ouverture avec “hold open” si un acteur occupe/entre suffisamment dans la cellule.
-        /// </summary>
-        private IEnumerator OpenTimerRoutine(DoorRuntime d, float seconds)
-        {
-            float remainingSeconds = Mathf.Max(0.01f, seconds);
-            while (remainingSeconds > 0f)
-            {
-                remainingSeconds -= Time.deltaTime;
-
-                // Si quelqu’un est “dans” la case (ou en train d’y entrer ? seuil), on prolonge implicitement
-                if (ShouldHoldOpen(d.cell))
-                    remainingSeconds += Time.deltaTime; // repousse d'autant
-
-                yield return null;
-            }
-            d.timerCo = null;
-            TryCloseOrDefer(d);
-        }
-
-        /// <summary>
-        /// Tente de fermer la porte, sinon décale la fermeture jusqu’à libération de la cellule.
-        /// </summary>
-        private void TryCloseOrDefer(DoorRuntime d)
-        {
-            // règle: ne jamais refermer si HÉRO/NME occupe la case ou l'entre >= seuil
-            if (ShouldHoldOpen(d.cell))
-            {
-                // on réessaie dans un court instant
-                d.state = DoorState.OpeningTimer;
-                d.timerCo = StartCoroutine(DeferCloseRoutine(d));
-                return;
-            }
-
-            // fermer
-            SetBlockerVisible(d, true);
-            AddDynamicBlock(d.cell);   // interdit de passer
-            d.state = DoorState.Closed;
-            PlayWooshClose(d);
-            DoorClosed?.Invoke(d.index);
-        }
-
-        /// <summary>
-        /// Attend que la cellule ne soit plus occupée/entrée, puis ferme la porte.
-        /// </summary>
-        private IEnumerator DeferCloseRoutine(DoorRuntime d)
-        {
-            while (ShouldHoldOpen(d.cell))
-                yield return null;
-
-            SetBlockerVisible(d, true);
-            AddDynamicBlock(d.cell);
-            d.state = DoorState.Closed;
-            d.timerCo = null;
-            PlayWooshClose(d);
-            DoorClosed?.Invoke(d.index);
-        }
-
-        /// <summary>
-        /// Règle “hold open” : garde la porte ouverte si un acteur occupe la cellule cible
-        /// ou si son step d’entrée a atteint le seuil <see cref="enterHoldThreshold"/>.
-        /// </summary>
-        private bool ShouldHoldOpen(Vector2Int cell)
-        {
-            if (_hero && OccupiesOrEntering(_hero.IsStepping, _hero.FromCell, _hero.ToCell, _hero.MoveProgress, _hero.GridPos, cell))
-                return true;
-
-            if (_nmes != null)
-            {
-                foreach (var n in _nmes)
-                {
-                    if (!n) continue;
-                    if (OccupiesOrEntering(n.IsStepping, n.FromCell, n.ToCell, n.MoveProgress, n.GridPos, cell))
-                        return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Vrai si l’acteur (mobile ou immobile) occupe déjà la cellule,
-        /// ou s’il est assez engagé dans son step d’entrée (? seuil).
-        /// </summary>
-        private bool OccupiesOrEntering(bool isStepping, Vector2Int from, Vector2Int to, float t, Vector2Int gridPos, Vector2Int cell)
-        {
-            if (!isStepping)
-                return gridPos == cell;
-
-            if (from == cell) return true; // quitte la case => on maintient ouvert
-            if (to == cell && t >= enterHoldThreshold) return true; // entre suffisamment
-            return false;
-        }
-
-        /// <summary>
-        /// Affiche/masque le visuel et active/désactive le blocage de LOS via layer.
-        /// </summary>
-        private void SetBlockerVisible(DoorRuntime d, bool visible)
-        {
-            if (!d.blockerGO) return;
-
-            // Affichage
-            var rendererComponent = d.blockerGO.GetComponent<Renderer>();
-            if (rendererComponent) rendererComponent.enabled = visible;
-
-            // Collision/LOS (le collider existe car on a créé un cube primitif)
-            var colliderComponent = d.blockerGO.GetComponent<Collider>();
-            if (colliderComponent) colliderComponent.enabled = visible;
-
-            // Layer pour la LOS des NME
-            int obstaclesLayer = LayerMask.NameToLayer(obstaclesLayerName);
-            if (visible && obstaclesLayer != -1)
-                d.blockerGO.layer = obstaclesLayer;        // fermé -> bloque LOS
-            else
-                d.blockerGO.layer = LayerMask.NameToLayer("Default"); // ouvert -> ne bloque pas
-        }
-
-        // ?????????????????????????????????????????????????????????????????????????????
-        // Mise à jour des sets de collisions Héros/NME
-        // ?????????????????????????????????????????????????????????????????????????????
 
         private void AddDynamicBlock(Vector2Int cell)
         {
@@ -427,38 +196,12 @@ namespace Sarabande.Doors
         /// <summary>
         /// Lance un “tick” périodique pendant la fenêtre d’ouverture (après un léger délai).
         /// </summary>
-        private void StartTickFor(DoorRuntime d, float seconds)
-        {
-            if (d.tickCo != null) { StopCoroutine(d.tickCo); d.tickCo = null; }
-            if (!tickClip || seconds <= 0f) return;
 
-            d.tickCo = StartCoroutine(TickWindowRoutine(d, seconds));
-        }
 
         /// <summary>
         /// Routine de tick : attend <see cref="tickStartDelay"/>, puis joue un SFX toutes les
         /// <see cref="tickIntervalSeconds"/> (ou longueur du clip si valeur ? 0) jusqu’à la fin de fenêtre.
         /// </summary>
-        private IEnumerator TickWindowRoutine(DoorRuntime d, float seconds)
-        {
-            float initialDelay = Mathf.Max(0f, tickStartDelay);
-            if (initialDelay > 0f) yield return new WaitForSeconds(initialDelay);
-
-            float remaining = Mathf.Max(0f, seconds - initialDelay);
-            if (remaining <= 0f) yield break;
-
-            float interval = (tickIntervalSeconds > 0f) ? tickIntervalSeconds : Mathf.Max(0.01f, tickClip.length);
-            Vector3 sfxPos = Center(d.cell, cellSize) + Vector3.up * 0.05f;
-
-            while (remaining > 0f)
-            {
-                Sarabande.Audio.AudioHub.I?.PlaySFXAt(tickClip, sfxPos, tickVolume, spatialBlend, minDistance, maxDistance);
-                yield return new WaitForSeconds(interval);
-                remaining -= interval;
-            }
-
-            StopTickFor(d);
-        }
 
         /// <summary>Arrête la coroutine de tick si elle est en cours.</summary>
         private void StopTickFor(DoorRuntime d)
@@ -480,54 +223,11 @@ namespace Sarabande.Doors
                 if (d.timerCo != null) { StopCoroutine(d.timerCo); d.timerCo = null; }
                 StopTickFor(d);
 
-                SetBlockerVisible(d, true);
+                //SetBlockerVisible(d, true);
                 d.state = DoorState.Closed;
                 AddDynamicBlock(d.cell);
             }
         }
 
-        // ?????????????????????????????????????????????????????????????????????????????
-        // LevelContext wiring (inchangé)
-        // ?????????????????????????????????????????????????????????????????????????????
-
-        private void AttachContext()
-        {
-            if (!useLevelContext) return;
-
-            if (!levelContext)
-                levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
-
-            if (levelContext != null)
-            {
-                levelContext.LevelDataChanged += HandleContextLevelDataChanged;
-                HandleContextLevelDataChanged(levelContext.LevelData); // init immédiate
-            }
-            else
-            {
-                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
-            }
-        }
-
-        private void DetachContext()
-        {
-            if (levelContext != null)
-                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
-        }
-
-        private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
-        {
-            if (levelData == ld) return;
-            levelData = ld;
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-                UnityEditor.EditorUtility.SetDirty(this);
-#endif
-        }
-
-        private void OnEnable() { AttachContext(); }
-        private void OnDisable() { DetachContext(); }
-#if UNITY_EDITOR
-        private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
-#endif
     }
 }

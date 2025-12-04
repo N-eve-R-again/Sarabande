@@ -50,7 +50,8 @@ namespace Sarabande.Levels
         public List<TriggerObjectConfig> triggerObjects = new List<TriggerObjectConfig>();
         public List<Vector2Int> fakeWalls = new List<Vector2Int>();
 
-
+        [Header("Triggerables")]
+        public List<GateConfig> gates = new List<GateConfig>();
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Spawns & entrée/sortie
@@ -123,6 +124,59 @@ namespace Sarabande.Levels
             }
 
              
+        }
+
+        [ContextMenu("Upgrade Levers")]
+        public void ImportLegacyLevers()
+        {
+            triggerObjects.RemoveAll(buffer =>  // Pour chaque buffer
+            {
+                // Si les conditions sont remplies :
+
+                if (buffer.type == TriggerObjectType.Lever)
+                {
+
+                    return true;  // buffer supprimé
+
+                }
+
+
+                return false;  // buffer gardé et ignoré
+            });
+
+            int i = 0;
+            foreach (var item in levers)
+            {
+                string key = $"door{i}";
+                string[] triggerobjectkey = new string[1]
+                {
+                    key
+                };
+                Vector2Int newcell = item.cell + GridUtils.DirToVec2(item.requireFacing);
+                TriggerObjectConfig temp = new TriggerObjectConfig(TriggerObjectType.Lever, triggerobjectkey, newcell, false, true, 0f, GridUtils.Opposite(item.requireFacing));
+                triggerObjects.Add(temp);
+                i++;
+            }
+        }
+
+        [ContextMenu("Upgrade Door and Gates")]
+        public void ImportLegacyGates()
+        {
+            gates.Clear();
+            int i = 0;
+
+            foreach (var item in timedDoors)
+            {
+                string key = $"door{i}";
+                string[] triggerobjectkey = new string[1]
+                {
+                    key
+                };
+                
+                GateConfig temp = new GateConfig(GateType.Timer, CardinalDirection.West, key, item.cell, item.openSeconds);
+                gates.Add(temp);
+                i++;
+            }
         }
 
         private void OnValidate()
@@ -216,6 +270,7 @@ namespace Sarabande.Levels
             [Min(0)] public int repeatCount = 0;
         }
         [Header("Legacy")]
+        [System.Obsolete]
         [Tooltip("Pièges à flèche : quand on marche sur 'triggerCell', une flèche part de 'startCell' dans 'travelDir'.")]
         public List<ArrowTrapSpec> arrowTraps = new();
 
@@ -328,6 +383,32 @@ namespace Sarabande.Levels
         OneShot,
         CallBack,
         Timer
+    }
+
+    public enum GateType
+    {
+        Timer,
+        OneShot,
+        Toggle
+    }
+
+    [System.Serializable]
+    public class GateConfig
+    {
+        public GateType type;
+        public CardinalDirection direction;
+        public string triggerKey;
+        public Vector2Int cell;
+        public float timer;
+
+        public GateConfig(GateType type, CardinalDirection direction, string triggerKey, Vector2Int cell, float timer)
+        {
+            this.type = type;
+            this.direction = direction;
+            this.triggerKey = triggerKey;
+            this.cell = cell;
+            this.timer = timer;
+        }
     }
 
     [Serializable]
