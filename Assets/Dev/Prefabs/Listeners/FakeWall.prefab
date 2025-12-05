@@ -99,9 +99,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f361d35e018bd7048b8b7e0549503217, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridPosition: {x: 0, y: 0}
-  wallInset: 0.05
-  wallHeight: 0.9
+  wallInset: 0
+  wallHeight: 0.75
   revealed: 0
   alphaOnRevealed: 0.6
   interactsWith:
