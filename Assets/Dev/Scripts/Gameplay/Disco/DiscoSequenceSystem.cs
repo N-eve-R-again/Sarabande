@@ -97,6 +97,7 @@ namespace Sarabande.Disco
 
         private void Start()
         {
+            
             return;
             // Validation retardée pour laisser LevelContext injecter levelData
             /*if (!hero || !visuals || (!levelData && useLevelContext))
@@ -346,7 +347,7 @@ namespace Sarabande.Disco
                 onSequenceFail?.Invoke();
         }
 
-        private void AttachContext()
+        /*private void AttachContext()
         {
             if (!useLevelContext) return;
 
@@ -362,13 +363,13 @@ namespace Sarabande.Disco
             {
                 Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
             }
-        }
+        }*/
 
-        private void DetachContext()
+        /*private void DetachContext()
         {
             if (levelContext != null)
                 levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
-        }
+        }*/
 
         private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
         {
@@ -380,11 +381,8 @@ namespace Sarabande.Disco
 #endif
             // Si besoin: re-init en live (ex.: StopSequence(); visuals.SetAllOff();)
         }
-
-        private void OnEnable() { AttachContext(); }
-        private void OnDisable() { DetachContext(); StopProgress(); }
 #if UNITY_EDITOR
-        private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
+
 #endif
 
         // ?????????????????????????????????????????????????????????????????????????????

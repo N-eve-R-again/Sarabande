@@ -506,51 +506,8 @@ namespace Sarabande.Traps
                 foreach (var n in _nmes) if (n) _lastNmeCell[n] = n.GridPos;
         }
 
-        /// <summary>Abonnement au LevelContext (si présent) + init immédiate.</summary>
-        private void AttachContext()
-        {
-            if (!useLevelContext) return;
-            if (!levelContext) levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
-            if (levelContext != null)
-            {
-                levelContext.LevelDataChanged += HandleContextLevelDataChanged;
-                HandleContextLevelDataChanged(levelContext.LevelData);
-            }
-            else
-            {
-                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
-            }
-        }
+      
 
-        private void DetachContext()
-        {
-            if (levelContext != null)
-                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
-        }
-
-        private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
-        {
-            if (levelData == ld) return;
-            levelData = ld;
-#if UNITY_EDITOR
-            if (!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(this);
-#endif
-        }
-
-        private void OnEnable()
-        {
-            AttachContext();
-            Sarabande.NME.NMESpawnSystem.AfterRebuild += RefreshNMECache;
-        }
-
-        private void OnDisable()
-        {
-            Sarabande.NME.NMESpawnSystem.AfterRebuild -= RefreshNMECache;
-            DetachContext();
-        }
-
-#if UNITY_EDITOR
-        private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
-#endif
+       
     }
 }

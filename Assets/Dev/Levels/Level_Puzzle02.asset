@@ -14,6 +14,142 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 8
   height: 8
+  exit:
+    fromCell:
+      x: 7
+      z: 4
+    direction: 1
+  obstacles:
+  - cell: {x: 7, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 6, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 5, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 4, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 3, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 2, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 1, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 0, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 7, y: 6}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 6, y: 6}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 5, y: 6}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 4, y: 6}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 3, y: 6}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 2, y: 6}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 1, y: 6}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 0, y: 6}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 7, y: 4}
+    type: 1
+    thinWallDirection: 0
+  - cell: {x: 7, y: 3}
+    type: 1
+    thinWallDirection: 0
+  - cell: {x: 0, y: 3}
+    type: 1
+    thinWallDirection: 0
+  - cell: {x: 0, y: 2}
+    type: 1
+    thinWallDirection: 0
+  - cell: {x: 7, y: 1}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 6, y: 1}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 5, y: 1}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 4, y: 1}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 3, y: 1}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 2, y: 1}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 1, y: 1}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 0, y: 1}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 7, y: 0}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 6, y: 0}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 5, y: 0}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 4, y: 0}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 3, y: 0}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 2, y: 0}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 1, y: 0}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 0, y: 0}
+    type: 0
+    thinWallDirection: 0
+  listeners:
+  - rid: 1441731473910005861
+  triggerables:
+  - rid: 1441731473910005862
+  discoSequencesConfigs:
+  - successTriggerKeys:
+    - door0
+    triggerKey: disco0
+    cells:
+    - x: 2
+      z: 3
+    - x: 5
+      z: 4
+    - x: 2
+      z: 4
+    - x: 5
+      z: 3
+    stepSeconds: []
+    defaultStepSeconds: 5
+  heroSpawnConfig:
+    spawnCell: {x: 0, y: 3}
+    spawnDirection: 3
   nonWalkables:
   - x: 0
     z: 0
@@ -107,15 +243,9 @@ MonoBehaviour:
   heroSpawn:
     x: 0
     z: 3
-  nmeSpawn:
-    x: 0
-    z: 0
+  nmeSpawns: []
+  nmeFacings: 
   heroEntry: 3
-  exit:
-    fromCell:
-      x: 7
-      z: 4
-    direction: 1
   passThroughWalls: []
   arrowTraps: []
   timedDoors: []
@@ -143,5 +273,25 @@ MonoBehaviour:
       z: 4
     side: 1
     initiallyOpen: 0
-  triggerPads: []
-  triggerBindings: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 1441731473910005861
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 7, y: 2}
+        triggerKeys:
+        - disco0
+        type: 1
+        attachedTo: 0
+        rearmType: 1
+        timeToRearm: 0
+    - rid: 1441731473910005862
+      type: {class: GateConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 6, y: 4}
+        triggerKey: door0
+        type: 1
+        direction: 1
+        timer: 0
+        startopen: 0

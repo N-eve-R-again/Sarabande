@@ -148,6 +148,17 @@ namespace Sarabande.Levels
         {
             discoSequencesConfigs.Clear();
             int i = 0;
+            foreach (var item in discoStartTiles)
+            {
+                string key = $"disco{i}";
+                string[] triggerobjectkey = new string[1]
+                {
+                    key
+                };
+                TriggerObjectConfig triggerPad = new TriggerObjectConfig(TriggerObjectType.TriggerPad, triggerobjectkey, item, false, true, 1f);
+                listeners.Add(triggerPad);
+            }
+            i = 0;
             foreach (var item in discoSequences)
             {
 

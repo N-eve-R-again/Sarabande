@@ -134,7 +134,7 @@ namespace Sarabande.Player
                 enabled = false;
                 return;
             }
-
+            levelData = levelContext.LevelData;
             moveInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnMove);
             bumpInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnBump);
             leaveInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnLeave);

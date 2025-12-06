@@ -40,7 +40,7 @@ namespace Sarabande.Levels
         [SerializeField] private TriggerableFactory triggerableFactory;
 
         [Header("Debug")]
-        [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
+        [SerializeField, HideInInspector] private LevelData levelData;
 
         private void Awake()
         {
@@ -49,7 +49,7 @@ namespace Sarabande.Levels
                 Debug.LogError("[LevelLoader] LevelData manquant.");
                 return;
             }
-
+            levelData = levelContext.LevelData;
             entitiesManager.Ready(levelData);
 
             staticVisualsFactory.BuildStaticVisuals(levelData); //Walls, ThinWalls, Grid

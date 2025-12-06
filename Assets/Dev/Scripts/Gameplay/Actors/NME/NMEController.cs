@@ -945,7 +945,7 @@ namespace Sarabande.NME
         {
             NoiseSystem.NoiseRaised -= OnNoiseRaised;
             DestroyTelegraphIfAny();
-            DetachContext();
+            //DetachContext();
             Sarabande.NME.NMEOccupancy.Unregister(this);
         }
 
@@ -967,7 +967,7 @@ namespace Sarabande.NME
 
             if (levelContext != null)
             {
-                levelContext.LevelDataChanged += HandleContextLevelDataChanged;
+                //levelContext.LevelDataChanged += HandleContextLevelDataChanged;
                 HandleContextLevelDataChanged(levelContext.LevelData); // init immédiate
             }
             else
@@ -977,11 +977,7 @@ namespace Sarabande.NME
         }
 
         /// <summary>Se désabonne du LevelContext.</summary>
-        private void DetachContext()
-        {
-            if (levelContext != null)
-                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
-        }
+
 
         /// <summary>Réagit au changement de LevelData : en jeu, reset complet.</summary>
         private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)

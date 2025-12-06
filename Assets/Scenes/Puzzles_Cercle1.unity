@@ -799,7 +799,6 @@ GameObject:
   - component: {fileID: 619786950}
   - component: {fileID: 619786945}
   - component: {fileID: 619786954}
-  - component: {fileID: 619786951}
   - component: {fileID: 619786952}
   - component: {fileID: 619786958}
   m_Layer: 0
@@ -879,74 +878,6 @@ MonoBehaviour:
   messages: 
   messagesSpecs: []
   voiceVolume: 0.9
---- !u!114 &619786951
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619786941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2cd51b08f84419047a6178d70e8c6222, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cellSize: 1
-  useLevelContext: 1
-  levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
-  baseMaterial: {fileID: 0}
-  coreMaterial: {fileID: 0}
-  tileSizeScale: 0.9
-  coreSizeScale: 0.55
-  tileThickness: 0.02
-  tileLift: 0.01
-  baseOffColor:
-    r: 0.08
-    g: 0.08
-    b: 0.08
-    a: 1
-  nextIntensity: 0.05
-  onIntensity: 0.1
-  palette:
-  - r: 1
-    g: 0.2
-    b: 0.35
-    a: 1
-  - r: 1
-    g: 0.55
-    b: 0.1
-    a: 1
-  - r: 0.95
-    g: 0.95
-    b: 0.2
-    a: 1
-  - r: 0.1
-    g: 0.85
-    b: 0.25
-    a: 1
-  - r: 0.1
-    g: 0.65
-    b: 1
-    a: 1
-  - r: 0.45
-    g: 0.3
-    b: 1
-    a: 1
-  - r: 1
-    g: 0.2
-    b: 0.8
-    a: 1
-  colorMaterials:
-  - {fileID: 2100000, guid: 087ccdc8f87a39c438d36848ea9fb879, type: 2}
-  - {fileID: 2100000, guid: 726063d4700c75c4eb79bb6d4d79239e, type: 2}
-  - {fileID: 2100000, guid: ca735b96bf322a04b997012259eb0882, type: 2}
-  - {fileID: 2100000, guid: 300a68f4dd7268b4a82501086a4fa798, type: 2}
-  - {fileID: 2100000, guid: 6513214097bf6384da9b28c560d00407, type: 2}
-  - {fileID: 2100000, guid: 6b4ac91b77d76b049a82df4d579e8eb4, type: 2}
-  - {fileID: 2100000, guid: 710b4a882e2c0a741abbce04f8d9a5dc, type: 2}
-  coreFullRelativeToTile: 0.96
-  _parent: {fileID: 0}
 --- !u!114 &619786952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -962,7 +893,7 @@ MonoBehaviour:
   hero: {fileID: 1116510830}
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
+  levelData: {fileID: 11400000, guid: 42ce266242fbb9a4e9fa601a6c1b8077, type: 2}
   sequenceIndex: 0
   autoStartOnPlay: 0
   onSequenceStart:
@@ -1033,7 +964,7 @@ MonoBehaviour:
         m_CallState: 2
       - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Sarabande.Gates.GridGateSystem, Assembly-CSharp
-        m_MethodName: OpenGate
+        m_MethodName: 
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1149,7 +1080,7 @@ MonoBehaviour:
   sequenceIndex: 0
   useLevelContext: 1
   levelContext: {fileID: 619786955}
-  levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
+  levelData: {fileID: 11400000, guid: 42ce266242fbb9a4e9fa601a6c1b8077, type: 2}
   readyMaterial: {fileID: 2100000, guid: 8ec4a79a5fb2fe94d9dc1d0de82ecf57, type: 2}
   activeMaterial: {fileID: 2100000, guid: 34d2daf413916db4aabe22be19f745ce, type: 2}
   tileSizeScale: 0.9
@@ -1168,7 +1099,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cd0e652d4439774f976f77782bdadc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
+  LevelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
 --- !u!114 &619786958
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2279,159 +2210,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1182809344}
   m_CullTransparentMesh: 1
---- !u!1001 &1245709528
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1537606097}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.673
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071067
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -7511558181221131132, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 6a8944905221323458574dc430412740, type: 2}
-    - target: {fileID: 919132149155446097, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_Name
-      value: SM_EnterExit
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
---- !u!1 &1299417520
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1299417521}
-  - component: {fileID: 1299417522}
-  m_Layer: 0
-  m_Name: Sprite
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1299417521
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1299417520}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.8191521, y: 0, z: 0, w: 0.57357645}
-  m_LocalPosition: {x: 0, y: 0.3, z: 0}
-  m_LocalScale: {x: 0.48245615, y: -0.48245615, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1116510832}
-  m_LocalEulerAnglesHint: {x: -110, y: 0, z: 0}
---- !u!212 &1299417522
-SpriteRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1299417520}
-  m_Enabled: 1
-  m_CastShadows: 0
-  m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 0
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 0
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 10
-  m_Sprite: {fileID: 21300000, guid: 2c254fa28acb3b547b35f4caa87b260e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 0
-  m_FlipY: 0
-  m_DrawMode: 0
-  m_Size: {x: 2.28, y: 2.28}
-  m_AdaptiveModeThreshold: 0.5
-  m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
-  m_SpriteSortPoint: 0
---- !u!114 &1352829488
+--- !u!114 &1187133576
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2518,30 +2297,31 @@ MonoBehaviour:
     type: 1
     thinWallDirection: 1
   listeners:
-  - rid: 1441731471894381254
-  - rid: 1441731471894381255
-  - rid: 1441731471894381256
-  - rid: 1441731471894381257
-  - rid: 1441731471894381258
-  - rid: 1441731471894381259
-  - rid: 1441731471894381260
-  - rid: 1441731471894381261
-  - rid: 1441731471894381262
-  - rid: 1441731471894381263
-  - rid: 1441731471894381264
-  - rid: 1441731471894381265
-  - rid: 1441731471894381266
+  - rid: 1441731473910005918
+  - rid: 1441731473910005919
+  - rid: 1441731473910005920
+  - rid: 1441731473910005921
+  - rid: 1441731473910005922
+  - rid: 1441731473910005923
+  - rid: 1441731473910005924
+  - rid: 1441731473910005925
+  - rid: 1441731473910005926
+  - rid: 1441731473910005927
+  - rid: 1441731473910005928
+  - rid: 1441731473910005929
+  - rid: 1441731473910005930
+  - rid: 1441731473910005931
   triggerables:
-  - rid: 1441731471894381267
-  - rid: 1441731471894381268
-  - rid: 1441731471894381269
-  - rid: 1441731471894381270
-  - rid: 1441731471894381271
-  - rid: 1441731471894381272
-  - rid: 1441731471894381273
-  - rid: 1441731471894381274
-  - rid: 1441731471894381275
-  - rid: 1441731471894381276
+  - rid: 1441731473910005932
+  - rid: 1441731473910005933
+  - rid: 1441731473910005934
+  - rid: 1441731473910005935
+  - rid: 1441731473910005936
+  - rid: 1441731473910005937
+  - rid: 1441731473910005938
+  - rid: 1441731473910005939
+  - rid: 1441731473910005940
+  - rid: 1441731473910005941
   discoSequencesConfigs:
   - successTriggerKeys:
     - door1
@@ -2798,18 +2578,17 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 1441731471894381254
+    - rid: 1441731473910005918
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 4, y: 7}
         triggerKeys:
         - door0
-        - disco0
         type: 2
         attachedTo: 2
         rearmType: 1
         timeToRearm: 0
-    - rid: 1441731471894381255
+    - rid: 1441731473910005919
       type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 6}
@@ -2817,7 +2596,7 @@ MonoBehaviour:
         text: "Cet endroit respire... ou plut\xF4t soupire..."
         displaySeconds: 4
         voiceClip: {fileID: 8300000, guid: 21124b32ac434bf4f91102c015b56fe3, type: 3}
-    - rid: 1441731471894381256
+    - rid: 1441731473910005920
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 5, y: 5}
@@ -2827,12 +2606,22 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731471894381257
+    - rid: 1441731473910005921
       type: {class: FakeWallData, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 5}
         triggerKeys: []
-    - rid: 1441731471894381258
+    - rid: 1441731473910005922
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 2, y: 4}
+        triggerKeys:
+        - disco0
+        type: 1
+        attachedTo: 0
+        rearmType: 1
+        timeToRearm: 0
+    - rid: 1441731473910005923
       type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 7, y: 2}
@@ -2840,7 +2629,7 @@ MonoBehaviour:
         text: Tout est affaire de sensation, suivre le rythme et les pulsions.
         displaySeconds: 6
         voiceClip: {fileID: 8300000, guid: 97edbf8a9daad764eadd66ad422e0648, type: 3}
-    - rid: 1441731471894381259
+    - rid: 1441731473910005924
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 2, y: 2}
@@ -2850,7 +2639,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731471894381260
+    - rid: 1441731473910005925
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 2}
@@ -2860,7 +2649,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731471894381261
+    - rid: 1441731473910005926
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 7, y: 1}
@@ -2870,7 +2659,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731471894381262
+    - rid: 1441731473910005927
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 5, y: 1}
@@ -2880,7 +2669,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731471894381263
+    - rid: 1441731473910005928
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 4, y: 1}
@@ -2890,7 +2679,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731471894381264
+    - rid: 1441731473910005929
       type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 1, y: 1}
@@ -2898,7 +2687,7 @@ MonoBehaviour:
         text: "Allez bouge moi ce boule, \xE7a vient du bas..."
         displaySeconds: 4
         voiceClip: {fileID: 8300000, guid: a1221e28227fa5c4598a321b5ee6dcb9, type: 3}
-    - rid: 1441731471894381265
+    - rid: 1441731473910005930
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 2, y: 0}
@@ -2908,7 +2697,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731471894381266
+    - rid: 1441731473910005931
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 1, y: 0}
@@ -2918,7 +2707,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731471894381267
+    - rid: 1441731473910005932
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 5, y: 4}
@@ -2927,7 +2716,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731471894381268
+    - rid: 1441731473910005933
       type: {class: GateConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 1, y: 4}
@@ -2936,7 +2725,7 @@ MonoBehaviour:
         direction: 3
         timer: 4
         startopen: 0
-    - rid: 1441731471894381269
+    - rid: 1441731473910005934
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 7, y: 0}
@@ -2945,7 +2734,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731471894381270
+    - rid: 1441731473910005935
       type: {class: GateConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 7, y: 0}
@@ -2954,7 +2743,7 @@ MonoBehaviour:
         direction: 1
         timer: 0
         startopen: 0
-    - rid: 1441731471894381271
+    - rid: 1441731473910005936
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 5, y: 0}
@@ -2963,7 +2752,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731471894381272
+    - rid: 1441731473910005937
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 4, y: 0}
@@ -2972,7 +2761,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731471894381273
+    - rid: 1441731473910005938
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 2, y: 0}
@@ -2981,7 +2770,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731471894381274
+    - rid: 1441731473910005939
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 2, y: 0}
@@ -2990,7 +2779,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731471894381275
+    - rid: 1441731473910005940
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 1, y: 0}
@@ -2999,7 +2788,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731471894381276
+    - rid: 1441731473910005941
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 0}
@@ -3008,6 +2797,158 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
+--- !u!1001 &1245709528
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1537606097}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.673
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071067
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 6a8944905221323458574dc430412740, type: 2}
+    - target: {fileID: 919132149155446097, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+      propertyPath: m_Name
+      value: SM_EnterExit
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
+--- !u!1 &1299417520
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1299417521}
+  - component: {fileID: 1299417522}
+  m_Layer: 0
+  m_Name: Sprite
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1299417521
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299417520}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.8191521, y: 0, z: 0, w: 0.57357645}
+  m_LocalPosition: {x: 0, y: 0.3, z: 0}
+  m_LocalScale: {x: 0.48245615, y: -0.48245615, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1116510832}
+  m_LocalEulerAnglesHint: {x: -110, y: 0, z: 0}
+--- !u!212 &1299417522
+SpriteRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299417520}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 10
+  m_Sprite: {fileID: 21300000, guid: 2c254fa28acb3b547b35f4caa87b260e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 2.28, y: 2.28}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_MaskInteraction: 0
+  m_SpriteSortPoint: 0
 --- !u!1 &1369825142
 GameObject:
   m_ObjectHideFlags: 0
@@ -3742,14 +3683,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentTool: 2
   levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
-  dataCopy: {fileID: 1352829488}
+  dataCopy: {fileID: 1187133576}
   hotCopyCreated: 1
-  hotCopyModified: 1
-  objectIsSelected: 1
+  hotCopyModified: 0
+  objectIsSelected: 0
   selectedColor: {r: 0, g: 0.025510311, b: 1, a: 0.83137256}
-  selectedObjectType: 2
-  selectedObjectIndex: 0
-  selectedCell: {x: 6, y: 3}
+  selectedObjectType: 3
+  selectedObjectIndex: 3
+  selectedCell: {x: 7, y: 0}
 --- !u!4 &1782864857
 Transform:
   m_ObjectHideFlags: 0

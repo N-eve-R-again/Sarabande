@@ -58,15 +58,12 @@ namespace Sarabande.NME
                 return;
             }
 
-            levelContext.LevelDataChanged += OnLevelDataChanged;
             OnLevelDataChanged(levelContext.LevelData); // init
         }
 
         private void OnDisable()
         {
-            if (levelContext)
-                levelContext.LevelDataChanged -= OnLevelDataChanged;
-
+           
             ClearSpawned(); // nettoyage si le système s’éteint
         }
 
