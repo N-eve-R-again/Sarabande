@@ -50,7 +50,7 @@ namespace Sarabande.Levels
                 return;
             }
 
-            entitiesManager.Ready();
+            entitiesManager.Ready(levelData);
 
             staticVisualsFactory.BuildStaticVisuals(levelData); //Walls, ThinWalls, Grid
             triggerableFactory.BuildTriggerables(levelData);//ArrowTraps, Doors, Disco, Grilles

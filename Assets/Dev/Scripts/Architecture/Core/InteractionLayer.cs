@@ -2,13 +2,13 @@ using System;
 using UnityEngine;
 
 [Serializable]
-public class ListenerInteractionLayer
+public class InteractionLayer
 {
     [SerializeField] private bool NME;
     [SerializeField] private bool Hero;
 
 
-    public ListenerInteractionLayer(bool hero, bool nme)
+    public InteractionLayer(bool hero, bool nme)
     {
         Hero = hero;
         NME = nme;

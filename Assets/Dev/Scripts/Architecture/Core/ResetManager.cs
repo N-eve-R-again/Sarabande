@@ -145,9 +145,6 @@ namespace Sarabande.Core
             if (resettable is Sarabande.Player.HeroController) return 0;
             if (resettable is Sarabande.NME.NMEController) return 0;
 
-            // Priorité 1: systèmes d’arêtes bloquantes et de cheminement.
-            if (resettable is Sarabande.Gates.GridGateSystem) return 1;
-
             // Priorité 2: tout le reste.
             return 2;
         }

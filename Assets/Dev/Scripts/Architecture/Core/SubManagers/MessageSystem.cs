@@ -1,8 +1,7 @@
-using System.Collections.Generic;
-using UnityEngine;
-using Sarabande.Core;
 using Sarabande.Levels;
 using Sarabande.UI;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Sarabande.Messages
 {
@@ -26,6 +25,23 @@ namespace Sarabande.Messages
         [Header("Audio")]
         [SerializeField, Range(0f, 1f)] private float voiceVolume = 0.9f;
         private AudioSource _voice;
+
+        public void SubscribeToEvents()
+        {
+            UIEvents.OnCollectMsgCollectible += Collect;
+            UIEvents.OnRegisterMsgCollectible += Register;
+
+        }
+        public void UnSubscribeToEvents()
+        {
+            UIEvents.OnCollectMsgCollectible -= Collect;
+            UIEvents.OnRegisterMsgCollectible -= Register;
+
+        }
+        private void OnDestroy()
+        {
+            UnSubscribeToEvents();
+        }
 
         // --- Collect ---
         public int Register(MessageConfig spec)

@@ -100,12 +100,6 @@ namespace Sarabande.Player
         // Runtime caches / état (NOMS CONSERVÉS)
         // ?????????????????????????????????????????????????????????????????????????????
 
-        // caches collisions
-        private HashSet<Vector2Int> _blockedCells; // non-walkables
-        private HashSet<(Vector2Int a, Vector2Int b)> _thinBlockers; // murs fins normalisés
-        private HashSet<(Vector2Int a, Vector2Int b)> _dynamicEdgeBlocks = new HashSet<(Vector2Int, Vector2Int)>();
-        private HashSet<Vector2Int> _dynamicBlockCells = new HashSet<Vector2Int>();
-
         private Vector2 _held;                 // dernier input maintenu (x,y)
         private bool _isMoving = false;
         private float _readyAtTime = 0f;       // quand un nouveau step est autorisé
@@ -146,7 +140,6 @@ namespace Sarabande.Player
             leaveInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnLeave);
             intentInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnIntent);
 
-            BuildCollisionSets();
 
             _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             ActorSpawn spawn = levelData.heroSpawnConfig;
@@ -189,8 +182,8 @@ namespace Sarabande.Player
             // Tentative de sortie : autorisée depuis la case/direction d'Exit
             if (IsExitMove(_gridPos, intendedDir))
             {
-                // Si une gate bloque l'arête de sortie, on bump au lieu de sortir
-                if (HasThinWallBetween(_gridPos, targetCell))
+                bool collidedexit = NavigationEvents.QueryCollision(_gridPos, targetCell, actorDirection);
+                if (collidedexit)
                 {
                     StartCoroutine(Bump(intendedDir));
                     return;
@@ -207,15 +200,8 @@ namespace Sarabande.Player
                 return;
             }
 
-            // 2) case mur -> bump
-            if (_blockedCells.Contains(targetCell))
-            {
-                StartCoroutine(Bump(intendedDir));
-                return;
-            }
-
-            // 3) mur fin entre les deux cases -> bump
-            if (HasThinWallBetween(_gridPos, targetCell))
+            bool collided = NavigationEvents.QueryCollision(_gridPos, targetCell, actorDirection);
+            if (collided)
             {
                 StartCoroutine(Bump(intendedDir));
                 return;
@@ -242,17 +228,6 @@ namespace Sarabande.Player
             _held = value.Get<Vector2>();
             CurrentIntentDir = HeldToCardinal(_held, inputDeadzone);
         }
-
-        private void OnEnable() { AttachContext(); }
-        private void OnDisable() { DetachContext(); }
-
-#if UNITY_EDITOR
-        private void OnValidate()
-        {
-            // En édition on (ré)attache le contexte pour garder les refs à jour
-            if (!Application.isPlaying) AttachContext();
-        }
-#endif
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Mouvement & collisions
@@ -443,77 +418,6 @@ namespace Sarabande.Player
             yield return StepTo(_gridPos);
         }
 
-        /// <summary>
-        /// Construit les sets de collisions : cellules bloquées et arêtes fines normalisées.
-        /// </summary>
-        private void BuildCollisionSets()
-        {
-            _blockedCells = new HashSet<Vector2Int>();
-            foreach (var c in levelData.nonWalkables)
-                _blockedCells.Add(new Vector2Int(c.x, c.z));
-
-            if (_dynamicBlockCells != null)
-            {
-                foreach (var c in _dynamicBlockCells)
-                    _blockedCells.Add(c);
-            }
-
-            _thinBlockers = new HashSet<(Vector2Int, Vector2Int)>();
-            foreach (var e in levelData.thinWalls)
-            {
-                var a = new Vector2Int(e.a.x, e.a.z);
-                var b = new Vector2Int(e.b.x, e.b.z);
-                var key = NormalizeEdge(a, b);
-                _thinBlockers.Add(key);
-            }
-        }
-
-        /// <summary>
-        /// Vrai si une arête fine (statique ou dynamique) bloque le passage entre deux cellules.
-        /// </summary>
-        private bool HasThinWallBetween(Vector2Int from, Vector2Int to)
-        {
-            var key = NormalizeEdge(from, to);
-            bool thin = _thinBlockers.Contains(key);
-            bool dyn = _dynamicEdgeBlocks.Contains(key);
-            return thin || dyn;
-        }
-
-        /// <summary>
-        /// Applique un blocage d’arête dynamique (par coordonnées exactes).
-        /// </summary>
-        public void AddDynamicEdgeBlock(Vector2Int a, Vector2Int b)
-        {
-            EnsureSets();
-            _dynamicEdgeBlocks.Add(NormalizeEdge(a, b));
-        }
-
-        /// <summary>
-        /// Applique un blocage d’arête dynamique (par côté depuis une cellule).
-        /// </summary>
-        public void AddDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
-        {
-            EnsureSets();
-            _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec2(side)));
-        }
-
-        /// <summary>
-        /// Retire un blocage d’arête dynamique (par coordonnées exactes).
-        /// </summary>
-        public void RemoveDynamicEdgeBlock(Vector2Int a, Vector2Int b)
-        {
-            EnsureSets();
-            _dynamicEdgeBlocks.Remove(NormalizeEdge(a, b));
-        }
-
-        /// <summary>
-        /// Retire un blocage d’arête dynamique (par côté depuis une cellule).
-        /// </summary>
-        public void RemoveDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
-        {
-            EnsureSets();
-            _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec2(side)));
-        }
 
         /// <summary>
         /// Autorisation d’entrer dans la cellule cible selon l’état des NME (réservations/chevauchements).
@@ -598,43 +502,11 @@ namespace Sarabande.Player
         /// </summary>
         private bool IsExitMove(Vector2Int from, Vector2Int dir)
         {
-            var exit = levelData;
-            var exitCell = new Vector2Int(exit.exit.fromCell.x, exit.exit.fromCell.z);
-            return from == exitCell && dir == DirToVec2(exit.exit.direction);
+            var exit = levelData.exit;
+            var exitCell = new Vector2Int(exit.fromCell.x, exit.fromCell.z);
+            return from == exitCell && dir == DirToVec2(exit.direction);
         }
 
-        // ?????????????????????????????????????????????????????????????????????????????
-        // Gestion des blocs dynamiques (cellules)
-        // ?????????????????????????????????????????????????????????????????????????????
-
-        /// <summary>Assure l’existence des set de collisions (si appelés très tôt).</summary>
-        private void EnsureSets()
-        {
-            if (_blockedCells == null) BuildCollisionSets();
-        }
-
-        /// <summary>Ajoute une cellule bloquante dynamique.</summary>
-        public void AddDynamicBlockCell(Vector2Int c)
-        {
-            EnsureSets();
-            _dynamicBlockCells.Add(c);
-            _blockedCells.Add(c); // utile immédiatement sans rebuild complet
-        }
-
-        /// <summary>Retire une cellule bloquante dynamique (ne retire pas un blocage statique).</summary>
-        public void RemoveDynamicBlockCell(Vector2Int c)
-        {
-            EnsureSets();
-            _dynamicBlockCells.Remove(c);
-
-            // Si c'était un blocage purement dynamique, on le retire de _blockedCells.
-            // S'il existe aussi en nonWalkables, on le laisse.
-            bool isStatic = false;
-            foreach (var gc in levelData.nonWalkables)
-                if (gc.x == c.x && gc.z == c.y) { isStatic = true; break; }
-
-            if (!isStatic) _blockedCells.Remove(c);
-        }
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Reset (IResettable)
@@ -654,13 +526,6 @@ namespace Sarabande.Player
             _isMoving = false;
             _readyAtTime = 0f;
 
-            // 1) VIDER d’abord les dynamiques (cells + edges)
-            _dynamicBlockCells.Clear();
-            _dynamicEdgeBlocks.Clear();
-
-            // 2) Puis reconstruire les sets statiques à partir du LevelData
-            BuildCollisionSets();
-
             // 3) (la GridGateSystem & TimedDoorSystem vont réinjecter leurs verrous juste après leur propre Reset)
             _gridPos = new Vector2Int(levelData.heroSpawn.x, levelData.heroSpawn.z);
             var spawnCenter = Center(_gridPos, cellSize);
@@ -671,54 +536,5 @@ namespace Sarabande.Player
             StartCoroutine(SpawnInFromEdge());
         }
 
-        // ?????????????????????????????????????????????????????????????????????????????
-        // LevelContext wiring
-        // ?????????????????????????????????????????????????????????????????????????????
-
-        /// <summary>
-        /// S’abonne au LevelContext (si utilisé) pour suivre les changements de LevelData.
-        /// </summary>
-        private void AttachContext()
-        {
-            if (!useLevelContext) return;
-
-            if (!levelContext)
-                levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
-
-            if (levelContext != null)
-            {
-                levelContext.LevelDataChanged += HandleContextLevelDataChanged;
-                HandleContextLevelDataChanged(levelContext.LevelData); // init immédiate
-            }
-            else
-            {
-                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
-            }
-        }
-
-        /// <summary>Se désabonne du LevelContext.</summary>
-        private void DetachContext()
-        {
-            if (levelContext != null)
-                levelContext.LevelDataChanged -= HandleContextLevelDataChanged;
-        }
-
-        /// <summary>
-        /// Callback déclenchée lors d’un changement de LevelData dans le LevelContext.
-        /// </summary>
-        private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
-        {
-            if (levelData == ld) return;
-            levelData = ld;
-
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-                UnityEditor.EditorUtility.SetDirty(this);
-#endif
-
-            // En jeu : se replacer sur le spawn du nouveau niveau
-            if (Application.isPlaying && isActiveAndEnabled && levelData != null)
-                ResetToInitial();
-        }
     }
 }

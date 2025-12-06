@@ -680,11 +680,11 @@ namespace Sarabande.NME
 
             _dynamicEdgeBlocks.Clear();
 
-            // Important : réappliquer les grilles fermées au NME fraîchement reset
+            /*// Important : réappliquer les grilles fermées au NME fraîchement reset
             var gateSys = FindFirstObjectByType<Sarabande.Gates.GridGateSystem>(FindObjectsInactive.Include);
             if (gateSys != null)
                 gateSys.ReapplyBlocksTo(this);
-
+            */
             Vector2Int spawnCell;
             if (_spawnOverrideCell.HasValue)
             {

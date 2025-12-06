@@ -11,7 +11,7 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
         WaitingRearm
     }
 
-    [SerializeField] private ListenerInteractionLayer interactsWith;
+    [SerializeField] private InteractionLayer interactsWith;
 
     [SerializeField] private TriggerObjectConfig config;
     [SerializeField] private TriggerPadVisual visual;
@@ -23,7 +23,7 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
     [SerializeField] private float timer;
 
     //References de l'interface
-    ListenerInteractionLayer IListener.interactionLayer => interactsWith;
+    InteractionLayer IListener.interactionLayer => interactsWith;
     bool IListenerWithCallback.wantsCallback => needsCallback;
 
     public void Init(TriggerObjectConfig _config)

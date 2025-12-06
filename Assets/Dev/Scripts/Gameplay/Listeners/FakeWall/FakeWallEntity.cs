@@ -12,8 +12,8 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
     [SerializeField] private bool revealed = false;
     [SerializeField] private float alphaOnRevealed = 0.5f;
 
-    [SerializeField] private ListenerInteractionLayer interactsWith;
-    public ListenerInteractionLayer interactionLayer => interactsWith;
+    [SerializeField] private InteractionLayer interactsWith;
+    public InteractionLayer interactionLayer => interactsWith;
 
     public void Init(FakeWallData _config)
     {

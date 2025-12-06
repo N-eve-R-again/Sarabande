@@ -1,25 +1,30 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class InteractionSystem
 {
     private Dictionary<Vector2Int, IListener> listeners = new();
     private Dictionary<string, ITriggerable> triggerables = new();
 
-    private Dictionary<IListener, ITriggerable> triggerLinks = new();
+    private Dictionary<IListener, List<ITriggerable>> triggerLinks = new();
     private Dictionary<ITriggerable, IListenerWithCallback> callbackLinks = new();
 
-    [Header("Buffers")]
-    [SerializeField]private List<InteractionBuffer> interactions = new List<InteractionBuffer>();
+    private Dictionary<Vector2Int,ISensorExtension> sensorExtensions = new();
+    
+    private List<InteractionBuffer> interactions = new List<InteractionBuffer>();
 
     public void SubscribeToEvents()
     {
         RegistryEvents.OnListenerRegistry += RegisterListener;
         RegistryEvents.OnTryTriggerLinkRegistry += RegisterTriggerLink;
         RegistryEvents.OnTriggerableRegistry += RegisterTriggerable;
+        RegistryEvents.OnSensorRegistry += RegisterSensor;
 
         LevelEntityEvents.OnListenerTryCallTrigger += SendEventToTriggerable;
         LevelEntityEvents.OnTriggerableCallback += SendTriggerableCallback;
+
+        LevelEntityEvents.OnSignalSent += SendSignal;
 
         ActorEvents.OnActorMove += ActorMoved;
     }
@@ -29,9 +34,12 @@ public class InteractionSystem
         RegistryEvents.OnListenerRegistry -= RegisterListener;
         RegistryEvents.OnTryTriggerLinkRegistry -= RegisterTriggerLink;
         RegistryEvents.OnTriggerableRegistry -= RegisterTriggerable;
+        RegistryEvents.OnSensorRegistry -= RegisterSensor;
 
         LevelEntityEvents.OnListenerTryCallTrigger -= SendEventToTriggerable;
         LevelEntityEvents.OnTriggerableCallback -= SendTriggerableCallback;
+
+        LevelEntityEvents.OnSignalSent -= SendSignal;
 
         ActorEvents.OnActorMove -= ActorMoved;
     }
@@ -41,6 +49,8 @@ public class InteractionSystem
         UnSubscribeToEvents();
     }
 
+    private void RegisterSensor(Vector2Int cell, ISensorExtension sensor) => sensorExtensions[cell] = sensor;
+
     private void RegisterListener(Vector2Int _gridCoord, IListener _listener) => listeners[_gridCoord] = _listener;
 
     private void RegisterTriggerable(string _triggerableKey, ITriggerable _triggerable) => triggerables[_triggerableKey] = (_triggerable);
@@ -49,9 +59,14 @@ public class InteractionSystem
     {
         if (triggerables.TryGetValue(triggerKey, out ITriggerable triggerable))
         {
-            triggerLinks[_listener] = triggerable;
+            if (!triggerLinks.ContainsKey(_listener))
+            {
+                triggerLinks[_listener] = new List<ITriggerable>();
+            }
 
-            if(_listener is IListenerWithCallback cbListener && cbListener.wantsCallback)
+            triggerLinks[_listener].Add(triggerable);
+
+            if (_listener is IListenerWithCallback cbListener && cbListener.wantsCallback)
             {
                 callbackLinks[triggerable] = cbListener;
             }
@@ -62,12 +77,30 @@ public class InteractionSystem
             Debug.LogError($"Link by {_listener.ToString()} with key {triggerKey} points to nothing");
         }
     }
+    private void SendSignal(ISignalerEnxtension signaler)
+    {
+        foreach (var signal in signaler.triggerableKeys)
+        {
+            if(triggerables.TryGetValue(signal, out ITriggerable triggerable))
+            {
+                triggerable.Trigger();
+            }
+            else
+            {
+                Debug.Log($"Signaler {signaler} was unsuccessful with signal - {signal}");
+            }
+        }
+    }
+
 
     private void SendEventToTriggerable(IListener _listener)
     {
-        if (triggerLinks.TryGetValue(_listener, out ITriggerable _target))
+        if (triggerLinks.TryGetValue(_listener, out List<ITriggerable> _targets))
         {
-            _target.Trigger();
+            foreach (var target in _targets)
+            {
+                target.Trigger();
+            }
         }
         else
         {
@@ -86,15 +119,8 @@ public class InteractionSystem
 
     private void ActorMoved(IActor _actor, ActorInteractionData _interaction)
     {
-        /*switch (_interactionType)
-        {
-            case ActorInteractionType.OnMove: Debug.Log($"Interaction Move at {_eventPos}"); break;
-            case ActorInteractionType.OnBump: Debug.Log($"Interaction Bump at {_eventPos}"); break;
-            case ActorInteractionType.OnIntent: Debug.Log($"Interaction Intent at {_eventPos}");  break;
-            case ActorInteractionType.OnLeave: Debug.Log($"Interaction Leave at {_eventPos}");  break;
 
-        }
-        */
+        TrySensors(_interaction.cell, _interaction);
 
         if(_interaction.interactionType != ActorInteractionType.OnLeave)// OnMove, OnIntent, OnBump
         {
@@ -112,6 +138,25 @@ public class InteractionSystem
             CheckForBufferedEvents(_interaction.cell, _actor);//On regarde si on a des ExitEvents à trigger
         }
 
+    }
+
+    private void TrySensors(Vector2Int _eventPos, ActorInteractionData data)
+    {
+        if (sensorExtensions.TryGetValue(_eventPos, out ISensorExtension sensor)) //est ce que j'ai un listener à _eventPos
+        {
+            if (!sensor.IsActive) return;
+            if (!sensor.interactionLayer.CanInteractWith(data.actorType)) return;
+
+            if(data.interactionType == ActorInteractionType.OnLeave)
+            {
+                sensor.OnExit(); return;
+            }
+
+            if (data.interactionType == ActorInteractionType.OnMove)
+            {
+                sensor.OnEnter(); return;
+            }
+        }
     }
 
     private (IListener,bool) TryTriggerInteractAt(Vector2Int _eventPos, ActorInteractionData _interaction)

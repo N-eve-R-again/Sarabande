@@ -54,6 +54,7 @@ namespace Sarabande.Levels
         [Header("Triggerables")]
         [SerializeReference] public List<TriggerableData> triggerables = new List<TriggerableData>();
 
+        [SerializeField] public List<DiscoSequenceConfig> discoSequencesConfigs = new List<DiscoSequenceConfig>();
         // ?????????????????????????????????????????????????????????????????????????????
         // Spawns & entrée/sortie
         // ?????????????????????????????????????????????????????????????????????????????
@@ -64,14 +65,14 @@ namespace Sarabande.Levels
         [System.Obsolete]
         [Header("Legacy Obstacles")]
         [Tooltip("Cases non-walkable (murs pleins). Coordonnées sur la grille (x,z).")]
-        public List<GridCoord> nonWalkables = new();
+        [HideInInspector] public List<GridCoord> nonWalkables = new();
 
         [System.Obsolete]
         [Tooltip("Murs fins entre deux cases adjacentes (arêtes bloquantes).")]
-        public List<EdgeBlocker> thinWalls = new();
+        [HideInInspector] public List<EdgeBlocker> thinWalls = new();
 
         [Header("Legacy Spawns")]
-        public GridCoord heroSpawn;  // D8 = (3,7)
+        [HideInInspector] public GridCoord heroSpawn;  // D8 = (3,7)
 
         [Tooltip("Liste des cellules de spawn des ennemis. Vide = 0 ennemi.")]
         public List<GridCoord> nmeSpawns = new();
@@ -81,6 +82,7 @@ namespace Sarabande.Levels
 
         [Header("Legacy Entry")]
         [Tooltip("Depuis quel bord le héros arrive pour son entry step.")]
+        [HideInInspector]
         public CardinalDirection heroEntry = CardinalDirection.North;
 
         // Exemple : fromCell = H1, direction = East
@@ -92,7 +94,7 @@ namespace Sarabande.Levels
         [Header("Décor (murs traversables)")]
         [Tooltip("Décor purement visuel : n'arrête ni le Héros/NME ni les flèches, ni la LOS.")]
         [System.Obsolete]
-        public List<GridCoord> passThroughWalls = new();  // ex: A6, etc.
+        [HideInInspector] public List<GridCoord> passThroughWalls = new();  // ex: A6, etc.
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Arrow Traps (proto)
@@ -131,7 +133,7 @@ namespace Sarabande.Levels
             ImportLegacyLevers();
             ImportObstacles();
 
-
+            ImportOldDisco();
             foreach (var item in messages)
             {
                 listeners.Add(item);
@@ -142,7 +144,18 @@ namespace Sarabande.Levels
             }
         }
 
+        private void ImportOldDisco()
+        {
+            discoSequencesConfigs.Clear();
+            int i = 0;
+            foreach (var item in discoSequences)
+            {
 
+                DiscoSequenceConfig config = new DiscoSequenceConfig("disco" + i,new string[0], item.cells,item.stepSeconds,item.defaultStepSeconds);
+                discoSequencesConfigs.Add(config);
+                i++;
+            }
+        }
         private void ImportLegacyLevers()
         {
 
@@ -161,7 +174,7 @@ namespace Sarabande.Levels
             }
         }
 
-        public void ImportLegacyGates()
+        private void ImportLegacyGates()
         {
 
             int i = 0;
@@ -178,14 +191,27 @@ namespace Sarabande.Levels
                 triggerables.Add(temp);
                 i++;
             }
+
+            foreach(var item in gridGates)
+            {
+                string key = $"door{i}";
+                string[] triggerobjectkey = new string[1]
+                {
+                    key
+                };
+
+                GateConfig temp = new GateConfig(GateType.OneShot, item.side, key, item.cell, 0f);
+                triggerables.Add(temp);
+                i++;
+            }
         }
 
-        public void UpdateHeroSpawn()
+        private void UpdateHeroSpawn()
         {
             heroSpawnConfig = new ActorSpawn(heroSpawn,heroEntry);
         }
 
-        public void ImportObstacles()
+        private void ImportObstacles()
         {
             obstacles.Clear();
             foreach (var item in nonWalkables)
@@ -250,7 +276,7 @@ namespace Sarabande.Levels
         [Header("Legacy")]
         [System.Obsolete]
         [Tooltip("Pièges à flèche : quand on marche sur 'triggerCell', une flèche part de 'startCell' dans 'travelDir'.")]
-        public List<ArrowTrapSpec> arrowTraps = new();
+        [HideInInspector] public List<ArrowTrapSpec> arrowTraps = new();
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Timed Doors & Levers
@@ -263,7 +289,7 @@ namespace Sarabande.Levels
             public GridCoord cell;                        // ex: B5
             [Min(0.1f)] public float openSeconds = 3f;    // durée d'ouverture de base
         }
-        public List<TimedDoorSpec> timedDoors = new();
+        [HideInInspector] public List<TimedDoorSpec> timedDoors = new();
 
         [System.Obsolete]
         [System.Serializable]
@@ -273,7 +299,7 @@ namespace Sarabande.Levels
             public CardinalDirection requireFacing = CardinalDirection.North; // direction à pousser
             [Min(0)] public int linkedDoorIndex = 0;     // index dans la liste 'timedDoors'
         }
-        public List<LeverSpec> levers = new();
+        [HideInInspector]public List<LeverSpec> levers = new();
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Messages
@@ -287,9 +313,13 @@ namespace Sarabande.Levels
         // Dalles Disco & Séquences
         // ?????????????????????????????????????????????????????????????????????????????
 
+
+
+
         [Header("Disco Start")]
         [Tooltip("Cases qui déclenchent la séquence Disco quand le Héros y entre.")]
         public List<GridCoord> discoStartTiles = new();
+
 
         [System.Serializable]
         public class DiscoSequenceSpec
@@ -314,12 +344,14 @@ namespace Sarabande.Levels
         // ?????????????????????????????????????????????????????????????????????????????
 
         [System.Serializable]
+        [System.Obsolete]
         public class GridGateSpec
         {
             public GridCoord cell;                 // case A
             public CardinalDirection side;             // bord de A (vers B = A + side)
             public bool initiallyOpen = false;     // fermé par défaut (bloque), sinon déjà ouvert
         }
+        [System.Obsolete]
         public List<GridGateSpec> gridGates = new();
 
         // ?????????????????????????????????????????????????????????????????????????????
@@ -339,6 +371,47 @@ namespace Sarabande.Levels
 
             return copy;
         }
+    }
+
+
+    [System.Serializable]
+    public class DiscoSequenceConfig
+    {
+        public string[] successTriggerKeys = new string[0];
+        public string triggerKey = "undefined";
+
+        [Header("Chemin à fouler (ordre strict)")]
+        public List<GridCoord> cells = new List<GridCoord>();
+
+        [Header("Timers par étape (optionnel)")]
+        public List<float> stepSeconds = new List<float>(); // si la taille ne match pas, utiliser defaultStepSeconds
+
+        [Header("Fallback timing")]
+        public float defaultStepSeconds = 0.8f;
+
+        public DiscoSequenceConfig(string triggerKey,string[] successTriggerKeys, List<GridCoord> cells, List<float> stepSeconds, float defaultStepSeconds)
+        {
+            this.triggerKey = triggerKey;
+            this.successTriggerKeys = successTriggerKeys;
+            this.cells = cells;
+            this.stepSeconds = stepSeconds;
+            this.defaultStepSeconds = defaultStepSeconds;
+        }
+        public DiscoSequenceConfig()
+        {
+            triggerKey = "undefined";
+            successTriggerKeys = new string[0];
+            cells = new List<GridCoord>();
+            stepSeconds = new List<float>();
+
+        }
+    }
+
+    [Serializable]
+    public class DiscoDalleData
+    {
+        Vector2Int cell;
+        float stepSecond;
     }
 
     [System.Serializable]
@@ -454,7 +527,6 @@ namespace Sarabande.Levels
         public string[] triggerKeys = new string[0];
         
     }
-
 
     [System.Serializable]
     public class ArrowTrapConfig : TriggerableData

@@ -18,21 +18,20 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
     [SerializeField] private bool fitToCell = true;              // ajuste la largeur au cellSize
     [SerializeField, Range(0.1f, 2f)] private float spriteScale = 1f; // multiplicateur
 
-    [SerializeField] private ListenerInteractionLayer interactsWith;
-    ListenerInteractionLayer IListener.interactionLayer => interactsWith;
+    [SerializeField] private InteractionLayer interactsWith;
+    InteractionLayer IListener.interactionLayer => interactsWith;
 
 
     public void Init(MessageConfig _specs)
     {
         specs = _specs;
 
-        messageSystem = LEM.I.GetMessageSystem();
-
         ListenerCreationHelper.SetupListenerEntity(this,this,_specs);
 
         SetPosition();
         transform.localScale = SetSize();
-        messageIndex = messageSystem.Register(specs);
+        messageIndex = UIEvents.NotifyRegisterMsgCollectible(specs);
+        if (messageIndex == -1) Debug.Log("Something went wrong in message registry");
 
     }
 
@@ -59,13 +58,14 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
 
     public bool OnInteract(ActorInteractionData _interaction)
     {
+        if (messageIndex == -1) return false;
         if (_interaction.interactionType != ActorInteractionType.OnMove) return false;
 
         if (collected) return false;
 
         collected = true;
         Debug.Log("MESSAGE COLLECTED");
-        messageSystem.Collect(messageIndex);
+        UIEvents.NotifyCollectMsgCollectible(messageIndex);
 
         //animation Collect
         transform.localScale = Vector3.zero;

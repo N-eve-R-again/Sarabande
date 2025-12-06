@@ -1,4 +1,5 @@
 ﻿using Sarabande.Levels;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -67,7 +68,7 @@ public partial class LevelEditorInspector : Editor
 
 
 
-        if (editor.hotCopyCreated == true)
+        if (editor.hotCopyCreated == true && editor.dataCopy != null)
         {
             
             DrawToolBar();
@@ -130,6 +131,7 @@ public partial class LevelEditorInspector : Editor
 
         SerializedProperty dataCopyProp = serializedObject.FindProperty("dataCopy");
         SerializedObject dataCopySO = new SerializedObject(dataCopyProp.objectReferenceValue);
+
         GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
         boxStyle.padding = new RectOffset(10, 4, 10, 4);
 
@@ -142,10 +144,11 @@ public partial class LevelEditorInspector : Editor
 
         SerializedProperty widthLevel = dataCopySO.FindProperty("width");
         SerializedProperty heightlevel = dataCopySO.FindProperty("height");
-
+        SerializedProperty discos = dataCopySO.FindProperty("discoSequencesConfigs");
 
         EditorGUILayout.PropertyField(widthLevel);
         EditorGUILayout.PropertyField(heightlevel);
+        EditorGUILayout.PropertyField(discos);
 
         EditorGUILayout.Space();
         dataCopySO.ApplyModifiedProperties();

@@ -87,29 +87,55 @@ MonoBehaviour:
     type: 1
     thinWallDirection: 1
   listeners:
-  - rid: 1441731444619083952
-  - rid: 1441731444619083953
-  - rid: 1441731444619083954
-  - rid: 1441731444619083955
-  - rid: 1441731444619083956
-  - rid: 1441731444619083957
-  - rid: 1441731444619083958
-  - rid: 1441731444619083959
-  - rid: 1441731444619083960
-  - rid: 1441731444619083961
-  - rid: 1441731444619083962
-  - rid: 1441731444619083963
-  - rid: 1441731444619083964
+  - rid: 1441731471894381254
+  - rid: 1441731471894381255
+  - rid: 1441731471894381256
+  - rid: 1441731471894381257
+  - rid: 1441731471894381258
+  - rid: 1441731471894381259
+  - rid: 1441731471894381260
+  - rid: 1441731471894381261
+  - rid: 1441731471894381262
+  - rid: 1441731471894381263
+  - rid: 1441731471894381264
+  - rid: 1441731471894381265
+  - rid: 1441731471894381266
   triggerables:
-  - rid: 1441731444619083965
-  - rid: 1441731444619083966
-  - rid: 1441731444619083967
-  - rid: 1441731444619083968
-  - rid: 1441731444619083969
-  - rid: 1441731444619083970
-  - rid: 1441731444619083971
-  - rid: 1441731444619083972
-  - rid: 1441731444619083973
+  - rid: 1441731471894381267
+  - rid: 1441731471894381268
+  - rid: 1441731471894381269
+  - rid: 1441731471894381270
+  - rid: 1441731471894381271
+  - rid: 1441731471894381272
+  - rid: 1441731471894381273
+  - rid: 1441731471894381274
+  - rid: 1441731471894381275
+  - rid: 1441731471894381276
+  discoSequencesConfigs:
+  - successTriggerKeys:
+    - door1
+    triggerKey: disco0
+    cells:
+    - x: 0
+      z: 4
+    - x: 1
+      z: 2
+    - x: 4
+      z: 2
+    - x: 4
+      z: 0
+    - x: 5
+      z: 0
+    - x: 6
+      z: 2
+    stepSeconds:
+    - 2
+    - 2
+    - 2
+    - 2.5
+    - 1
+    - 4
+    defaultStepSeconds: 8
   heroSpawnConfig:
     spawnCell: {x: 3, y: 7}
     spawnDirection: 0
@@ -341,17 +367,18 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 1441731444619083952
+    - rid: 1441731471894381254
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 4, y: 7}
         triggerKeys:
         - door0
+        - disco0
         type: 2
         attachedTo: 2
         rearmType: 1
         timeToRearm: 0
-    - rid: 1441731444619083953
+    - rid: 1441731471894381255
       type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 6}
@@ -359,7 +386,7 @@ MonoBehaviour:
         text: "Cet endroit respire... ou plut\xF4t soupire..."
         displaySeconds: 4
         voiceClip: {fileID: 8300000, guid: 21124b32ac434bf4f91102c015b56fe3, type: 3}
-    - rid: 1441731444619083954
+    - rid: 1441731471894381256
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 5, y: 5}
@@ -369,12 +396,12 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731444619083955
+    - rid: 1441731471894381257
       type: {class: FakeWallData, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 5}
         triggerKeys: []
-    - rid: 1441731444619083956
+    - rid: 1441731471894381258
       type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 7, y: 2}
@@ -382,7 +409,7 @@ MonoBehaviour:
         text: Tout est affaire de sensation, suivre le rythme et les pulsions.
         displaySeconds: 6
         voiceClip: {fileID: 8300000, guid: 97edbf8a9daad764eadd66ad422e0648, type: 3}
-    - rid: 1441731444619083957
+    - rid: 1441731471894381259
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 2, y: 2}
@@ -392,7 +419,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731444619083958
+    - rid: 1441731471894381260
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 2}
@@ -402,7 +429,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731444619083959
+    - rid: 1441731471894381261
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 7, y: 1}
@@ -412,7 +439,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731444619083960
+    - rid: 1441731471894381262
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 5, y: 1}
@@ -422,7 +449,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731444619083961
+    - rid: 1441731471894381263
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 4, y: 1}
@@ -432,7 +459,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731444619083962
+    - rid: 1441731471894381264
       type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 1, y: 1}
@@ -440,7 +467,7 @@ MonoBehaviour:
         text: "Allez bouge moi ce boule, \xE7a vient du bas..."
         displaySeconds: 4
         voiceClip: {fileID: 8300000, guid: a1221e28227fa5c4598a321b5ee6dcb9, type: 3}
-    - rid: 1441731444619083963
+    - rid: 1441731471894381265
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 2, y: 0}
@@ -450,7 +477,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731444619083964
+    - rid: 1441731471894381266
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 1, y: 0}
@@ -460,7 +487,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 0
         timeToRearm: 0
-    - rid: 1441731444619083965
+    - rid: 1441731471894381267
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 5, y: 4}
@@ -469,7 +496,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731444619083966
+    - rid: 1441731471894381268
       type: {class: GateConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 1, y: 4}
@@ -478,7 +505,7 @@ MonoBehaviour:
         direction: 3
         timer: 4
         startopen: 0
-    - rid: 1441731444619083967
+    - rid: 1441731471894381269
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 7, y: 0}
@@ -487,7 +514,16 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731444619083968
+    - rid: 1441731471894381270
+      type: {class: GateConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 7, y: 0}
+        triggerKey: door1
+        type: 1
+        direction: 1
+        timer: 0
+        startopen: 0
+    - rid: 1441731471894381271
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 5, y: 0}
@@ -496,7 +532,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731444619083969
+    - rid: 1441731471894381272
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 4, y: 0}
@@ -505,7 +541,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731444619083970
+    - rid: 1441731471894381273
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 2, y: 0}
@@ -514,7 +550,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731444619083971
+    - rid: 1441731471894381274
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 2, y: 0}
@@ -523,7 +559,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731444619083972
+    - rid: 1441731471894381275
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 1, y: 0}
@@ -532,7 +568,7 @@ MonoBehaviour:
         arrowSpeed: 6
         canRearm: 0
         rearmTimeDelay: 0
-    - rid: 1441731444619083973
+    - rid: 1441731471894381276
       type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 0}

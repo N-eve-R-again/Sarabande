@@ -1,7 +1,7 @@
 using Sarabande.Core;
 using Sarabande.Levels;
+using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.Rendering.STP;
 
 public class TriggerableFactory : MonoBehaviour, IClearable
 {
@@ -13,6 +13,8 @@ public class TriggerableFactory : MonoBehaviour, IClearable
     [Header("Prefabs")]
     [SerializeField] private GameObject arrowTrapPrefab;
     [SerializeField] private GameObject gatePrefab;
+    [SerializeField] private GameObject discoSeqPrefab;
+    [SerializeField] private GameObject discoDallePrefab;
 
     [SerializeField] private bool jobDone = false;
     public bool IsJobDone() => jobDone;
@@ -48,14 +50,42 @@ public class TriggerableFactory : MonoBehaviour, IClearable
                 case GateConfig gate:
                     CreateGate(gate);
                     break;
+
+
             }
         }
+
+        foreach (var disco in _levelData.discoSequencesConfigs)
+        {
+            CreateDiscoSeq(disco);
+        }
+
         //arrow traps
         //doors et timed doors
         //grilles
 
         jobDone = true; 
 
+    }
+
+    private void CreateDiscoSeq(DiscoSequenceConfig config)
+    {
+
+        GameObject temp = Instantiate(discoSeqPrefab);
+        temp.name = config.triggerKey;
+        List<DalleDiscoEntity> dalles = new();
+        DiscoSequenceEntity entity = temp.GetComponent<DiscoSequenceEntity>();
+        int i = 0;
+        foreach (var item in config.cells)
+        {
+            GameObject dalleob = Instantiate(discoDallePrefab, temp.transform);
+            dalleob.name = "DalleDisco " + i;
+            DalleDiscoEntity dalle = dalleob.GetComponent<DalleDiscoEntity>();
+            dalle.Init(item, entity);
+            dalles.Add(dalle);
+            i++;
+        }
+        entity.Init(config,dalles);
     }
     private void CreateGate(GateConfig gate)
     {

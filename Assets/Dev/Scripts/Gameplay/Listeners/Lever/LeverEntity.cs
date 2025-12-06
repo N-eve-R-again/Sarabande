@@ -13,13 +13,13 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
     }
     [SerializeField] private LeverState state;
 
-    [SerializeField] private ListenerInteractionLayer interactsWith;
+    [SerializeField] private InteractionLayer interactsWith;
     public TriggerObjectConfig config;
     public LeverVisual visual;
     private float timer;
     public bool needsCallback => config.rearmType == RearmType.CallBack;
 
-    ListenerInteractionLayer IListener.interactionLayer => interactsWith;
+    InteractionLayer IListener.interactionLayer => interactsWith;
     bool IListenerWithCallback.wantsCallback => needsCallback;
 
     public void Init(TriggerObjectConfig _config)

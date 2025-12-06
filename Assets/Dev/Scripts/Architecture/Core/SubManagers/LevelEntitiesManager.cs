@@ -1,4 +1,5 @@
 using Sarabande.Core;
+using Sarabande.Levels;
 using Sarabande.Messages;
 using System;
 using System.Collections.Generic;
@@ -8,41 +9,46 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
 {
 
 
-    private static LevelEntitiesManager Instance;
-    public static LevelEntitiesManager I => Instance;
+    //private static LevelEntitiesManager Instance;
+    //public static LevelEntitiesManager I => Instance;
 
     [Header("SubManagers")]
     [SerializeField] private MessageSystem messageSystem;
     private InteractionSystem interactionSystem;
+    private NavigationManager navigationManager;
 
-    public MessageSystem GetMessageSystem() => messageSystem;
-
-    private void Init()
+    private void Init(LevelData levelData)
     {
         // S'abonner aux events
         interactionSystem = new InteractionSystem();
         interactionSystem.SubscribeToEvents();
+
+        navigationManager = new NavigationManager();
+        navigationManager.SubscribeToEvents();
+
+        navigationManager.BuildCollisionSets(levelData);
+
+        if (messageSystem != null) messageSystem.SubscribeToEvents();
 
         Debug.Log("LEM Subscribed to LevelEntityEvents");
     }
 
     private void OnDisable()
     {
-        if(interactionSystem != null)
-        {
+        if(interactionSystem != null) interactionSystem.UnSubscribeToEvents();
 
-            interactionSystem.UnSubscribeToEvents();
-        }
+        if (navigationManager != null) navigationManager.UnSubscribeToEvents();
 
+        if (messageSystem != null) messageSystem.UnSubscribeToEvents();
 
         Debug.Log("LEM Unsubscribed to LevelEntityEvents");
     }
 
-    public void Ready()
+    public void Ready(LevelData _levelData)
     {
         if(messageSystem == null) throw new MissingReferenceException("MessageSystem");
-        Instance = this;
-        Init();
+        //Instance = this;
+        Init(_levelData);
     }
 
     public void ClearObject()

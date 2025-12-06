@@ -7,6 +7,7 @@ public class GateEntity : MonoBehaviour, ITriggerable
 {
     public string triggerableKey;
     [SerializeField] private GateConfig config;
+    [SerializeField] private ObstacleData obstacleData;
 
     [SerializeField] private GateVisual visual;
     private float timer;
@@ -14,13 +15,14 @@ public class GateEntity : MonoBehaviour, ITriggerable
     public void Init(GateConfig _config, string _name)
     {
         config = _config;
-
+        obstacleData = new ObstacleData(ObstacleData.ObstacleType.ThinWall, config.cell, config.direction);
         visual.InitVisual(config.direction);
         gameObject.name = _name;
         triggerableKey = config.triggerKey;
         transform.position = GridUtils.CenterXZ(config.cell);
         if (config.startopen) OpenDoor();
         RegistryEvents.NotifyTriggerableRegistry(triggerableKey, this);
+        NavigationEvents.NotifyDynamicObstacle(obstacleData);
 
     }
 
@@ -32,6 +34,7 @@ public class GateEntity : MonoBehaviour, ITriggerable
         {
             timer = config.timer;
         }
+        NavigationEvents.NotifyDynamicObstacleModification(config.cell, false);
     }
 
     private void CloseDoor()
@@ -39,6 +42,7 @@ public class GateEntity : MonoBehaviour, ITriggerable
         visual.UpAnim();
         LevelEntityEvents.NotifyTriggerableCallback(this);
         down = false;
+        NavigationEvents.NotifyDynamicObstacleModification(config.cell, true);
     }
 
     public void Trigger()

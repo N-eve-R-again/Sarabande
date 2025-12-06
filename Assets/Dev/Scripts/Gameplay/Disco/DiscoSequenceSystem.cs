@@ -35,7 +35,7 @@ namespace Sarabande.Disco
 
         [Header("Data & Refs")]
         [SerializeField] private HeroController hero;
-        [SerializeField] private DiscoTilesVisuals visuals; // si null, on prend GetComponent<DiscoTilesVisuals>()
+        //[SerializeField] private DiscoTilesVisuals visuals; // si null, on prend GetComponent<DiscoTilesVisuals>()
         [SerializeField] private bool useLevelContext = true;
         [SerializeField] private Sarabande.Core.LevelContext levelContext;
         [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
@@ -91,26 +91,28 @@ namespace Sarabande.Disco
 
         private void Awake()
         {
-            if (!visuals) visuals = GetComponent<DiscoTilesVisuals>();
+            //if (!visuals) visuals = GetComponent<DiscoTilesVisuals>();
             // NOTE: le LevelData est injecté via LevelContext en OnEnable/OnValidate.
         }
 
         private void Start()
         {
+            return;
             // Validation retardée pour laisser LevelContext injecter levelData
-            if (!hero || !visuals || (!levelData && useLevelContext))
+            /*if (!hero || !visuals || (!levelData && useLevelContext))
             {
                 Debug.LogError("[DiscoSequenceSystem] Références manquantes (LevelData/Hero/Visuals).");
                 enabled = false;
                 return;
             }
-
+            */
             if (autoStartOnPlay)
                 StartSequence(sequenceIndex);
         }
 
         private void Update()
         {
+            return;
             if (!_running) return;
 
             UpdateNextCoreGrowth();
@@ -198,18 +200,18 @@ namespace Sarabande.Disco
             }
 
             // Reset visuel & état
-            visuals.SetAllOff();
+            //visuals.SetAllOff();
             _step = 0;
             _running = true;
             _progressForStep = -1;
             StopProgress();
 
             // État initial : 0 = ON, 1 = NEXT, le reste = OFF (visibles)
-            visuals.SetState(_cells[0], DiscoTilesVisuals.State.On, PickBright());
+            //visuals.SetState(_cells[0], DiscoTilesVisuals.State.On, PickBright());
             if (_cells.Count >= 2)
             {
-                visuals.SetState(_cells[1], DiscoTilesVisuals.State.Next, PickBright());
-                visuals.SetNextCoreFill(_cells[1], nextCoreMinScale); // 20% de la dalle au départ
+                //visuals.SetState(_cells[1], DiscoTilesVisuals.State.Next, PickBright());
+                //visuals.SetNextCoreFill(_cells[1], nextCoreMinScale); // 20% de la dalle au départ
             }
 
             _deadline = Time.time + _durations[0];
@@ -250,13 +252,13 @@ namespace Sarabande.Disco
             }
 
             // Nouvelle étape ON
-            visuals.SetState(_cells[_step], DiscoTilesVisuals.State.On, PickBright());
+            //visuals.SetState(_cells[_step], DiscoTilesVisuals.State.On, PickBright());
 
             int nextIdx = _step + 1;
             if (nextIdx < _cells.Count)
             {
-                visuals.SetState(_cells[nextIdx], DiscoTilesVisuals.State.Next, PickBright());
-                visuals.SetNextCoreFill(_cells[nextIdx], nextCoreMinScale); // repart à 20%
+                //visuals.SetState(_cells[nextIdx], DiscoTilesVisuals.State.Next, PickBright());
+                //visuals.SetNextCoreFill(_cells[nextIdx], nextCoreMinScale); // repart à 20%
             }
 
             _deadline = Time.time + _durations[_step];
@@ -273,8 +275,8 @@ namespace Sarabande.Disco
             _progressForStep = -1;
             StopProgress();
 
-            if (visuals) visuals.ClearAllNextCores();
-            visuals.SetAllOff();
+            //if (visuals) visuals.ClearAllNextCores();
+            //visuals.SetAllOff();
 
             onSequenceFail?.Invoke();
         }
@@ -298,7 +300,7 @@ namespace Sarabande.Disco
             float u = Mathf.Clamp01(elapsed / growthDuration);
 
             float frac = Mathf.Lerp(nextCoreMinScale, nextCoreMaxScale, u);   // 20% -> 80% de la dalle
-            if (visuals) visuals.SetNextCoreFill(_cells[nextIdx], frac);      // fraction de dalle
+            //if (visuals) visuals.SetNextCoreFill(_cells[nextIdx], frac);      // fraction de dalle
         }
 
         // ?????????????????????????????????????????????????????????????????????????????
@@ -334,11 +336,11 @@ namespace Sarabande.Disco
             bool wasRunning = _running;     // évite de spammer onSequenceFail au boot
 
             StopSequence();                 // coupe l’état interne + sons de progression
-            if (visuals)                    // nettoie le visuel
+            /*if (visuals)                    // nettoie le visuel
             {
                 visuals.ClearAllNextCores();
                 visuals.SetAllOff();
-            }
+            }*/
 
             if (wasRunning)
                 onSequenceFail?.Invoke();
@@ -478,9 +480,10 @@ namespace Sarabande.Disco
         /// </summary>
         private Vector3 CellCenterWorld(Vector2Int cell)
         {
-            var tile = visuals ? visuals.GetTile(cell) : null;
-            if (tile != null) return tile.transform.position;
-            return new Vector3(cell.x + 0.5f, 0f, cell.y + 0.5f); // fallback
+            return Vector3.zero;
+            //var tile = visuals ? visuals.GetTile(cell) : null;
+            //if (tile != null) return tile.transform.position;
+            //return new Vector3(cell.x + 0.5f, 0f, cell.y + 0.5f); // fallback
         }
     }
 }

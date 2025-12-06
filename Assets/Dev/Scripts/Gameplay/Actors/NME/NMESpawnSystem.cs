@@ -132,10 +132,10 @@ namespace Sarabande.NME
 
             // --- RECOLLAGE DES SYSTÈMES DYNAMIQUES ---
             // 1) Grilles fines : re-pousser les arêtes fermées vers chaque NME
-            var gates = FindFirstObjectByType<Sarabande.Gates.GridGateSystem>(FindObjectsInactive.Include);
+            /*var gates = FindFirstObjectByType<Sarabande.Gates.GridGateSystem>(FindObjectsInactive.Include);
             if (gates != null)
                 foreach (var n in _spawned) if (n) gates.ReapplyBlocksTo(n);
-
+            */
             // 2) Timed Doors : refresh caches (héros+NME) puis re-pousser toutes les cases bloquées
             /*var doors = FindFirstObjectByType<Sarabande.Doors.TimedDoorSystem>(FindObjectsInactive.Include);
             if (doors != null)

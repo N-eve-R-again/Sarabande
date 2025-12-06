@@ -123,10 +123,10 @@ public class LevelEditor : MonoBehaviour
                         DrawGate(gateConfig,false);
                         break;
                     case ArrowTrapConfig arrowTrapConfig:
-                        Gizmos.color = Color.magenta;
-                        DrawCubeAtCell(arrowTrapConfig.cell, true);
+                        DrawArrowTrap(arrowTrapConfig.cell);
                         break;
                     case FakeWallData fakeWallData:
+                        Gizmos.color = Color.gray;
                         DrawCubeAtCell(fakeWallData.cell, true);
                         break;
                     default:
@@ -192,11 +192,21 @@ public class LevelEditor : MonoBehaviour
         }
     }
 
+    private void DrawArrowTrap(Vector2Int cell)
+    {
+        Gizmos.color = Color.red;
+        Vector3 size = Vector3.one * LevelGlobalSettings.cellSize * 0.25f;
+        Gizmos.DrawWireCube(GridUtils.CenterInCell(cell), size);
+        
+
+    }
+
     private void DrawTriggerable(TriggerableData triggerable)
     {
         switch (triggerable)
         {
             case ArrowTrapConfig arrowTrapConfig:
+                DrawArrowTrap(arrowTrapConfig.cell);
                 break;
             case GateConfig gateConfig:
                 DrawGate(gateConfig, true);
@@ -334,6 +344,8 @@ public class LevelEditor : MonoBehaviour
                 selectedCell = dataCopy.listeners[selectedObjectIndex].cell += dir; break;
             case SelectedObjectType.Triggerable:
                 selectedCell = dataCopy.triggerables[selectedObjectIndex].cell += dir; break;
+            case SelectedObjectType.Obstacle:
+                selectedCell = dataCopy.obstacles[selectedObjectIndex].cell += dir; break;
         }
         UpdateLookUpList();
     }
@@ -448,6 +460,10 @@ public class LevelEditor : MonoBehaviour
 
     private void RefreshCopy()
     {
+        if(currentTool == EditorToolType.Misc)
+        {
+            currentTool = EditorToolType.Edit;
+        }
         hotCopyModified = false;
         objectIsSelected = false;
         ReorderList();
@@ -494,7 +510,9 @@ public class LevelEditor : MonoBehaviour
 
         foreach (var item in dataCopy.triggerables)
         {
+
             AddTriggerableToLookUpTable(item);
+
         }
 
         foreach (var item in dataCopy.listeners)

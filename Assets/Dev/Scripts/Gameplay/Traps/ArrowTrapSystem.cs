@@ -139,49 +139,6 @@ namespace Sarabande.Traps
             RefreshNMECache(); // première passe sûre
         }
 
-        private void Update()
-        {
-            // Réarmement différé
-            for (int i = 0; i < _runtime.Length; i++)
-            {
-                if (!_runtime[i].armed && Time.time >= _runtime[i].nextReadyTime)
-                {
-                    var spec = levelData.arrowTraps[i];
-                    if (spec.canRearm) _runtime[i].armed = true;
-                }
-            }
-
-            // Héros : déclenche sur changement de cellule
-            var heroCell = hero.GridPos;
-            if (heroCell != _lastHeroCell)
-            {
-                TryTriggerAtCell(heroCell);
-                _lastHeroCell = heroCell;
-            }
-
-            // NME : idem
-            if (_nmes != null)
-            {
-                foreach (var n in _nmes)
-                {
-                    if (n == null) continue;
-                    var cell = n.GridPos;
-                    if (_lastNmeCell.TryGetValue(n, out var prev))
-                    {
-                        if (cell != prev)
-                        {
-                            TryTriggerAtCell(cell);
-                            _lastNmeCell[n] = cell;
-                        }
-                    }
-                    else
-                    {
-                        _lastNmeCell[n] = cell;
-                    }
-                }
-            }
-        }
-
         // ?????????????????????????????????????????????????????????????????????????????
         // Déclenchements & émissions
         // ?????????????????????????????????????????????????????????????????????????????
@@ -190,21 +147,6 @@ namespace Sarabande.Traps
         /// Tente de déclencher tous les pièges qui ont <paramref name="enteredCell"/> pour cellule trigger.
         /// Respecte l’état d’armement et la liaison Disco.
         /// </summary>
-        private void TryTriggerAtCell(Vector2Int enteredCell)
-        {
-            for (int i = 0; i < _runtime.Length; i++)
-            {
-                if (!_runtime[i].armed) continue;
-
-                var spec = levelData.arrowTraps[i];
-
-                // Si lié à la Disco, seulement quand la Disco tourne
-                if (spec.linkToDisco && !_discoRunning) continue;
-
-                if (enteredCell.x == spec.triggerCell.x && enteredCell.y == spec.triggerCell.z)
-                    FireTrap(i, spec);
-            }
-        }
 
         /// <summary>
         /// Déclenche un piège : armement ? visuel ? audio ? planification des émissions.

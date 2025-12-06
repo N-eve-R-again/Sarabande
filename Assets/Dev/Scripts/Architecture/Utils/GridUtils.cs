@@ -52,6 +52,20 @@ namespace Sarabande.Core
             return CardinalDirection.North; //North par défaut;
         }
 
+        public static bool IsPerpendicularDirection(CardinalDirection compare, CardinalDirection with)
+        {
+            switch (compare)
+            {
+                case CardinalDirection.North:
+                case CardinalDirection.South:
+                    return !(with == CardinalDirection.North || with == CardinalDirection.South);
+                case CardinalDirection.West:
+                case CardinalDirection.East:
+                    return !(with == CardinalDirection.West || with == CardinalDirection.East);
+            }
+            return false;
+        }
+
         public static bool InsideBounds(Vector2Int c, int width, int height)
             => c.x >= 0 && c.x < width && c.y >= 0 && c.y < height;
 
