@@ -10,11 +10,23 @@ public partial class LevelEditorInspector : Editor
 
 
     private LevelEditor editor;
-   
+
     void OnEnable()
     {
         editor = (LevelEditor)target;
+        Undo.undoRedoPerformed += OnUndoRedo;
+    }
 
+    void OnDisable()
+    {
+        Undo.undoRedoPerformed -= OnUndoRedo;
+    }
+
+    void OnUndoRedo()
+    {
+        editor.Refresh();
+        editor.UpdateFlags();
+        SceneView.RepaintAll(); // Rafraîchit la scène
     }
 
     // Pour l'Inspector UI
@@ -66,25 +78,72 @@ public partial class LevelEditorInspector : Editor
         }
         EditorGUILayout.EndVertical();
 
+        EditorGUILayout.Space();
+
 
 
         if (editor.hotCopyCreated == true && editor.dataCopy != null)
         {
-            
+
             DrawToolBar();
         }
 
         serializedObject.ApplyModifiedProperties();
-
+        editor.UpdateFlags();
     }
 
-    
+    void DisplayFilterButton(string label, string tooltip, DisplayFilter flag)
+    {
+        Color activateColor = new Color(0.5f, 0.8f, 0.5f);
+        Color desactivated = new Color(0.8f, 0.5f, 0.5f);
+
+        GUIContent content = new GUIContent(label, tooltip);
+
+        bool isActive = editor.displayFilter.HasFlag(flag);
+        GUI.backgroundColor = isActive ? activateColor : desactivated;
+
+        if (GUILayout.Button(content, GUILayout.Height(20)))
+        {
+            editor.ChangeDisplayFlag(flag);
+            SceneView.RepaintAll();
+        }
+
+        GUI.backgroundColor = Color.white;
+    }
     private void DrawToolBar()
     {
-        EditorGUILayout.Space();
         GUIStyle windowStyle = new GUIStyle(GUI.skin.window);
         windowStyle.padding = new RectOffset(10, 10, 10, 10);
+        GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
+        boxStyle.padding = new RectOffset(10, 4, 10, 4);
+
         EditorGUILayout.BeginVertical(windowStyle);
+
+        EditorGUILayout.BeginVertical(boxStyle);
+
+        EditorGUILayout.BeginHorizontal();
+
+        // Bouton All
+        bool allActive = editor.displayFilter == DisplayFilter.Everything;
+        GUI.backgroundColor = allActive ? Color.cyan : Color.gray;
+
+        if (GUILayout.Button("All", GUILayout.Height(20)))
+        {
+            editor.displayFilter = allActive ? DisplayFilter.None : DisplayFilter.Everything;
+        }
+
+        GUI.backgroundColor = Color.white;
+
+        DisplayFilterButton("O", "Obstacles", DisplayFilter.Obstacles);
+        DisplayFilterButton("L", "Listeners", DisplayFilter.Listeners);
+        DisplayFilterButton("T", "Triggerables", DisplayFilter.Triggerables);
+        DisplayFilterButton("T.L", "Trigger Links", DisplayFilter.TriggerLinks);
+
+
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.Space();
+        EditorGUILayout.EndVertical();
+        EditorGUILayout.Space();
         // Tes boutons, toolbar, etc.
         EditorGUILayout.LabelField("Tools", EditorStyles.boldLabel);
 
@@ -106,6 +165,7 @@ public partial class LevelEditorInspector : Editor
 
             if (GUILayout.Button(((EditorToolType)i).ToString(), GUILayout.Height(30)))
             {
+                Undo.RecordObject(editor, "Tool Change");
                 editor.currentTool = (EditorToolType)i;
             }
         }
@@ -144,26 +204,27 @@ public partial class LevelEditorInspector : Editor
 
         SerializedProperty widthLevel = dataCopySO.FindProperty("width");
         SerializedProperty heightlevel = dataCopySO.FindProperty("height");
-        SerializedProperty discos = dataCopySO.FindProperty("discoSequencesConfigs");
+        SerializedProperty discosSequences = dataCopySO.FindProperty("discoSequencesConfigs");
 
         EditorGUILayout.PropertyField(widthLevel);
         EditorGUILayout.PropertyField(heightlevel);
-        EditorGUILayout.PropertyField(discos);
+        EditorGUILayout.PropertyField(discosSequences.GetArrayElementAtIndex(0));
 
         EditorGUILayout.Space();
         dataCopySO.ApplyModifiedProperties();
         editor.Updatebounds();
+        editor.UpdateLinks();
 
 
         EditorGUILayout.EndVertical();
     }
-
 
     private void SelectToolInspector()
     {
 
         if (editor.objectIsSelected)
         {
+
             // Récupère via SerializedProperty
             string basePath = editor.selectedObjectType switch
             {
@@ -174,12 +235,14 @@ public partial class LevelEditorInspector : Editor
                 _ => null
             };
 
+
             if (basePath != null)
             {
                 SerializedProperty dataCopyProp = serializedObject.FindProperty("dataCopy");
                 if (dataCopyProp != null && dataCopyProp.objectReferenceValue != null)
                 {
                     SerializedObject dataCopySO = new SerializedObject(dataCopyProp.objectReferenceValue);
+
                     SerializedProperty listProp = dataCopySO.FindProperty(basePath);
 
                     SerializedProperty itemProp = listProp.GetArrayElementAtIndex(editor.selectedObjectIndex);
@@ -194,18 +257,20 @@ public partial class LevelEditorInspector : Editor
 
                         switch (editor.selectedObjectType)
                         {
-                            case SelectedObjectType.Obstacle: InspectObstacle(itemProp); break;
+                            case SelectedObjectType.Obstacle:
+                        
+                                InspectObstacle(itemProp); break;
                             case SelectedObjectType.Listener: InspectListener(itemProp); break;
                             case SelectedObjectType.Triggerable: InspectTriggerable(itemProp); break;
                         }
 
                         EditorGUILayout.EndVertical();
                     }
+                    Undo.RecordObject(editor.dataCopy, "Inspect Obj");
                     dataCopySO.ApplyModifiedProperties();
-                    if(editor.selectedObjectType == SelectedObjectType.Listener)
-                    {
-                        editor.UpdateLinks();
-                    }
+
+                    editor.UpdateLinks();
+                    editor.UpdateFlags();
 
                 }
 
@@ -220,6 +285,7 @@ public partial class LevelEditorInspector : Editor
     }
     private void InspectTriggerable(SerializedProperty item)
     {
+
         item.isExpanded = true;
         EditorGUILayout.PropertyField(item, GUIContent.none, true);
 

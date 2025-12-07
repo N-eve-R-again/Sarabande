@@ -1,7 +1,11 @@
 using Sarabande.Core;
 using Sarabande.Levels;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public partial class LevelEditorInspector
 {
@@ -17,16 +21,26 @@ public partial class LevelEditorInspector
         Event e = Event.current;
 
         if (editor.dataCopy == null) return;
+
+
+        if (!editor.hotCopyCreated) return;
+
+
+        if (editor.displayFilter.HasFlag(DisplayFilter.TriggerLinks))
+        {
+            DrawTriggerLinks();
+        }
+
         if (e.button != 0) return;
 
         Vector2Int gridPos = GetGridPositionFromMouse(e.mousePosition);
 
-        if (!editor.hotCopyCreated) return;
 
         if (!editor.InsideBounds(gridPos))
         {
             return;
         }
+
 
 
         switch (editor.currentTool)
@@ -50,13 +64,97 @@ public partial class LevelEditorInspector
         }
     }
 
+    private void DrawTriggerLinks()
+    {
+        Color keyColor = new Color(1f, 0.5f, 0f, 0.95f);
+        Color listenerkey = new Color(0f, 0.5f, 1f, 0.95f);
+        Color globalkey = new Color(0.5f, 1f, 1f, 0.95f);
+        List<Vector2Int> exploredCells = new List<Vector2Int>();
 
+        foreach (var item in editor.links)
+        {
+            int countA = exploredCells.Count(cell => cell == item.cellA);
+
+
+
+            if (item.valid())
+            {
+                if (item.IsGlobal())
+                {
+                    DrawTextBubble(item.cellA, 0, $"{item.triggerkey}", globalkey);
+                    exploredCells.Add(item.cellA);
+                }
+                else
+                {
+                    DrawLine(item.cellA, item.cellB, keyColor, 3);
+                    //DrawTextBubble(item.cellA, countA, $"{item.triggerkey}", listenerkey);
+                    exploredCells.Add(item.cellA);
+
+                    countA = exploredCells.Count(cell => cell == item.cellA);
+                    int countB = exploredCells.Count(cell => cell == item.cellB);
+
+                    if(countB <= 0)
+                    {
+                        DrawTextBubble(item.cellB, 0, $"{item.triggerkey}", keyColor);
+                    }
+
+
+                }
+
+
+            }
+            else
+            {
+                DrawTextBubble(item.cellA, countA, $"[{countA}] {item.triggerkey}", Color.red);
+            }
+
+
+            exploredCells.Add(item.cellB);
+        }
+    }
+    private void DrawLine(Vector2Int a, Vector2Int b,Color color, float thickness)
+    {
+        Handles.color = color;
+        Handles.DrawLine(GridUtils.CenterInCell(a),GridUtils.CenterInCell(b), thickness);
+        Handles.color = Color.white;
+    }
+    private void DrawTextBubble(Vector2Int cell,int visibilityOffset, string text, Color bgColor)
+    {
+        Vector3 worldPos = GridUtils.CenterInCell(cell) ;
+        Vector3 offset = Vector3.up *0.5f* visibilityOffset;
+        worldPos += offset;
+
+        Handles.color = bgColor;
+        //Handles.DrawLine(GridUtils.CenterInCell(cell), worldPos);
+        Handles.color = Color.white;
+        GUIStyle style = new GUIStyle(GUI.skin.button);
+        style.normal.textColor = Color.white;
+        style.alignment = TextAnchor.MiddleCenter;
+        style.fontSize = 10;
+
+        Handles.BeginGUI();
+
+        Vector2 screenPos = HandleUtility.WorldToGUIPoint(worldPos);
+        GUIContent content = new GUIContent(text);
+        Vector2 size = style.CalcSize(content);
+        Rect rect = new Rect(screenPos.x - size.x / 2, screenPos.y - size.y / 2, size.x + 10, size.y + 5);
+
+        GUI.backgroundColor = bgColor;
+        GUI.Box(rect, content, style);
+        GUI.backgroundColor = Color.white;
+
+        Handles.EndGUI();
+
+    }
+
+    // Utilisation
 
     private void SelectTool(Event e, Vector2Int gridPos)
     {
 
         if (editor.objectIsSelected)
         {
+
             DrawMoveHandles(editor.selectedCell);
         }
         // Ta logique ici 
@@ -129,12 +227,12 @@ public partial class LevelEditorInspector
         // Pareil pour droite, bas, gauche
     }
 
+
     void ShowSelectionMenu()
     {
         GenericMenu menu = new GenericMenu();
 
         int i = 0;
-
         foreach (var item in editor.conflictedSelection)
         {
             switch (item)
@@ -143,7 +241,7 @@ public partial class LevelEditorInspector
                     menu.AddItem(
                         new GUIContent($"[{i}] Obstacle - {obstacle.type}"),
                         false,
-                        () => editor.ResolveConflictedSelection(obstacle)
+                        () => editor.ResolveConflictedMenu(obstacle)
                     );
                     break;
 
@@ -151,7 +249,7 @@ public partial class LevelEditorInspector
                     menu.AddItem(
                         new GUIContent($"[{i}] Message - {message.text}"),
                         false,
-                        () => editor.ResolveConflictedSelection(message)
+                        () => editor.ResolveConflictedMenu(message)
                     );
                     break;
 
@@ -159,21 +257,29 @@ public partial class LevelEditorInspector
                     menu.AddItem(
                         new GUIContent($"[{i}] TriggerObject - {triggerObject.type}"),
                         false,
-                        () => editor.ResolveConflictedSelection(triggerObject)
+                        () => editor.ResolveConflictedMenu(triggerObject)
                     );
                     break;
                 case ArrowTrapConfig arrowtrap:
                     menu.AddItem(
                         new GUIContent($"[{i}] ArrowTrap - {arrowtrap.triggerKey}"),
                         false,
-                        () => editor.ResolveConflictedSelection(arrowtrap)
+                        () => editor.ResolveConflictedMenu(arrowtrap)
                     );
                     break;
                 case GateConfig gate:
                     menu.AddItem(
                         new GUIContent($"[{i}] TriggerObject - {gate.triggerKey}"),
                         false,
-                        () => editor.ResolveConflictedSelection(gate)
+                        () => editor.ResolveConflictedMenu(gate)
+                    );
+                    break;
+
+                default:
+                    menu.AddItem(
+                        new GUIContent($"[{i}] TriggerObject - {item}"),
+                        false,
+                        () => editor.ResolveConflictedMenu(item)
                     );
                     break;
             }
@@ -181,6 +287,7 @@ public partial class LevelEditorInspector
         }
 
         menu.ShowAsContext();
+
     }
 
 
@@ -195,7 +302,10 @@ public partial class LevelEditorInspector
 
                 if (e.type == EventType.MouseDown)
                 {
-                    editor.DeleteCell(gridPos);
+                    if (editor.DeleteCell(gridPos))
+                    {
+                        ShowSelectionMenu();
+                    }
                 }
 
             }

@@ -1,14 +1,13 @@
+using JetBrains.Annotations;
 using Sarabande.Core;
 using Sarabande.Levels;
-using System;
+
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Mathematics;
-using Unity.VisualScripting;
+
 using UnityEditor;
+
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
-using static UnityEditor.Progress;
 
 
 public enum EditorToolType
@@ -28,26 +27,50 @@ public enum SelectedObjectType
     Actor
 }
 
+[System.Flags]
+public enum DisplayFilter
+{
+    None = 0,
+    Obstacles = 1 << 0,      // 1
+    Listeners = 1 << 1,      // 2
+    Triggerables = 1 << 2,   // 4
+    TriggerLinks = 1 << 4,   // 16
+
+    Everything = ~0          // Tous les bits à 1
+}
+
+
+
 public class TriggerLink
 {
     public Vector2Int cellA;
     public Vector2Int cellB;
+    
+    public string triggerkey;
+    private bool globalKey;
 
-    public TriggerLink(Vector2Int _cellA, Vector2Int _cellB)
+    public TriggerLink(Vector2Int _cellA, Vector2Int _cellB, string _triggerkey, bool globalKey)
     {
         this.cellA = _cellA;
         this.cellB = _cellB;
+        this.triggerkey = _triggerkey;
+        this.globalKey = globalKey;
     }
 
+    public bool IsGlobal()
+    {
+        return globalKey;
+    }
     public bool valid()
     {
-        return cellB != -Vector2Int.one;
+        return cellB != -Vector2Int.one || globalKey;
     }
 }
 
 public class LevelEditor : MonoBehaviour
 {
-
+    // Usage
+    public DisplayFilter displayFilter = DisplayFilter.Everything;
 
     public EditorToolType currentTool = EditorToolType.Place;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -70,13 +93,9 @@ public class LevelEditor : MonoBehaviour
     public List<TriggerLink> links = new();
     public Dictionary<string, Vector2Int> availableKeys = new();
 
+    private string originalJson; // Stocke l'état initial
 
     Vector3[] bounds;
-
-    private void OnEnable()
-    {
-
-    }
 
     private void OnDrawGizmos()
     {
@@ -110,47 +129,38 @@ public class LevelEditor : MonoBehaviour
                 {
                     case ObstacleData obstacle:
 
-                        DrawObstacle(obstacle);
+                        DrawObstacle(obstacle, false);
                         break;
-                    case MessageConfig message:
-
-                        DrawSpriteIcon("Gizmo_Message", message.cell, Color.yellow);
+                    case ListenerData listener:
+                        DrawListener(listener, false);
                         break;
-                    case TriggerObjectConfig triggerObject:
-                        DrawTriggerObject(triggerObject); 
-                        break;
-                    case GateConfig gateConfig:
-                        DrawGate(gateConfig,false);
-                        break;
-                    case ArrowTrapConfig arrowTrapConfig:
-                        DrawArrowTrap(arrowTrapConfig.cell);
-                        break;
-                    case FakeWallData fakeWallData:
-                        Gizmos.color = Color.gray;
-                        DrawCubeAtCell(fakeWallData.cell, true);
-                        break;
-                    default:
-
+                    case TriggerableData triggerable:
+                        DrawTriggerable(triggerable, false);
                         break;
                 }
             }
         }
 
-
-        foreach (var item in links)
+        /*if (displayFilter.HasFlag(DisplayFilter.TriggerLinks))
         {
-            if (item.valid())
+            foreach (var item in links)
             {
-                Gizmos.color = new Color(1, 0.5f, 0);
-                Gizmos.DrawLine(GridUtils.CenterXZ(item.cellA), GridUtils.CenterInCell(item.cellB));
-            }
-            else
-            {
-                Gizmos.color =Color.red;
-                Gizmos.DrawLine(GridUtils.CenterXZ(item.cellA), GridUtils.CenterXZ(item.cellA) + Vector3.up * 0.4f);
-            }
+                if (item.valid() && !item.IsGlobal())
+                {
+                    Gizmos.color = new Color(1, 0.5f, 0);
+                    Gizmos.DrawLine(GridUtils.CenterXZ(item.cellA), GridUtils.CenterInCell(item.cellB));
+                }
+                else
+                {
+                    Gizmos.color = Color.red;
+                    Gizmos.DrawLine(GridUtils.CenterXZ(item.cellA), GridUtils.CenterXZ(item.cellA) + Vector3.up * 0.4f);
+                }
 
+            }
         }
+        */
+
+
         Gizmos.color = Color.white;
 
         if (objectIsSelected && currentTool == EditorToolType.Edit)
@@ -162,37 +172,48 @@ public class LevelEditor : MonoBehaviour
                     break;
                 case SelectedObjectType.Listener:
 
-                    DrawListener(dataCopy.listeners[selectedObjectIndex]);
+                    DrawListener(dataCopy.listeners[selectedObjectIndex], true);
 
                     break;
 
                 case SelectedObjectType.Triggerable:
-                    DrawTriggerable(dataCopy.triggerables[selectedObjectIndex]);
+                    DrawTriggerable(dataCopy.triggerables[selectedObjectIndex], true);
                     break;
-
             }
+            
         }
 
     }
 
-    private void DrawListener(ListenerData listener)
+    public void ChangeDisplayFlag(DisplayFilter flag)
     {
+        displayFilter ^= flag; // Toggle le flag
+    }
+    private void DrawListener(ListenerData listener, bool selectionGizmo)
+    {
+        if (!displayFilter.HasFlag(DisplayFilter.Listeners)) return;
+
+
         switch (listener)
         {
-            case MessageConfig message: 
-                DrawSpriteIcon("Gizmo_Message", message.cell, selectedColor, true); 
+            case MessageConfig message:
+
+                DrawSpriteIcon("Gizmo_Message", message.cell, Color.yellow, selectionGizmo);
                 break;
             case TriggerObjectConfig triggerObject:
-                
-                DrawTriggerObject(triggerObject, true);
+                DrawTriggerObject(triggerObject,selectionGizmo);
                 break;
-            case FakeWallData wallData:
-                DrawCubeAtCell(wallData.cell,true);
+            case FakeWallData fakeWallData:
+                Gizmos.color = Color.gray;
+                DrawCubeAtCell(fakeWallData.cell, true);
+                break;
+            default:
+
                 break;
         }
     }
 
-    private void DrawArrowTrap(Vector2Int cell)
+    private void DrawArrowTrap(Vector2Int cell, bool selectionGizmo)
     {
         Gizmos.color = Color.red;
         Vector3 size = Vector3.one * LevelGlobalSettings.cellSize * 0.25f;
@@ -201,15 +222,17 @@ public class LevelEditor : MonoBehaviour
 
     }
 
-    private void DrawTriggerable(TriggerableData triggerable)
+    private void DrawTriggerable(TriggerableData triggerable, bool selectionGizmo)
     {
+        if (!displayFilter.HasFlag(DisplayFilter.Triggerables)) return;
+
         switch (triggerable)
         {
             case ArrowTrapConfig arrowTrapConfig:
-                DrawArrowTrap(arrowTrapConfig.cell);
+                DrawArrowTrap(arrowTrapConfig.cell, selectionGizmo);
                 break;
             case GateConfig gateConfig:
-                DrawGate(gateConfig, true);
+                DrawGate(gateConfig, selectionGizmo);
                 break;
         }
     }
@@ -235,7 +258,8 @@ public class LevelEditor : MonoBehaviour
 
     private void DrawObstacle(ObstacleData obstacle,  bool selectionGizmo = false)
     {
-        if(selectionGizmo)
+        if (!displayFilter.HasFlag(DisplayFilter.Obstacles)) return;
+        if (selectionGizmo)
         {
             Gizmos.color = selectedColor;
         }
@@ -291,9 +315,6 @@ public class LevelEditor : MonoBehaviour
 
 
     }
-
-
-
     private void DrawPressurePadAt(Vector2Int cell, bool wire)
     {
 
@@ -316,7 +337,6 @@ public class LevelEditor : MonoBehaviour
 
         }
     }
-
     private void DrawLeverAt(Vector2Int cell,CardinalDirection dir, bool wire)
     {
         Vector3 cellpos = GridUtils.CenterInCell(cell);
@@ -335,21 +355,6 @@ public class LevelEditor : MonoBehaviour
         Gizmos.DrawWireCube(cellpos + vecDir3,Vector3.one * 0.2f);
         Gizmos.DrawCube(cellpos + vecDir3,Vector3.one * 0.18f);
     }
-
-    public void MoveSelectedObject(Vector2Int dir)
-    {
-        switch (selectedObjectType)
-        {
-            case SelectedObjectType.Listener:
-                selectedCell = dataCopy.listeners[selectedObjectIndex].cell += dir; break;
-            case SelectedObjectType.Triggerable:
-                selectedCell = dataCopy.triggerables[selectedObjectIndex].cell += dir; break;
-            case SelectedObjectType.Obstacle:
-                selectedCell = dataCopy.obstacles[selectedObjectIndex].cell += dir; break;
-        }
-        UpdateLookUpList();
-    }
-
     void DrawBounds()
     {
         Gizmos.color = Color.red;
@@ -389,7 +394,6 @@ public class LevelEditor : MonoBehaviour
             Gizmos.DrawWireCube(pos, size);
         }
     }
-
     private void DrawGateAt(Vector2Int cell, CardinalDirection dir, bool wire)
     {
         Vector3 size = Vector3.zero;
@@ -464,9 +468,17 @@ public class LevelEditor : MonoBehaviour
         {
             currentTool = EditorToolType.Edit;
         }
-        hotCopyModified = false;
+
+
         objectIsSelected = false;
         ReorderList();
+        Updatebounds();
+        UpdateLookUpList();
+        UpdateFlags();
+    }
+
+    public void Refresh()
+    {
         Updatebounds();
         UpdateLookUpList();
     }
@@ -478,6 +490,7 @@ public class LevelEditor : MonoBehaviour
             list = new List<object>();
             lookupTable[item.cell] = list;
         }
+
         availableKeys[item.triggerKey] = item.cell;
         list.Add(item);
     }
@@ -526,19 +539,39 @@ public class LevelEditor : MonoBehaviour
     public void UpdateLinks()
     {
         links.Clear();
+        List<string > global = new List<string>();
+        foreach (var item in dataCopy.discoSequencesConfigs)
+        {
+            global.Add(item.triggerKey);
+        }
+
         foreach (var item in dataCopy.listeners)
         {
             if (item.triggerKeys.Length <= 0) continue;
-            if (availableKeys.TryGetValue(item.triggerKeys[0], out Vector2Int linkcell))
+            foreach (var key in item.triggerKeys)
             {
-                TriggerLink triggerLink = new TriggerLink(item.cell, linkcell);
-                links.Add(triggerLink);
+                if (global.Contains(key))
+                {
+                    TriggerLink triggerLink = new TriggerLink(item.cell, -Vector2Int.one, key, true);
+                    links.Add(triggerLink);
+                }
+                else
+                {
+                    if (availableKeys.TryGetValue(key, out Vector2Int linkcell))
+                    {
+                        TriggerLink triggerLink = new TriggerLink(item.cell, linkcell, key, false);
+                        links.Add(triggerLink);
+                    }
+                    else
+                    {
+                        TriggerLink triggerLink = new TriggerLink(item.cell, -Vector2Int.one, key, false);
+                        links.Add(triggerLink);
+                    }
+                }
+
+
             }
-            else
-            {
-                TriggerLink triggerLink = new TriggerLink(item.cell, -Vector2Int.one);
-                links.Add(triggerLink);
-            }
+
         }
 
     }
@@ -568,12 +601,39 @@ public class LevelEditor : MonoBehaviour
 
     public Vector3[] GetBounds() => bounds;
 
+    private bool HasChanges()
+    {
+        return (CreateSnapshot(dataCopy) != originalJson);
+    }
+
+    public void UpdateFlags()
+    {
+
+        hotCopyCreated = (dataCopy != null);
+        hotCopyModified = HasChanges();
+
+    }
+
+    string CreateSnapshot(LevelData data)
+    {
+        if(data == null) return null;
+        var snapshot = new LevelDataSnapshot
+        {
+            obstacles = data.obstacles,
+            listeners = data.listeners,
+            triggerables = data.triggerables,
+            width = data.width,
+            height = data.height,
+        };
+        return EditorJsonUtility.ToJson(snapshot);
+    }
+
     private void ReImportLevel()
     {
         if (levelData == null) return;
 
         DeleteWorkingCopy();
-        hotCopyCreated = true;
+        originalJson = CreateSnapshot(levelData);
         dataCopy = levelData.Clone();
         dataCopy.name = "copy_" + levelData.name;
         EditorUtility.SetDirty(dataCopy);
@@ -628,11 +688,10 @@ public class LevelEditor : MonoBehaviour
         EditorUtility.SetDirty(levelData);
         AssetDatabase.SaveAssets();
 
-        // Réinitialise le JSON pour la détection de changements
-        //originalJson = JsonUtility.ToJson(dataCopy);
-        hotCopyModified = false;
         ReImportLevel();
     }
+
+
 
     public void SaveAsNew()
     {
@@ -644,16 +703,31 @@ public class LevelEditor : MonoBehaviour
         dataCopy = null;
         hotCopyCreated = false;
         hotCopyModified= false;
-
+        
         objectIsSelected = false;
+    }
+
+    public void MoveSelectedObject(Vector2Int dir)
+    {
+        switch (selectedObjectType)
+        {
+            case SelectedObjectType.Listener:
+                selectedCell = dataCopy.listeners[selectedObjectIndex].cell += dir; break;
+            case SelectedObjectType.Triggerable:
+                selectedCell = dataCopy.triggerables[selectedObjectIndex].cell += dir; break;
+            case SelectedObjectType.Obstacle:
+                selectedCell = dataCopy.obstacles[selectedObjectIndex].cell += dir; break;
+        }
+        UpdateLookUpList();
     }
 
     public bool SelectCell(Vector2Int cell)
     {
-        if(lookupTable.TryGetValue(cell, out var table)){
+        Undo.RecordObject(this, $"Select {cell}");
+        if (lookupTable.TryGetValue(cell, out var table)){
             if(table.Count > 1)
             {
-                Debug.Log("Multiple objects");
+                //Debug.Log("Multiple objects");
                 conflictedSelection = table;
                 return true;
             }
@@ -676,16 +750,35 @@ public class LevelEditor : MonoBehaviour
         return false;
     }
 
-    public void ResolveConflictedSelection(object obj)
+    public void ResolveConflictedMenu(object obj)
     {
-        SelectObject(obj);
+        switch (currentTool)
+        {
+            case EditorToolType.Erase:
+                ResolveConflictedDelete(obj); break;
+            case EditorToolType.Edit:
+                ResolveConflictedSelection(obj); break;
+        }
+
+    }
+    private void ResolveConflictedSelection(object obj) {
         conflictedSelection = null;
         objectIsSelected = true;
         hotCopyModified = true;
+        SelectObject(obj);
+
+    }
+    private void ResolveConflictedDelete(object obj)
+    {
+
+        SelectObject(null); //failsafe au cas ou on detruit un objet selectionné
+        DeleteObject(obj);
+        conflictedSelection = null;
     }
 
     public void SelectObject(object obj)
     {
+        Undo.RecordObject(dataCopy, $"Inspect {obj}");
         switch (obj)
         {
             case null:
@@ -695,6 +788,7 @@ public class LevelEditor : MonoBehaviour
                 selectedCell = new Vector2Int(-1, -1);
                 break;
             case ListenerData:
+
                 objectIsSelected = true;
                 selectedObjectType = SelectedObjectType.Listener;
                 selectedObjectIndex = dataCopy.listeners.IndexOf((ListenerData)obj);
@@ -719,31 +813,71 @@ public class LevelEditor : MonoBehaviour
                 break;
 
         }
+        EditorUtility.SetDirty(dataCopy);
+        UpdateFlags();
 
     }
 
 
-    public void DeleteCell(Vector2Int cell)
+    public bool DeleteCell(Vector2Int cell)
     {
-        dataCopy.obstacles.RemoveAll(buffer =>  // Pour chaque buffer
+        if (lookupTable.TryGetValue(cell, out var table))
         {
-            // Si les conditions sont remplies :
-            if (buffer.cell == cell)
+            if(table.Count > 1)
             {
-                if(selectedCell == buffer.cell)
-                {
-
-                    objectIsSelected = false;
-                }
-                hotCopyModified = true;
-                return true;  // buffer supprimé
+                conflictedSelection = table;
+                return true;
             }
-            return false;  // buffer gardé et ignoré
-        });
+            DeleteObject(table[0]);
+        
+        }
+        return false;
+
+
+
+    }
+
+    private void DeleteObject(object obj)
+    {
+        Undo.RecordObject(dataCopy, "Delete Obj");
+        EditorUtility.SetDirty(dataCopy);
+
+        bool confirm0 = EditorUtility.DisplayDialog(
+            $"Delete {obj}",
+            "You are going to delete this object, are you sure?",
+            "Delete",
+            "Cancel"
+        );
+
+        if (!confirm0) return; // Annule l'action
+
+        switch (obj)
+        {
+            case null: 
+                return;
+
+            case TriggerableData triggerable: 
+                dataCopy.triggerables.Remove(triggerable);
+                break;
+
+            case ListenerData listener:
+
+                dataCopy.listeners.Remove(listener);
+                break;
+
+            case ObstacleData obstacle:
+                dataCopy.obstacles.Remove(obstacle);
+                break;
+
+        }
+
+
         ReorderList();
         UpdateLookUpList();
-    }
+        EditorUtility.SetDirty(dataCopy);
+        UpdateFlags();
 
+    }
 
     public void CreateCell(Vector2Int cell)
     {
@@ -751,10 +885,25 @@ public class LevelEditor : MonoBehaviour
         dataCopy.obstacles.Add(temp);
         ReorderList();
         UpdateLookUpList();
-        hotCopyModified = true;
+
+        EditorUtility.SetDirty(dataCopy);
+        UpdateFlags();
     }
 
 }
 
+[System.Serializable]
+public class LevelDataSnapshot
+{
+    public List<ObstacleData> obstacles;
+    [SerializeReference] public List<ListenerData> listeners;
+    [SerializeReference] public List<TriggerableData> triggerables;
+    [SerializeReference] public List<DiscoSequenceConfig> discoSequences;
+    public int width;
+    public int height;
+
+
+    // ... seulement tes données de gameplay
+}
 
 
