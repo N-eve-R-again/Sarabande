@@ -1,7 +1,8 @@
 ﻿using Sarabande.Levels;
-using Unity.VisualScripting;
+using System;
 using UnityEditor;
 using UnityEngine;
+using static UnityEditor.Progress;
 
 [CustomEditor(typeof(LevelEditor))]
 public partial class LevelEditorInspector : Editor
@@ -179,6 +180,8 @@ public partial class LevelEditorInspector : Editor
         {
             case EditorToolType.Edit: SelectToolInspector(); break;
             case EditorToolType.Misc: MiscInspector(); break;
+            case EditorToolType.Place:
+                DrawPlaceToolInspector(); break;
                 //case LevelEditor.ToolType.Remove: RemoveTool(e, gridPos); break;
         }
         EditorGUILayout.EndVertical();
@@ -218,7 +221,39 @@ public partial class LevelEditorInspector : Editor
 
         EditorGUILayout.EndVertical();
     }
+    private void DrawPlaceToolInspector()
+    {
+        GUIStyle windowStyle = new GUIStyle(GUI.skin.box);
+        windowStyle.padding = new RectOffset(10, 10, 10, 10);
+        EditorGUILayout.BeginVertical(windowStyle);
+        EditorGUILayout.LabelField("Select Type to Place", EditorStyles.boldLabel);
+        Type[] listenerTypes = editor.GetListenersTypes();
+        EditorGUILayout.BeginHorizontal();
 
+        for (int i = 0; i < listenerTypes.Length; i++)
+        {
+            bool isSelected = editor.selectedPlaceTypeIndex == i;
+            GUI.backgroundColor = isSelected ? Color.green : Color.white;
+
+            string nametype = editor.listenerNames[i];
+            string label = nametype;
+
+            if (GUILayout.Button(label, GUILayout.Height(30)))
+            {
+                editor.selectedPlaceTypeIndex = i;
+            }
+        }
+
+        GUI.backgroundColor = Color.white;
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.Space();
+
+        SerializedProperty brushesProp = serializedObject.FindProperty("listenerDummies");
+        SerializedProperty currentBrush = brushesProp.GetArrayElementAtIndex(editor.selectedPlaceTypeIndex);
+        currentBrush.isExpanded = true;
+        EditorGUILayout.PropertyField(currentBrush, true);
+        EditorGUILayout.EndVertical();
+    }
     private void SelectToolInspector()
     {
 

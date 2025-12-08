@@ -68,11 +68,13 @@ namespace Sarabande.Player
         [SerializeField, Min(0f)] private float interStepPause = 0.04f;
         [SerializeField, Range(0.1f, 0.99f)] private float inputDeadzone = 0.5f;
         [SerializeField] private AnimationCurve stepToLerpCurve;
+        [SerializeField] private AnimationCurve bumpLerpCurve;
 
         [Header("Collision & Bump")]
         [SerializeField, Min(0.01f)] private float bumpDistance = 0.12f;
-        [SerializeField, Min(0.01f)] private float bumpOutDuration = 0.06f;
-        [SerializeField, Min(0.01f)] private float bumpReturnDuration = 0.08f;
+        [SerializeField, Min(0.01f)] private float bumpDuration = 0.06f;
+        [SerializeField, Min(0.01f)] private float bumpEventPing = 0.95f;
+
 
         [Header("NME Conflict")]
         [SerializeField, Range(0f, 0.5f)] private float nmeYieldThreshold = 0.15f;   // priorité Héro si NME pas assez avancé sur son step
@@ -158,6 +160,8 @@ namespace Sarabande.Player
             _isMoving = true;
             StartCoroutine(SpawnInFromEdge());
         }
+
+
 
         /// <summary>
         /// Boucle par frame : lit l’input, applique tempo (pause), gère collisions & conflits NME,
@@ -358,27 +362,39 @@ namespace Sarabande.Player
             // on se tourne vers la direction tentée, même si c'est bloqué
 
             Vector3 start = transform.position;
-            Vector3 bumpVector = new Vector3(dir.x, 0f, dir.y).normalized * bumpDistance;
+            Vector3 bumpVector = start + new Vector3(dir.x, 0f, dir.y).normalized * bumpDistance;
 
-            // Aller (rapide)
+            bool walltouched = false;
             float lerpT = 0f;
-            while (lerpT < 1f)
+            
+            while (lerpT < bumpDuration)
             {
-                lerpT += Time.deltaTime / bumpOutDuration;
-                if (lerpT > 1f) lerpT = 1f;
-                transform.position = Vector3.Lerp(start, start + bumpVector, lerpT);
+                // progression anim
+                lerpT += Time.deltaTime;
+                float ratio = lerpT / bumpDuration;
+
+                if (!walltouched && ratio >= bumpEventPing)
+                {
+                    walltouched = true;
+                    ActorEvents.NotifyActorMove(this, bumpInteraction);
+                }
+
+                Vector3 worldPosAtThisFrame = Vector3.LerpUnclamped(start, bumpVector, bumpLerpCurve.Evaluate(ratio));
+                if (lerpT > bumpDuration) lerpT = bumpDuration;
+                transform.position = worldPosAtThisFrame;   
                 yield return null;
             }
-            ActorEvents.NotifyActorMove( this, bumpInteraction);
+
+
             // Retour
-            lerpT = 0f;
+            /*lerpT = 0f;
             while (lerpT < 1f)
             {
-                lerpT += Time.deltaTime / bumpReturnDuration;
+                lerpT += Time.deltaTime /
                 if (lerpT > 1f) lerpT = 1f;
                 transform.position = Vector3.Lerp(start + bumpVector, start, lerpT);
                 yield return null;
-            }
+            }*/
 
             transform.position = start;
             _isMoving = false;

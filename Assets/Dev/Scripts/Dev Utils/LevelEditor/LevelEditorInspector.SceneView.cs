@@ -325,12 +325,12 @@ public partial class LevelEditorInspector
             if (editor.CellOccuped(gridPos))
             {
                 DrawSelector(gridPos, placeColor, false);
-
+                DrawPlace(gridPos);
             }
             else
             {
-
-                DrawSelector(gridPos, placeColor, true);
+                DrawPlace(gridPos);
+                DrawSelector(gridPos, placeColor, false);
                 if (e.type == EventType.MouseDown)
                 {
                     editor.CreateCell(gridPos);
@@ -338,6 +338,14 @@ public partial class LevelEditorInspector
             }
         }
 
+    }
+
+    private void DrawPlace(Vector2Int cell)
+    {
+        Handles.color = placeColor;
+        Vector3 pos = GridUtils.CenterXZ(cell);
+        Handles.DrawWireCube(pos, new Vector3(0.8f, 0f, 0.8f));
+        DrawTextBubble(cell, 0, editor.listenerNames[editor.selectedPlaceTypeIndex],Color.green);
     }
 
 

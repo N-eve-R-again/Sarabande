@@ -1,12 +1,9 @@
-using JetBrains.Annotations;
 using Sarabande.Core;
 using Sarabande.Levels;
-
+using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using UnityEditor;
-
 using UnityEngine;
 
 
@@ -94,8 +91,43 @@ public class LevelEditor : MonoBehaviour
     public Dictionary<string, Vector2Int> availableKeys = new();
 
     private string originalJson; // Stocke l'état initial
+    private Type[] availableListenerTypes = new Type[0];
+    [SerializeReference]
+    public List<ListenerData> listenerDummies = new List<ListenerData>();
 
+    public string[] listenerNames = new string[0];
+
+    public int selectedPlaceTypeIndex = 0;
     Vector3[] bounds;
+
+
+    public Type[] GetListenersTypes()
+    {
+        if(listenerDummies.Count == 0)
+        {
+            availableListenerTypes = null;
+        }
+        if (availableListenerTypes == null) {
+            availableListenerTypes = new Type[0]; }
+        if(availableListenerTypes.Length == 0)
+        {
+            availableListenerTypes = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(ListenerData)))
+                .OrderBy(t => t.Name) // Tri alphabétique
+                .ToArray();
+            listenerNames = new string[availableListenerTypes.Length];
+            listenerDummies.Clear();
+            for (int i = 0; i < availableListenerTypes.Length; i++)
+            {
+                listenerDummies.Add((ListenerData)Activator.CreateInstance(availableListenerTypes[i]));
+                listenerNames[i] = availableListenerTypes[i].Name.Replace("Config", "").Replace("Data", "");
+            }
+
+        }
+
+        return availableListenerTypes;
+    }
 
     private void OnDrawGizmos()
     {
@@ -881,8 +913,21 @@ public class LevelEditor : MonoBehaviour
 
     public void CreateCell(Vector2Int cell)
     {
+        Undo.RecordObject(dataCopy, $"Place OBJ {availableListenerTypes[selectedPlaceTypeIndex].Name} {cell}");
+        Type typeToPlace = availableListenerTypes[selectedPlaceTypeIndex];
+
+        ListenerData brush = listenerDummies[selectedPlaceTypeIndex];
+
+        // Clone le brush
+        string json = JsonUtility.ToJson(brush);
+        ListenerData newObject = (ListenerData)Activator.CreateInstance(brush.GetType());
+        JsonUtility.FromJsonOverwrite(json, newObject);
+
+        newObject.cell = cell;
+        dataCopy.listeners.Add(newObject);
+        /*
         ObstacleData temp = new ObstacleData(ObstacleData.ObstacleType.Wall, cell,CardinalDirection.North );
-        dataCopy.obstacles.Add(temp);
+        dataCopy.obstacles.Add(temp);*/
         ReorderList();
         UpdateLookUpList();
 

@@ -5,23 +5,11 @@
 //   murs fins (arêtes), spawns Héros/NME, entrée/sortie, décors traversables,
 //   spécifications des systèmes (flèches, portes temporisées + leviers, messages,
 //   dalles de départ Disco, séquences Disco, grilles/gates, pads de triggers génériques).
-// - Sert de "source de vérité" lue par LevelContext et par tous les systèmes.
-//
-// Invariants (ne pas casser)
-// - Aucun renommage de champs publics/sérialisés, classes internes ou enums.
-// - Aucune modification de types, attributs [SerializeField], valeurs par défaut, ni logique.
-// - Les listes sont utilisées par index dans d’autres systèmes : l’ordre doit rester géré côté design.
-//
-// Dépendances
-// - Sarabande.Core : GridCoord, EdgeBlocker, EdgeDirection, EdgeExit
-// - Utilisé par : HeroController, NMESpawnSystem, GridGateSystem, TimedDoorSystem, LeverSystem,
-//                 PressurePadSystem/TriggerRouter, ArrowTrapSystem, DiscoSequenceSystem, MessageSystem, etc.
+// - Sert de "source de vérité" lue par LevelContext.
 
-using NUnit.Framework;
 using Sarabande.Core;
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -429,9 +417,11 @@ namespace Sarabande.Levels
     public class MessageConfig : ListenerData
     {       
         // coordonnées (utilise x/z comme partout)
-        [TextArea(2, 5)] public string text;
+        [TextArea(2, 5)] public string text = "text here";
         [Min(0.1f)] public float displaySeconds = 3f;
-        public AudioClip voiceClip;
+        public AudioClip voiceClip = null;
+
+        public MessageConfig() : base() { }
     }
 
     public enum TriggerObjectType
@@ -479,14 +469,14 @@ namespace Sarabande.Levels
 
 
         [Header("Core Config")]
-        public TriggerObjectType type;
+        public TriggerObjectType type = TriggerObjectType.TriggerPad;
 
         [ConditionalHide("type", TriggerObjectType.Lever)]
         public CardinalDirection attachedTo = CardinalDirection.South;
 
         [Header("Rearm Behaviour")]
 
-        public RearmType rearmType;
+        public RearmType rearmType = RearmType.OneShot;
         [Min(0f)] public float timeToRearm = 1f;
 
         public TriggerObjectConfig(TriggerObjectType type, string[] triggerKeys, Vector2Int cell, bool oneShot, bool waitForCallback, float timeToRearm, CardinalDirection attachedTo = CardinalDirection.North)
@@ -513,12 +503,21 @@ namespace Sarabande.Levels
 
         }
 
+        public TriggerObjectConfig() : base()
+        {
+        }
+
     }
     [System.Serializable]
     public class FakeWallData : ListenerData
     {
-        public FakeWallData(Vector2Int cell) {
-        this.cell = cell;
+        public FakeWallData(Vector2Int cell) 
+        {
+            this.cell = cell;
+        }
+
+        public FakeWallData() : base()
+        {
         }
     }
 
@@ -534,20 +533,23 @@ namespace Sarabande.Levels
     [System.Serializable]
     public abstract class ListenerData
     {
-        public Vector2Int cell;
+        public Vector2Int cell = Vector2Int.zero;
         public string[] triggerKeys = new string[0];
-        
+        public ListenerData()
+        {
+        }
+
     }
 
     [System.Serializable]
     public class ArrowTrapConfig : TriggerableData
     {
            // première case dans la map que la flèche traverse
-        public CardinalDirection travelDir;         // direction de déplacement (N/E/S/W)
-        [Min(0.1f)] public float arrowSpeed;   // vitesse (unités monde / seconde)
+        public CardinalDirection travelDir = CardinalDirection.North;         // direction de déplacement (N/E/S/W)
+        [Min(0.1f)] public float arrowSpeed = 1f;   // vitesse (unités monde / seconde)
 
         // --- options de réarmement ---
-        public bool canRearm;                   // si true, le piège se réarme
+        public bool canRearm = false;                   // si true, le piège se réarme
         [Min(0f)] public float rearmTimeDelay = 1f;      // délai avant réarmement (secondes)
 
 
@@ -561,7 +563,9 @@ namespace Sarabande.Levels
             this.triggerKey = triggerKey;
         }
 
-        
+        public ArrowTrapConfig() : base()
+        {
+        }
     }
 
     [System.Serializable]
