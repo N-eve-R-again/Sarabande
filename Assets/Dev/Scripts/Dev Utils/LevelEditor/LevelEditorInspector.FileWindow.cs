@@ -201,4 +201,11 @@ public partial class LevelEditorInspector
 
         GUI.enabled = true;
     }
+
+    private void DrawSeparator(bool spaceBefore = false, bool spaceAfter = false)
+    {
+        if (spaceBefore) EditorGUILayout.Space();
+        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        if (spaceAfter) EditorGUILayout.Space();
+    }
 }

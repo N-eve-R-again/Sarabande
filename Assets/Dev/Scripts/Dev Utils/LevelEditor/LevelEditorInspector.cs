@@ -77,11 +77,13 @@ public partial class LevelEditorInspector : Editor
             }
             
         }
+
+        EditorGUILayout.Space();
+        DrawDisplayLayerMasks();
+
         EditorGUILayout.EndVertical();
 
         EditorGUILayout.Space();
-
-
 
         if (editor.hotCopyCreated == true && editor.dataCopy != null)
         {
@@ -92,6 +94,33 @@ public partial class LevelEditorInspector : Editor
         serializedObject.ApplyModifiedProperties();
         editor.UpdateFlags();
     }
+    void DrawDisplayLayerMasks()
+    {
+        EditorGUILayout.LabelField("Display in Scene View", EditorStyles.centeredGreyMiniLabel);
+        EditorGUILayout.BeginHorizontal();
+
+        // Bouton All
+        bool allActive = editor.displayFilter == DisplayFilter.Everything;
+        GUI.backgroundColor = allActive ? Color.cyan : Color.gray;
+
+        if (GUILayout.Button("All", GUILayout.Height(20)))
+        {
+            editor.displayFilter = allActive ? DisplayFilter.None : DisplayFilter.Everything;
+            SceneView.RepaintAll();
+        }
+
+        GUI.backgroundColor = Color.white;
+
+        DisplayFilterButton("O", "Obstacles", DisplayFilter.Obstacles);
+        DisplayFilterButton("L", "Listeners", DisplayFilter.Listeners);
+        DisplayFilterButton("T", "Triggerables", DisplayFilter.Triggerables);
+        DisplayFilterButton("T.L", "Trigger Links", DisplayFilter.TriggerLinks);
+
+
+        EditorGUILayout.EndHorizontal();
+
+    }
+
 
     void DisplayFilterButton(string label, string tooltip, DisplayFilter flag)
     {
@@ -116,35 +145,10 @@ public partial class LevelEditorInspector : Editor
         GUIStyle windowStyle = new GUIStyle(GUI.skin.window);
         windowStyle.padding = new RectOffset(10, 10, 10, 10);
         GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
-        boxStyle.padding = new RectOffset(10, 4, 10, 4);
+        boxStyle.padding = new RectOffset(2, 2, 2, 2);
 
         EditorGUILayout.BeginVertical(windowStyle);
 
-        EditorGUILayout.BeginVertical(boxStyle);
-
-        EditorGUILayout.BeginHorizontal();
-
-        // Bouton All
-        bool allActive = editor.displayFilter == DisplayFilter.Everything;
-        GUI.backgroundColor = allActive ? Color.cyan : Color.gray;
-
-        if (GUILayout.Button("All", GUILayout.Height(20)))
-        {
-            editor.displayFilter = allActive ? DisplayFilter.None : DisplayFilter.Everything;
-        }
-
-        GUI.backgroundColor = Color.white;
-
-        DisplayFilterButton("O", "Obstacles", DisplayFilter.Obstacles);
-        DisplayFilterButton("L", "Listeners", DisplayFilter.Listeners);
-        DisplayFilterButton("T", "Triggerables", DisplayFilter.Triggerables);
-        DisplayFilterButton("T.L", "Trigger Links", DisplayFilter.TriggerLinks);
-
-
-        EditorGUILayout.EndHorizontal();
-        EditorGUILayout.Space();
-        EditorGUILayout.EndVertical();
-        EditorGUILayout.Space();
         // Tes boutons, toolbar, etc.
         EditorGUILayout.LabelField("Tools", EditorStyles.boldLabel);
 
@@ -172,6 +176,7 @@ public partial class LevelEditorInspector : Editor
         }
 
         GUI.backgroundColor = Color.white;
+        EditorGUILayout.EndVertical();
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space();
@@ -184,7 +189,7 @@ public partial class LevelEditorInspector : Editor
                 DrawPlaceToolInspector(); break;
                 //case LevelEditor.ToolType.Remove: RemoveTool(e, gridPos); break;
         }
-        EditorGUILayout.EndVertical();
+
         EditorGUILayout.Space();
 
     }
@@ -208,9 +213,13 @@ public partial class LevelEditorInspector : Editor
         SerializedProperty widthLevel = dataCopySO.FindProperty("width");
         SerializedProperty heightlevel = dataCopySO.FindProperty("height");
         SerializedProperty discosSequences = dataCopySO.FindProperty("discoSequencesConfigs");
+        SerializedProperty exit = dataCopySO.FindProperty("exit");
+        SerializedProperty hero = dataCopySO.FindProperty("heroSpawnConfig");
 
         EditorGUILayout.PropertyField(widthLevel);
         EditorGUILayout.PropertyField(heightlevel);
+        EditorGUILayout.PropertyField(exit);
+        EditorGUILayout.PropertyField(hero);
         EditorGUILayout.PropertyField(discosSequences.GetArrayElementAtIndex(0));
 
         EditorGUILayout.Space();
@@ -223,7 +232,7 @@ public partial class LevelEditorInspector : Editor
     }
     private void DrawPlaceToolInspector()
     {
-        GUIStyle windowStyle = new GUIStyle(GUI.skin.box);
+        GUIStyle windowStyle = new GUIStyle(GUI.skin.window);
         windowStyle.padding = new RectOffset(10, 10, 10, 10);
         EditorGUILayout.BeginVertical(windowStyle);
         EditorGUILayout.LabelField("Select Type to Place", EditorStyles.boldLabel);
@@ -233,7 +242,7 @@ public partial class LevelEditorInspector : Editor
         for (int i = 0; i < listenerTypes.Length; i++)
         {
             bool isSelected = editor.selectedPlaceTypeIndex == i;
-            GUI.backgroundColor = isSelected ? Color.green : Color.white;
+            GUI.backgroundColor = isSelected ? Color.white : Color.gray;
 
             string nametype = editor.listenerNames[i];
             string label = nametype;
@@ -246,16 +255,32 @@ public partial class LevelEditorInspector : Editor
 
         GUI.backgroundColor = Color.white;
         EditorGUILayout.EndHorizontal();
-        EditorGUILayout.Space();
+
 
         SerializedProperty brushesProp = serializedObject.FindProperty("listenerDummies");
         SerializedProperty currentBrush = brushesProp.GetArrayElementAtIndex(editor.selectedPlaceTypeIndex);
         currentBrush.isExpanded = true;
-        EditorGUILayout.PropertyField(currentBrush, true);
+
+        DrawSeparator(false,false);
+
+        switch (editor.listenerDummies[editor.selectedPlaceTypeIndex])
+        {
+            case TriggerObjectConfig:
+                InspectTriggerObject(currentBrush, false);
+                break;
+            default: EditorGUILayout.PropertyField(currentBrush, true);
+                break;
+        }
+        //EditorGUILayout.PropertyField(currentBrush, true);
         EditorGUILayout.EndVertical();
     }
     private void SelectToolInspector()
     {
+
+        GUIStyle boxStyle = new GUIStyle(GUI.skin.window);
+        boxStyle.padding = new RectOffset(10, 10, 10, 10);
+
+        EditorGUILayout.BeginVertical(boxStyle);
 
         if (editor.objectIsSelected)
         {
@@ -284,22 +309,21 @@ public partial class LevelEditorInspector : Editor
 
                     if (itemProp != null)
                     {
-                        GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
-                        boxStyle.padding = new RectOffset(10, 10, 10, 10);
-                        EditorGUILayout.BeginVertical(boxStyle);
 
-                        EditorGUILayout.LabelField($"Selected {editor.selectedObjectType.ToString()} :", EditorStyles.boldLabel);
+                        //EditorGUILayout.Space();
+
 
                         switch (editor.selectedObjectType)
                         {
                             case SelectedObjectType.Obstacle:
-                        
                                 InspectObstacle(itemProp); break;
-                            case SelectedObjectType.Listener: InspectListener(itemProp); break;
-                            case SelectedObjectType.Triggerable: InspectTriggerable(itemProp); break;
+                            case SelectedObjectType.Listener: 
+                                InspectListener(itemProp); break;
+                            case SelectedObjectType.Triggerable: 
+                                InspectTriggerable(itemProp); break;
                         }
 
-                        EditorGUILayout.EndVertical();
+                        //EditorGUILayout.EndVertical();
                     }
                     Undo.RecordObject(editor.dataCopy, "Inspect Obj");
                     dataCopySO.ApplyModifiedProperties();
@@ -317,7 +341,10 @@ public partial class LevelEditorInspector : Editor
         {
             EditorGUILayout.LabelField("No Object Selected - Click on an object to see its properties", EditorStyles.helpBox);
         }
+        EditorGUILayout.EndVertical();
     }
+
+
     private void InspectTriggerable(SerializedProperty item)
     {
 
@@ -329,7 +356,22 @@ public partial class LevelEditorInspector : Editor
     private void InspectListener(SerializedProperty item)
     {
         item.isExpanded = true;
-        EditorGUILayout.PropertyField(item, GUIContent.none,true);
+        switch (editor.dataCopy.listeners[editor.selectedObjectIndex])
+        {
+            case FakeWallData:
+                break;
+            case TriggerObjectConfig:
+                InspectTriggerObject(item);
+                break;
+            case MessageConfig:
+                InspectMessage(item);
+                break;
+            default:
+                EditorGUILayout.LabelField($"Selected {editor.dataCopy.listeners[editor.selectedObjectIndex].GetType().Name} :", EditorStyles.boldLabel);
+                EditorGUILayout.PropertyField(item, GUIContent.none, true);
+                break;
+        }
+
     }
     private void InspectObstacle(SerializedProperty item)
     {
@@ -366,7 +408,9 @@ public partial class LevelEditorInspector : Editor
 
     private void InspectMessage(SerializedProperty item)
     {
-        EditorGUILayout.PropertyField(item, GUIContent.none);
+        EditorGUILayout.LabelField($"Selected Message Collectible :", EditorStyles.boldLabel);
+
+        EditorGUILayout.PropertyField(item, GUIContent.none, true);
     }
     private void InspectArrowTrap(SerializedProperty item)
     {
@@ -377,10 +421,87 @@ public partial class LevelEditorInspector : Editor
         EditorGUILayout.PropertyField(item, GUIContent.none);
     }
 
-    private void InspectTriggerObject(SerializedProperty item)
+    private void InspectTriggerObject(SerializedProperty item, bool title = true)
     {
-        EditorGUILayout.PropertyField(item, GUIContent.none);
+        if (title) EditorGUILayout.LabelField($"Trigger Object", EditorStyles.boldLabel);
+
+        EditorGUILayout.Space();
+        GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
+        boxStyle.padding = new RectOffset(10, 5,5, 10);
+
+        SerializedProperty cell = item.FindPropertyRelative("cell");
+        SerializedProperty type = item.FindPropertyRelative("type");
+        SerializedProperty rearmType = item.FindPropertyRelative("rearmType");
+        SerializedProperty timerR = item.FindPropertyRelative("timeToRearm");
+        SerializedProperty attached = item.FindPropertyRelative("attachedTo");
+
+        EditorGUILayout.BeginVertical(boxStyle);
+
+        EditorGUILayout.LabelField($"Cell:", EditorStyles.label);
+
+        DrawDisabledField(cell);
+        //EditorGUILayout.PropertyField(cell, GUIContent.none);
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.Space();
+
+
+
+        EditorGUILayout.BeginVertical(boxStyle);
+
+        EditorGUILayout.LabelField($"Type:", EditorStyles.boldLabel);
+
+        int currentType = type.intValue;
+        string[] typeLabels = { "Invisible", "Pad", "Lever"};
+        int newType = GUILayout.Toolbar(currentType, typeLabels);
+
+        if (newType != currentType)
+        {
+            type.intValue = newType; // ou dir.enumValueIndex = newDir
+        }
+
+        if (type.intValue == (int)TriggerObjectType.Lever)
+        {
+            EditorGUILayout.LabelField($"Attached to side:", EditorStyles.miniLabel);
+            string[] dirLabels = { "↑", "→", "↓", "←" };
+            int currentDir = attached.intValue; // ou dir.enumValueIndex si c'est un enum
+
+            int newDir = GUILayout.Toolbar(currentDir, dirLabels, GUILayout.Width(120));
+            if (newDir != currentDir) attached.intValue = newDir; // ou dir.enumValueIndex = newDir
+        }
+
+
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.Space();
+
+
+        EditorGUILayout.BeginVertical(boxStyle);
+
+        EditorGUILayout.LabelField($"Rearm Type:", EditorStyles.boldLabel);
+
+        int currentRearmType = rearmType.intValue;
+        string[] RearmTypeLabels = { "One Shot", "CallBack", "Timer" };
+        string[] RearmTypeToolTips = { "Only activates once", "Rearms only after a callback from a triggerable", "Automaticaly rearms itself after some time" };
+
+
+        int newRearmType = GUILayout.Toolbar(currentRearmType, RearmTypeLabels);
+
+        if (newRearmType != currentRearmType)
+        {
+            rearmType.intValue = newRearmType; // ou dir.enumValueIndex = newDir
+        }
+        EditorGUILayout.LabelField(RearmTypeToolTips[currentRearmType], EditorStyles.helpBox);
+        if (rearmType.intValue == (int)RearmType.Timer)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"Time to rearm (seconds):", EditorStyles.miniLabel);
+            EditorGUILayout.PropertyField(timerR, GUIContent.none);
+            EditorGUILayout.EndHorizontal();
+        }
+
+        EditorGUILayout.EndVertical();
     }
-   
+
 
 }

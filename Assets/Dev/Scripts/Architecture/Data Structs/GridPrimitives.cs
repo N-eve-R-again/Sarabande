@@ -45,6 +45,7 @@ namespace Sarabande.Core
     [System.Serializable]
     public struct EdgeExit
     {
+        public bool startObstructed;
         public GridCoord fromCell;     // ex: H1 = (7,0)
         public CardinalDirection direction; // ex: East (sortir à droite)
 

@@ -322,19 +322,12 @@ public partial class LevelEditorInspector
         if (editor.InsideBounds(gridPos))
         {
             // Ta logique ici 
-            if (editor.CellOccuped(gridPos))
+
+            DrawPlace(gridPos);
+            DrawSelector(gridPos, placeColor, false);
+            if (e.type == EventType.MouseDown)
             {
-                DrawSelector(gridPos, placeColor, false);
-                DrawPlace(gridPos);
-            }
-            else
-            {
-                DrawPlace(gridPos);
-                DrawSelector(gridPos, placeColor, false);
-                if (e.type == EventType.MouseDown)
-                {
-                    editor.CreateCell(gridPos);
-                }
+                editor.CreateCell(gridPos);
             }
         }
 

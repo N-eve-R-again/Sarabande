@@ -467,8 +467,6 @@ namespace Sarabande.Levels
     public class TriggerObjectConfig : ListenerData
     {
 
-
-        [Header("Core Config")]
         public TriggerObjectType type = TriggerObjectType.TriggerPad;
 
         [ConditionalHide("type", TriggerObjectType.Lever)]

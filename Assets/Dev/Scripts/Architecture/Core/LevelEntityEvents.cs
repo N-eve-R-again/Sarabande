@@ -83,7 +83,11 @@ public static class NavigationEvents
     => OnMoveDynamicObstacle?.Invoke(key, newKey);
 
     public static event Func<Vector2Int, Vector2Int, CardinalDirection, bool> OnQueryCollision;
-
     public static bool QueryCollision(Vector2Int from, Vector2Int to, CardinalDirection actorDir)
     => OnQueryCollision?.Invoke(from, to, actorDir) ?? false;
+
+    public static event Func<Vector2Int, Vector2Int, CardinalDirection, bool> OnQueryExitPortal;
+    public static bool QueryExitPortal(Vector2Int from, Vector2Int to, CardinalDirection actorDir)
+    => OnQueryExitPortal?.Invoke(from, to, actorDir) ?? false;
+ 
 }

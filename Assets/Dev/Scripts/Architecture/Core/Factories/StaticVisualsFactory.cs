@@ -17,6 +17,7 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
     [Header("Prefabs")]
     [SerializeField] private GameObject wallPrefab;
     [SerializeField] private GameObject thinWallPrefab;
+    [SerializeField] private GameObject Exit;
 
     [Header("Grid Visuals")]
     [SerializeField, Min(0.001f)] private float lineWidth = 0.03f;
@@ -38,6 +39,8 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
 
         BuildGridLines(_levelData);
         BuildObstacles(_levelData);
+
+        Exit.GetComponent<ExitDoorEntity>().Init(_levelData.exit);
 
         jobDone = true;
     }

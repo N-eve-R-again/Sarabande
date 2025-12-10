@@ -149,7 +149,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 3
       scalar: 1
-      minScalar: 1.5
+      minScalar: 2
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -319,8 +319,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.3
-      minScalar: 0.15
+      scalar: 0.35
+      minScalar: 0.2
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -1078,12 +1078,21 @@ ParticleSystem:
         - serializedVersion: 3
           time: 0
           value: 1
-          inSlope: -2
-          outSlope: -2
+          inSlope: -0.051639043
+          outSlope: -0.051639043
           tangentMode: 0
           weightedMode: 0
           inWeight: 0
-          outWeight: 0
+          outWeight: 0.4973099
+        - serializedVersion: 3
+          time: 0.4098976
+          value: 0.874193
+          inSlope: -1.0647327
+          outSlope: -1.0647327
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.40885806
+          outWeight: 0.33333334
         - serializedVersion: 3
           time: 1
           value: 0
@@ -2123,12 +2132,21 @@ ParticleSystem:
         - serializedVersion: 3
           time: 0
           value: 1
-          inSlope: -3.0336936
-          outSlope: -3.0336936
+          inSlope: -5.017545
+          outSlope: -5.017545
           tangentMode: 0
           weightedMode: 0
           inWeight: 0
-          outWeight: 0.14243323
+          outWeight: 0.24754743
+        - serializedVersion: 3
+          time: 0.37288886
+          value: 0.00045522302
+          inSlope: -0.018397033
+          outSlope: -0.018397033
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0.33333334
         - serializedVersion: 3
           time: 1
           value: 0
@@ -5000,6 +5018,10 @@ MonoBehaviour:
     direction: 0
     timer: 0
     startopen: 0
+  obstacleData:
+    cell: {x: 0, y: 0}
+    type: 0
+    thinWallDirection: 0
   visual: {fileID: 4359535939721465119}
 --- !u!114 &4359535939721465119
 MonoBehaviour:

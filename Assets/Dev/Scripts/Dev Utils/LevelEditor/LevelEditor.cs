@@ -151,7 +151,8 @@ public class LevelEditor : MonoBehaviour
             Updatebounds();
         }
         DrawBounds();
-
+        DrawDoor(dataCopy.heroSpawnConfig.spawnCell, dataCopy.heroSpawnConfig.spawnDirection, new Color(1f, 0.5f, 0f));
+        DrawDoor(dataCopy.exit.fromCell, dataCopy.exit.direction, Color.green);
 
         foreach (var space in lookupTable)
         {
@@ -173,24 +174,7 @@ public class LevelEditor : MonoBehaviour
             }
         }
 
-        /*if (displayFilter.HasFlag(DisplayFilter.TriggerLinks))
-        {
-            foreach (var item in links)
-            {
-                if (item.valid() && !item.IsGlobal())
-                {
-                    Gizmos.color = new Color(1, 0.5f, 0);
-                    Gizmos.DrawLine(GridUtils.CenterXZ(item.cellA), GridUtils.CenterInCell(item.cellB));
-                }
-                else
-                {
-                    Gizmos.color = Color.red;
-                    Gizmos.DrawLine(GridUtils.CenterXZ(item.cellA), GridUtils.CenterXZ(item.cellA) + Vector3.up * 0.4f);
-                }
-
-            }
-        }
-        */
+        DrawSpriteIcon("Gizmo_Hero", dataCopy.heroSpawnConfig.spawnCell, new Color(1f, 0.5f, 0f), false);
 
 
         Gizmos.color = Color.white;
@@ -203,9 +187,7 @@ public class LevelEditor : MonoBehaviour
                     DrawObstacle(dataCopy.obstacles[selectedObjectIndex], true);
                     break;
                 case SelectedObjectType.Listener:
-
                     DrawListener(dataCopy.listeners[selectedObjectIndex], true);
-
                     break;
 
                 case SelectedObjectType.Triggerable:
@@ -215,6 +197,27 @@ public class LevelEditor : MonoBehaviour
             
         }
 
+    }
+
+    private void DrawDoor(Vector2Int cell, CardinalDirection dir, Color color)
+    {
+        Gizmos.color = color;
+        Vector3 pos = GridUtils.CenterXZ(cell) + GridUtils.DirToVec3(dir) * 0.5f;
+        bool horizontal = dir == CardinalDirection.North || dir == CardinalDirection.South;
+
+        Vector3 sideDir = horizontal ? Vector3.left : Vector3.forward;
+        Vector3 fwdDir = horizontal ? Vector3.forward : Vector3.right;
+
+        Vector3 leftsidePos = fwdDir * 0.05f  + Vector3.up * 0.55f + sideDir * 0.4f; 
+        Vector3 rightsidePos = fwdDir * 0.05f  + Vector3.up * 0.55f - sideDir * 0.4f;
+        Vector3 upsidePos = fwdDir * 0.05f + Vector3.up * 1.2f;
+
+        Vector3 pillarsize = horizontal ? new Vector3(0.2f, 1.1f, 0.1f) : new Vector3(0.1f, 1.1f, 0.2f);
+        Vector3 topsize = horizontal ? new Vector3(1f, 0.2f, 0.1f) : new Vector3(0.1f, 0.2f, 1f);
+
+        Gizmos.DrawCube(pos + leftsidePos, pillarsize);
+        Gizmos.DrawCube(pos + rightsidePos, pillarsize);
+        Gizmos.DrawCube(pos + upsidePos, topsize);
     }
 
     public void ChangeDisplayFlag(DisplayFilter flag)
@@ -230,19 +233,22 @@ public class LevelEditor : MonoBehaviour
         {
             case MessageConfig message:
 
-                DrawSpriteIcon("Gizmo_Message", message.cell, Color.yellow, selectionGizmo);
+                DrawSpriteIcon("Gizmo_Message", message.cell, selectionGizmo ? selectedColor : Color.yellow, selectionGizmo);
                 break;
             case TriggerObjectConfig triggerObject:
                 DrawTriggerObject(triggerObject,selectionGizmo);
                 break;
             case FakeWallData fakeWallData:
-                Gizmos.color = Color.gray;
+                
+                Color color = selectionGizmo ? selectedColor : Color.gray;
+                Gizmos.color = color;
                 DrawCubeAtCell(fakeWallData.cell, true);
                 break;
             default:
 
                 break;
         }
+        Gizmos.color = Color.white;
     }
 
     private void DrawArrowTrap(Vector2Int cell, bool selectionGizmo)
@@ -572,6 +578,7 @@ public class LevelEditor : MonoBehaviour
     {
         links.Clear();
         List<string > global = new List<string>();
+        global.Add("exit");
         foreach (var item in dataCopy.discoSequencesConfigs)
         {
             global.Add(item.triggerKey);
@@ -824,6 +831,7 @@ public class LevelEditor : MonoBehaviour
                 objectIsSelected = true;
                 selectedObjectType = SelectedObjectType.Listener;
                 selectedObjectIndex = dataCopy.listeners.IndexOf((ListenerData)obj);
+                selectedCell = dataCopy.listeners[selectedObjectIndex].cell;
                 break;
             case ObstacleData:
                 objectIsSelected = true;

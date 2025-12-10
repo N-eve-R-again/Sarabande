@@ -186,7 +186,7 @@ namespace Sarabande.Player
             // Tentative de sortie : autorisée depuis la case/direction d'Exit
             if (IsExitMove(_gridPos, intendedDir))
             {
-                bool collidedexit = NavigationEvents.QueryCollision(_gridPos, targetCell, actorDirection);
+                bool collidedexit = NavigationEvents.QueryExitPortal(_gridPos, targetCell, actorDirection);
                 if (collidedexit)
                 {
                     StartCoroutine(Bump(intendedDir));

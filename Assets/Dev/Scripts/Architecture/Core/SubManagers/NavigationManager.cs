@@ -16,14 +16,18 @@ public class NavigationManager
         NavigationEvents.OnRegisterDynamicObstacle += RegisterDynamicObstacle;
         NavigationEvents.OnModifyDynamicObstacle += ModifyDynamicObstacle;
         NavigationEvents.OnMoveDynamicObstacle += MoveDynamicObstacle;
+
         NavigationEvents.OnQueryCollision += CheckForCollision;
+        NavigationEvents.OnQueryExitPortal += CheckForExitPortalAccess;
     }
     public void UnSubscribeToEvents()
     {
         NavigationEvents.OnRegisterDynamicObstacle -= RegisterDynamicObstacle;
         NavigationEvents.OnModifyDynamicObstacle -= ModifyDynamicObstacle;
         NavigationEvents.OnMoveDynamicObstacle -= MoveDynamicObstacle;
+
         NavigationEvents.OnQueryCollision -= CheckForCollision;
+        NavigationEvents.OnQueryExitPortal -= CheckForExitPortalAccess;
     }
     private void OnDestroy()
     {
@@ -47,6 +51,11 @@ public class NavigationManager
                 _thinBlockers.Add(item);
             }
         }
+    }
+
+    public bool CheckForExitPortalAccess(Vector2Int from, Vector2Int to, CardinalDirection _actorDir)
+    {
+        return DynamicObstacleCollision(from, to, _actorDir);
     }
     public bool CheckForCollision(Vector2Int from, Vector2Int to, CardinalDirection _actorDir)
     {
