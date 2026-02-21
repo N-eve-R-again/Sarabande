@@ -15,6 +15,7 @@ MonoBehaviour:
   width: 8
   height: 8
   exit:
+    startObstructed: 1
     fromCell:
       x: 7
       z: 4
@@ -129,9 +130,9 @@ MonoBehaviour:
     type: 0
     thinWallDirection: 0
   listeners:
-  - rid: 1441731545853854145
+  - rid: 1441731563824873701
   triggerables:
-  - rid: 1441731545853854146
+  - rid: 1441731563824873702
   discoSequencesConfigs:
   - successTriggerKeys:
     - door0
@@ -277,7 +278,7 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 1441731545853854145
+    - rid: 1441731563824873701
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 7, y: 2}
@@ -287,7 +288,7 @@ MonoBehaviour:
         attachedTo: 0
         rearmType: 1
         timeToRearm: 0
-    - rid: 1441731545853854146
+    - rid: 1441731563824873702
       type: {class: GateConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 6, y: 4}

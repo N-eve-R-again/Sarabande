@@ -9,11 +9,13 @@ public class LeverVisual : MonoBehaviour
     private bool pressed = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public void InitVisual(CardinalDirection dir, bool callback)
+    public void InitVisual(CardinalDirection dir, bool instant)
     {
         SetRotation(dir);
-        animator.SetBool("Callback", callback);
+        animator.SetBool("Instant", instant);
     }
+
+
 
     public void PressAnim()
     {

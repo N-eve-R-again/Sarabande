@@ -16,9 +16,9 @@ public class LevelEntityEvents
     public static void NotifyTriggerableCallback(ITriggerable triggerable)
     => OnTriggerableCallback?.Invoke(triggerable);
 
-    public static event Action<ISignalerEnxtension> OnSignalSent;
-    public static void SendSignal(ISignalerEnxtension signer)
-    => OnSignalSent?.Invoke(signer);
+    public static event Action<string[]> OnSignalSent;
+    public static void SendSignal(string[] signals)
+    => OnSignalSent?.Invoke(signals);
 }
 
 public static class RegistryEvents

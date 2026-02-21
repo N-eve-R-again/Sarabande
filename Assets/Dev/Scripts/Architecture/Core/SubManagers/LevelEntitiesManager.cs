@@ -12,6 +12,8 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
     //private static LevelEntitiesManager Instance;
     //public static LevelEntitiesManager I => Instance;
 
+    public List<EventTriggerable> eventTrig = new List<EventTriggerable>();
+
     [Header("SubManagers")]
     [SerializeField] private MessageSystem messageSystem;
     private InteractionSystem interactionSystem;
@@ -22,6 +24,7 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
         // S'abonner aux events
         interactionSystem = new InteractionSystem();
         interactionSystem.SubscribeToEvents();
+        interactionSystem.ImportGlobalEvents(eventTrig);
 
         navigationManager = new NavigationManager();
         navigationManager.SubscribeToEvents();

@@ -57,6 +57,7 @@ namespace Sarabande.Disco
 
         private void Awake()
         {
+            return;
             if (!levelData || !hero || !disco)
             {
                 Debug.LogError("[DiscoStartTileSystem] Références manquantes (LevelData/Hero/Disco).");
@@ -88,6 +89,7 @@ namespace Sarabande.Disco
 
         private void Update()
         {
+            return;
             var cell = hero.GridPos;
             if (cell == _lastHeroCell) return;
             _lastHeroCell = cell;

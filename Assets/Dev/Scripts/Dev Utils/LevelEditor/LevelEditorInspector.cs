@@ -226,6 +226,7 @@ public partial class LevelEditorInspector : Editor
         dataCopySO.ApplyModifiedProperties();
         editor.Updatebounds();
         editor.UpdateLinks();
+        editor.UpdateFlags();
 
 
         EditorGUILayout.EndVertical();
@@ -431,6 +432,7 @@ public partial class LevelEditorInspector : Editor
 
         SerializedProperty cell = item.FindPropertyRelative("cell");
         SerializedProperty type = item.FindPropertyRelative("type");
+        SerializedProperty triggerkeys = item.FindPropertyRelative("triggerKeys");
         SerializedProperty rearmType = item.FindPropertyRelative("rearmType");
         SerializedProperty timerR = item.FindPropertyRelative("timeToRearm");
         SerializedProperty attached = item.FindPropertyRelative("attachedTo");
@@ -445,7 +447,7 @@ public partial class LevelEditorInspector : Editor
 
         EditorGUILayout.Space();
 
-
+        EditorGUILayout.PropertyField(triggerkeys);
 
         EditorGUILayout.BeginVertical(boxStyle);
 
@@ -481,8 +483,8 @@ public partial class LevelEditorInspector : Editor
         EditorGUILayout.LabelField($"Rearm Type:", EditorStyles.boldLabel);
 
         int currentRearmType = rearmType.intValue;
-        string[] RearmTypeLabels = { "One Shot", "CallBack", "Timer" };
-        string[] RearmTypeToolTips = { "Only activates once", "Rearms only after a callback from a triggerable", "Automaticaly rearms itself after some time" };
+        string[] RearmTypeLabels = { "One Shot", "CallBack", "Timer", "Instant"};
+        string[] RearmTypeToolTips = { "Only activates once", "Rearms only after a callback from a triggerable", "Automaticaly rearms itself after some time", "Instantaneous Reload" };
 
 
         int newRearmType = GUILayout.Toolbar(currentRearmType, RearmTypeLabels);

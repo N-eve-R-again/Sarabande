@@ -26,7 +26,8 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
     {
         config = _config;
         ListenerCreationHelper.SetupListenerEntity(this, this, config);
-        visual.InitVisual(_config.attachedTo,config.rearmType == RearmType.CallBack);
+        visual.InitVisual(_config.attachedTo,config.rearmType == RearmType.Instant);
+        
         //transform.localScale = SetSize();
 
     }
@@ -55,6 +56,11 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
         {
             timer = config.timeToRearm;
             state = LeverState.WaitingRearm; 
+        }
+
+        if(config.rearmType == RearmType.Instant)
+        {
+            Rearm();
         }
 
     }

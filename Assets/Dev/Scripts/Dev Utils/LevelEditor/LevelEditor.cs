@@ -661,8 +661,13 @@ public class LevelEditor : MonoBehaviour
             obstacles = data.obstacles,
             listeners = data.listeners,
             triggerables = data.triggerables,
+            discoSequences = data.discoSequencesConfigs,
             width = data.width,
             height = data.height,
+            exit = data.exit,
+            heroSpawnConfig = data.heroSpawnConfig
+
+
         };
         return EditorJsonUtility.ToJson(snapshot);
     }
@@ -954,7 +959,8 @@ public class LevelDataSnapshot
     [SerializeReference] public List<DiscoSequenceConfig> discoSequences;
     public int width;
     public int height;
-
+    public EdgeExit exit;
+    public ActorSpawn heroSpawnConfig;
 
     // ... seulement tes données de gameplay
 }

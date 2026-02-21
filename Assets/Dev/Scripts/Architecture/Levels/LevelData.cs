@@ -150,7 +150,7 @@ namespace Sarabande.Levels
             foreach (var item in discoSequences)
             {
 
-                DiscoSequenceConfig config = new DiscoSequenceConfig("disco" + i,new string[0], item.cells,item.stepSeconds,item.defaultStepSeconds);
+                DiscoSequenceConfig config = new DiscoSequenceConfig("disco" + i,new string[0], new string[0], item.cells,item.stepSeconds,item.defaultStepSeconds);
                 discoSequencesConfigs.Add(config);
                 i++;
             }
@@ -377,6 +377,7 @@ namespace Sarabande.Levels
     public class DiscoSequenceConfig
     {
         public string[] successTriggerKeys = new string[0];
+        public string[] failTriggerKeys = new string[0];
         public string triggerKey = "undefined";
 
         [Header("Chemin à fouler (ordre strict)")]
@@ -388,10 +389,11 @@ namespace Sarabande.Levels
         [Header("Fallback timing")]
         public float defaultStepSeconds = 0.8f;
 
-        public DiscoSequenceConfig(string triggerKey,string[] successTriggerKeys, List<GridCoord> cells, List<float> stepSeconds, float defaultStepSeconds)
+        public DiscoSequenceConfig(string triggerKey,string[] successTriggerKeys, string[] failTriggerKeys , List<GridCoord> cells, List<float> stepSeconds, float defaultStepSeconds)
         {
             this.triggerKey = triggerKey;
             this.successTriggerKeys = successTriggerKeys;
+            this.failTriggerKeys = failTriggerKeys;
             this.cells = cells;
             this.stepSeconds = stepSeconds;
             this.defaultStepSeconds = defaultStepSeconds;
@@ -400,6 +402,7 @@ namespace Sarabande.Levels
         {
             triggerKey = "undefined";
             successTriggerKeys = new string[0];
+            failTriggerKeys = new string[0];
             cells = new List<GridCoord>();
             stepSeconds = new List<float>();
 
@@ -435,7 +438,8 @@ namespace Sarabande.Levels
     {
         OneShot,
         CallBack,
-        Timer
+        Timer,
+        Instant
     }
 
     public enum GateType
@@ -570,7 +574,6 @@ namespace Sarabande.Levels
     public class ActorSpawn
     {
         public Vector2Int spawnCell;
-        [EnumButtons]
         public CardinalDirection spawnDirection;
 
         public ActorSpawn(GridCoord spawnCell, CardinalDirection spawnDirection)

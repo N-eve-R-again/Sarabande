@@ -240,11 +240,6 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
---- !u!4 &290268956 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-  m_PrefabInstance: {fileID: 1245709528}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &511754652
 GameObject:
   m_ObjectHideFlags: 0
@@ -289,7 +284,7 @@ MonoBehaviour:
   spotAngle: 68
   innerSpotAngle: 67
   range: 30
-  intensity: 8
+  intensity: 0.16
   wobbleDeg: 8
   wobbleSpeed: 1.6
   randomizePhases: 1
@@ -637,6 +632,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1561729935}
+  - {fileID: 1119770613}
+  - {fileID: 1537606098}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &619786943
@@ -700,7 +697,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 619786941}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e54e35c2e1323c47a9e9f753f5a2890, type: 3}
   m_Name: 
@@ -726,18 +723,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Sarabande.Traps.ArrowTrapSystem, Assembly-CSharp
-        m_MethodName: 
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
       - m_Target: {fileID: 511754653}
         m_TargetAssemblyTypeName: Sarabande.VFX.DiscoLightRig, Assembly-CSharp
         m_MethodName: StartRig
@@ -753,45 +738,9 @@ MonoBehaviour:
   onSequenceSuccess:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Sarabande.Utils.LogOnEvent, Assembly-CSharp
-        m_MethodName: 
-        m_Mode: 5
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 'Debug.Log("[Disco] STOP: " + (new System.Diagnostics.StackTrace()).GetFrame(1)?.GetMethod()?.Name); '
-          m_BoolArgument: 0
-        m_CallState: 2
       - m_Target: {fileID: 735958318}
         m_TargetAssemblyTypeName: Sarabande.Audio.MusicSystem, Assembly-CSharp
         m_MethodName: ExitDisco
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: DISCO OK
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Sarabande.Gates.GridGateSystem, Assembly-CSharp
-        m_MethodName: 
-        m_Mode: 3
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: DISCO OK
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Sarabande.Traps.ArrowTrapSystem, Assembly-CSharp
-        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -819,30 +768,6 @@ MonoBehaviour:
       - m_Target: {fileID: 735958318}
         m_TargetAssemblyTypeName: Sarabande.Audio.MusicSystem, Assembly-CSharp
         m_MethodName: ExitDisco
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: DISCO FAILED
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Sarabande.Utils.LogOnEvent, Assembly-CSharp
-        m_MethodName: 
-        m_Mode: 5
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 'Debug.Log("[Disco] STOP: " + (new System.Diagnostics.StackTrace()).GetFrame(1)?.GetMethod()?.Name); '
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Sarabande.Traps.ArrowTrapSystem, Assembly-CSharp
-        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -884,7 +809,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 619786941}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48f1c098ce99d0c479815bf2a914a3e5, type: 3}
   m_Name: 
@@ -943,6 +868,79 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5b7ac40bf49f45458cafa911d3056d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  eventTrig:
+  - triggerKey: discoStart
+    _event:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 511754653}
+          m_TargetAssemblyTypeName: Sarabande.VFX.DiscoLightRig, Assembly-CSharp
+          m_MethodName: StartRig
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 1929999198}
+          m_TargetAssemblyTypeName: Sarabande.VFX.DiscoDancersRig, Assembly-CSharp
+          m_MethodName: OnDiscoStart
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - triggerKey: discoEnd
+    _event:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 511754653}
+          m_TargetAssemblyTypeName: Sarabande.VFX.DiscoLightRig, Assembly-CSharp
+          m_MethodName: StopRig
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 1929999198}
+          m_TargetAssemblyTypeName: Sarabande.VFX.DiscoDancersRig, Assembly-CSharp
+          m_MethodName: OnDiscoStop
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - triggerKey: cameraMoveA
+    _event:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 511754653}
+          m_TargetAssemblyTypeName: Sarabande.VFX.DiscoLightRig, Assembly-CSharp
+          m_MethodName: StopRig
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
   messageSystem: {fileID: 619786950}
 --- !u!1 &653965775
 GameObject:
@@ -1331,585 +1329,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 805807276}
   m_CullTransparentMesh: 1
---- !u!114 &808184266
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c1a542ffd2fa3743a4a7f83a79a553a, type: 3}
-  m_Name: copy_Level_EVE
-  m_EditorClassIdentifier: 
-  width: 8
-  height: 8
-  exit:
-    startObstructed: 0
-    fromCell:
-      x: 7
-      z: 0
-    direction: 1
-  obstacles:
-  - cell: {x: 7, y: 7}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 6, y: 7}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 5, y: 7}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 4, y: 7}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 2, y: 7}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 1, y: 7}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 0, y: 7}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 6, y: 5}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 4, y: 5}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 3, y: 5}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 2, y: 5}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 1, y: 5}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 7, y: 3}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 6, y: 3}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 5, y: 3}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 4, y: 3}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 3, y: 3}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 2, y: 3}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 1, y: 3}
-    type: 0
-    thinWallDirection: 0
-  - cell: {x: 5, y: 1}
-    type: 1
-    thinWallDirection: 1
-  - cell: {x: 3, y: 1}
-    type: 1
-    thinWallDirection: 1
-  - cell: {x: 5, y: 0}
-    type: 1
-    thinWallDirection: 1
-  listeners:
-  - rid: 1441731545853854186
-  - rid: 1441731545853854187
-  - rid: 1441731545853854188
-  - rid: 1441731545853854189
-  - rid: 1441731545853854190
-  - rid: 1441731545853854191
-  - rid: 1441731545853854192
-  - rid: 1441731545853854193
-  - rid: 1441731545853854194
-  - rid: 1441731545853854195
-  - rid: 1441731545853854196
-  - rid: 1441731545853854197
-  - rid: 1441731545853854198
-  - rid: 1441731545853854199
-  triggerables:
-  - rid: 1441731545853854200
-  - rid: 1441731545853854201
-  - rid: 1441731545853854202
-  - rid: 1441731545853854203
-  - rid: 1441731545853854204
-  - rid: 1441731545853854205
-  - rid: 1441731545853854206
-  - rid: 1441731545853854207
-  - rid: 1441731545853854208
-  discoSequencesConfigs:
-  - successTriggerKeys:
-    - door1
-    - exit
-    triggerKey: disco0
-    cells:
-    - x: 0
-      z: 4
-    - x: 1
-      z: 2
-    - x: 4
-      z: 2
-    - x: 4
-      z: 0
-    - x: 5
-      z: 0
-    - x: 6
-      z: 2
-    stepSeconds:
-    - 2
-    - 2
-    - 2
-    - 2.5
-    - 1
-    - 4
-    defaultStepSeconds: 8
-  heroSpawnConfig:
-    spawnCell: {x: 3, y: 7}
-    spawnDirection: 0
-  nonWalkables:
-  - x: 0
-    z: 7
-  - x: 1
-    z: 7
-  - x: 2
-    z: 7
-  - x: 4
-    z: 7
-  - x: 5
-    z: 7
-  - x: 6
-    z: 7
-  - x: 7
-    z: 7
-  - x: 1
-    z: 5
-  - x: 2
-    z: 5
-  - x: 3
-    z: 5
-  - x: 4
-    z: 5
-  - x: 6
-    z: 5
-  - x: 1
-    z: 3
-  - x: 2
-    z: 3
-  - x: 3
-    z: 3
-  - x: 4
-    z: 3
-  - x: 5
-    z: 3
-  - x: 6
-    z: 3
-  - x: 7
-    z: 3
-  thinWalls:
-  - a:
-      x: 3
-      z: 1
-    b:
-      x: 4
-      z: 1
-  - a:
-      x: 5
-      z: 1
-    b:
-      x: 6
-      z: 1
-  - a:
-      x: 5
-      z: 0
-    b:
-      x: 6
-      z: 0
-  heroSpawn:
-    x: 3
-    z: 7
-  nmeSpawns:
-  - x: 1
-    z: 6
-  nmeFacings: 
-  heroEntry: 0
-  passThroughWalls:
-  - x: 0
-    z: 5
-  arrowTraps:
-  - triggerCell:
-      x: 5
-      z: 5
-    startCell:
-      x: 5
-      z: 4
-    travelDir: 0
-    arrowSpeed: 6
-    canRearm: 0
-    rearmDelay: 0
-    linkToDisco: 0
-    emissions: []
-  - triggerCell:
-      x: 0
-      z: 2
-    startCell:
-      x: 0
-      z: 0
-    travelDir: 0
-    arrowSpeed: 6
-    canRearm: 0
-    rearmDelay: 0
-    linkToDisco: 0
-    emissions: []
-  - triggerCell:
-      x: 1
-      z: 0
-    startCell:
-      x: 1
-      z: 0
-    travelDir: 0
-    arrowSpeed: 6
-    canRearm: 0
-    rearmDelay: 0
-    linkToDisco: 0
-    emissions: []
-  - triggerCell:
-      x: 2
-      z: 2
-    startCell:
-      x: 2
-      z: 0
-    travelDir: 0
-    arrowSpeed: 6
-    canRearm: 0
-    rearmDelay: 0
-    linkToDisco: 0
-    emissions: []
-  - triggerCell:
-      x: 2
-      z: 0
-    startCell:
-      x: 2
-      z: 0
-    travelDir: 0
-    arrowSpeed: 6
-    canRearm: 0
-    rearmDelay: 0
-    linkToDisco: 0
-    emissions: []
-  - triggerCell:
-      x: 4
-      z: 1
-    startCell:
-      x: 4
-      z: 0
-    travelDir: 0
-    arrowSpeed: 6
-    canRearm: 0
-    rearmDelay: 0
-    linkToDisco: 0
-    emissions: []
-  - triggerCell:
-      x: 5
-      z: 1
-    startCell:
-      x: 5
-      z: 0
-    travelDir: 0
-    arrowSpeed: 6
-    canRearm: 0
-    rearmDelay: 0
-    linkToDisco: 0
-    emissions: []
-  - triggerCell:
-      x: 7
-      z: 1
-    startCell:
-      x: 7
-      z: 0
-    travelDir: 0
-    arrowSpeed: 6
-    canRearm: 0
-    rearmDelay: 0
-    linkToDisco: 0
-    emissions: []
-  timedDoors:
-  - cell:
-      x: 1
-      z: 4
-    openSeconds: 4
-  levers:
-  - cell:
-      x: 4
-      z: 6
-    requireFacing: 0
-    linkedDoorIndex: 0
-  messages:
-  - cell: {x: 0, y: 6}
-    triggerKeys: []
-    text: "Cet endroit respire... ou plut\xF4t soupire..."
-    displaySeconds: 4
-    voiceClip: {fileID: 8300000, guid: 21124b32ac434bf4f91102c015b56fe3, type: 3}
-  - cell: {x: 1, y: 1}
-    triggerKeys: []
-    text: "Allez bouge moi ce boule, \xE7a vient du bas..."
-    displaySeconds: 4
-    voiceClip: {fileID: 8300000, guid: a1221e28227fa5c4598a321b5ee6dcb9, type: 3}
-  - cell: {x: 7, y: 2}
-    triggerKeys: []
-    text: Tout est affaire de sensation, suivre le rythme et les pulsions.
-    displaySeconds: 6
-    voiceClip: {fileID: 8300000, guid: 97edbf8a9daad764eadd66ad422e0648, type: 3}
-  discoStartTiles:
-  - x: 2
-    z: 4
-  discoSequences:
-  - cells:
-    - x: 0
-      z: 4
-    - x: 1
-      z: 2
-    - x: 4
-      z: 2
-    - x: 4
-      z: 0
-    - x: 5
-      z: 0
-    - x: 6
-      z: 2
-    stepSeconds:
-    - 2
-    - 2
-    - 2
-    - 2.5
-    - 1
-    - 4
-    startOnDoorIndex: 0
-    defaultStepSeconds: 8
-  gridGates:
-  - cell:
-      x: 7
-      z: 0
-    side: 1
-    initiallyOpen: 0
-  references:
-    version: 2
-    RefIds:
-    - rid: 1441731545853854186
-      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 4, y: 7}
-        triggerKeys:
-        - door0
-        type: 2
-        attachedTo: 2
-        rearmType: 1
-        timeToRearm: 0
-    - rid: 1441731545853854187
-      type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 0, y: 6}
-        triggerKeys: []
-        text: "Cet endroit respire... ou plut\xF4t soupire..."
-        displaySeconds: 4
-        voiceClip: {fileID: 8300000, guid: 21124b32ac434bf4f91102c015b56fe3, type: 3}
-    - rid: 1441731545853854188
-      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 5, y: 5}
-        triggerKeys:
-        - arrowTrap_0
-        type: 1
-        attachedTo: 0
-        rearmType: 0
-        timeToRearm: 0
-    - rid: 1441731545853854189
-      type: {class: FakeWallData, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 0, y: 5}
-        triggerKeys: []
-    - rid: 1441731545853854190
-      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 2, y: 4}
-        triggerKeys:
-        - disco0
-        type: 1
-        attachedTo: 0
-        rearmType: 1
-        timeToRearm: 0
-    - rid: 1441731545853854191
-      type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 7, y: 2}
-        triggerKeys: []
-        text: Tout est affaire de sensation, suivre le rythme et les pulsions.
-        displaySeconds: 6
-        voiceClip: {fileID: 8300000, guid: 97edbf8a9daad764eadd66ad422e0648, type: 3}
-    - rid: 1441731545853854192
-      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 2, y: 2}
-        triggerKeys:
-        - arrowTrap_3
-        type: 1
-        attachedTo: 0
-        rearmType: 0
-        timeToRearm: 0
-    - rid: 1441731545853854193
-      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 0, y: 2}
-        triggerKeys:
-        - arrowTrap_1
-        type: 1
-        attachedTo: 0
-        rearmType: 0
-        timeToRearm: 0
-    - rid: 1441731545853854194
-      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 7, y: 1}
-        triggerKeys:
-        - arrowTrap_7
-        type: 1
-        attachedTo: 0
-        rearmType: 0
-        timeToRearm: 0
-    - rid: 1441731545853854195
-      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 5, y: 1}
-        triggerKeys:
-        - arrowTrap_6
-        type: 1
-        attachedTo: 0
-        rearmType: 0
-        timeToRearm: 0
-    - rid: 1441731545853854196
-      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 4, y: 1}
-        triggerKeys:
-        - arrowTrap_5
-        type: 1
-        attachedTo: 0
-        rearmType: 0
-        timeToRearm: 0
-    - rid: 1441731545853854197
-      type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 1, y: 1}
-        triggerKeys: []
-        text: "Allez bouge moi ce boule, \xE7a vient du bas..."
-        displaySeconds: 4
-        voiceClip: {fileID: 8300000, guid: a1221e28227fa5c4598a321b5ee6dcb9, type: 3}
-    - rid: 1441731545853854198
-      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 2, y: 0}
-        triggerKeys:
-        - arrowTrap_3
-        type: 1
-        attachedTo: 0
-        rearmType: 0
-        timeToRearm: 0
-    - rid: 1441731545853854199
-      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 1, y: 0}
-        triggerKeys:
-        - arrowTrap_2
-        type: 1
-        attachedTo: 0
-        rearmType: 0
-        timeToRearm: 0
-    - rid: 1441731545853854200
-      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 5, y: 4}
-        triggerKey: arrowTrap_0
-        travelDir: 0
-        arrowSpeed: 6
-        canRearm: 0
-        rearmTimeDelay: 0
-    - rid: 1441731545853854201
-      type: {class: GateConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 1, y: 4}
-        triggerKey: door0
-        type: 0
-        direction: 3
-        timer: 4
-        startopen: 0
-    - rid: 1441731545853854202
-      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 7, y: 0}
-        triggerKey: arrowTrap_7
-        travelDir: 0
-        arrowSpeed: 6
-        canRearm: 0
-        rearmTimeDelay: 0
-    - rid: 1441731545853854203
-      type: {class: GateConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 7, y: 0}
-        triggerKey: door1
-        type: 1
-        direction: 1
-        timer: 0
-        startopen: 0
-    - rid: 1441731545853854204
-      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 5, y: 0}
-        triggerKey: arrowTrap_6
-        travelDir: 0
-        arrowSpeed: 6
-        canRearm: 0
-        rearmTimeDelay: 0
-    - rid: 1441731545853854205
-      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 4, y: 0}
-        triggerKey: arrowTrap_5
-        travelDir: 0
-        arrowSpeed: 6
-        canRearm: 0
-        rearmTimeDelay: 0
-    - rid: 1441731545853854206
-      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 2, y: 0}
-        triggerKey: arrowTrap_3
-        travelDir: 0
-        arrowSpeed: 6
-        canRearm: 0
-        rearmTimeDelay: 0
-    - rid: 1441731545853854207
-      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 1, y: 0}
-        triggerKey: arrowTrap_2
-        travelDir: 0
-        arrowSpeed: 6
-        canRearm: 0
-        rearmTimeDelay: 0
-    - rid: 1441731545853854208
-      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
-      data:
-        cell: {x: 0, y: 0}
-        triggerKey: arrowTrap_1
-        travelDir: 0
-        arrowSpeed: 6
-        canRearm: 0
-        rearmTimeDelay: 0
 --- !u!1 &869493704
 GameObject:
   m_ObjectHideFlags: 0
@@ -2450,6 +1869,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 842631983811810369, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
   m_PrefabInstance: {fileID: 6707965940767310448}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &1119770613 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4744049033777101950, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
+  m_PrefabInstance: {fileID: 6707965940767310448}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1151910043
 GameObject:
   m_ObjectHideFlags: 0
@@ -2646,148 +2070,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1182809344}
   m_CullTransparentMesh: 1
---- !u!1001 &1245709528
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1537606097}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.673
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071067
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -7918335002988649766, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 8b09ab3aa84bc864abd388cd0d01a15e, type: 2}
-    - target: {fileID: -7511558181221131132, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 6a8944905221323458574dc430412740, type: 2}
-    - target: {fileID: -4292154010595695564, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.0000000023841857
-      objectReference: {fileID: 0}
-    - target: {fileID: -4292154010595695564, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.0001693201
-      objectReference: {fileID: 0}
-    - target: {fileID: -4292154010595695564, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.0130907195
-      objectReference: {fileID: 0}
-    - target: {fileID: -4292154010595695564, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.0000028659863
-      objectReference: {fileID: 0}
-    - target: {fileID: -4292154010595695564, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 3.4106054e-13
-      objectReference: {fileID: 0}
-    - target: {fileID: -4292154010595695564, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0.00000005960465
-      objectReference: {fileID: 0}
-    - target: {fileID: -4292154010595695564, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -4292154010595695564, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 180
-      objectReference: {fileID: 0}
-    - target: {fileID: -3272106112100924687, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -3272106112100924687, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.00128
-      objectReference: {fileID: 0}
-    - target: {fileID: -3272106112100924687, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.013354
-      objectReference: {fileID: 0}
-    - target: {fileID: -3272106112100924687, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.0000028659863
-      objectReference: {fileID: 0}
-    - target: {fileID: -3272106112100924687, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 3.4106054e-13
-      objectReference: {fileID: 0}
-    - target: {fileID: -3272106112100924687, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0.00000005960465
-      objectReference: {fileID: 0}
-    - target: {fileID: -3272106112100924687, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -3272106112100924687, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 180
-      objectReference: {fileID: 0}
-    - target: {fileID: -2571118854743697038, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: fb17f7f1a232a264284e16137833d8d8, type: 2}
-    - target: {fileID: 882129737928793925, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: fb17f7f1a232a264284e16137833d8d8, type: 2}
-    - target: {fileID: 919132149155446097, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-      propertyPath: m_Name
-      value: SM_EnterExit
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: -7029948723529949830, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: b9b0da11436e9dd45882e7d579cdebfd, type: 3}
 --- !u!1 &1299417520
 GameObject:
   m_ObjectHideFlags: 0
@@ -3070,6 +2352,589 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1414520887}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1465134134
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c1a542ffd2fa3743a4a7f83a79a553a, type: 3}
+  m_Name: copy_Level_EVE
+  m_EditorClassIdentifier: 
+  width: 8
+  height: 8
+  exit:
+    startObstructed: 1
+    fromCell:
+      x: 7
+      z: 0
+    direction: 1
+  obstacles:
+  - cell: {x: 7, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 6, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 5, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 4, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 2, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 1, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 0, y: 7}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 6, y: 5}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 4, y: 5}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 3, y: 5}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 2, y: 5}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 1, y: 5}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 7, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 6, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 5, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 4, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 3, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 2, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 1, y: 3}
+    type: 0
+    thinWallDirection: 0
+  - cell: {x: 5, y: 1}
+    type: 1
+    thinWallDirection: 1
+  - cell: {x: 3, y: 1}
+    type: 1
+    thinWallDirection: 1
+  - cell: {x: 5, y: 0}
+    type: 1
+    thinWallDirection: 1
+  listeners:
+  - rid: 1005578639947334003
+  - rid: 1005578639947334004
+  - rid: 1005578639947334005
+  - rid: 1005578639947334006
+  - rid: 1005578639947334007
+  - rid: 1005578639947334008
+  - rid: 1005578639947334009
+  - rid: 1005578639947334010
+  - rid: 1005578639947334011
+  - rid: 1005578639947334012
+  - rid: 1005578639947334013
+  - rid: 1005578639947334014
+  - rid: 1005578639947334015
+  - rid: 1005578639947334016
+  triggerables:
+  - rid: 1005578639947334017
+  - rid: 1005578639947334018
+  - rid: 1005578639947334019
+  - rid: 1005578639947334020
+  - rid: 1005578639947334021
+  - rid: 1005578639947334022
+  - rid: 1005578639947334023
+  - rid: 1005578639947334024
+  - rid: 1005578639947334025
+  discoSequencesConfigs:
+  - successTriggerKeys:
+    - door1
+    - exit
+    - discoEnd
+    failTriggerKeys:
+    - discoEnd
+    triggerKey: disco0
+    cells:
+    - x: 0
+      z: 4
+    - x: 1
+      z: 2
+    - x: 4
+      z: 2
+    - x: 4
+      z: 0
+    - x: 5
+      z: 0
+    - x: 6
+      z: 2
+    stepSeconds:
+    - 2
+    - 2
+    - 2
+    - 2.5
+    - 1
+    - 4
+    defaultStepSeconds: 8
+  heroSpawnConfig:
+    spawnCell: {x: 3, y: 7}
+    spawnDirection: 0
+  nonWalkables:
+  - x: 0
+    z: 7
+  - x: 1
+    z: 7
+  - x: 2
+    z: 7
+  - x: 4
+    z: 7
+  - x: 5
+    z: 7
+  - x: 6
+    z: 7
+  - x: 7
+    z: 7
+  - x: 1
+    z: 5
+  - x: 2
+    z: 5
+  - x: 3
+    z: 5
+  - x: 4
+    z: 5
+  - x: 6
+    z: 5
+  - x: 1
+    z: 3
+  - x: 2
+    z: 3
+  - x: 3
+    z: 3
+  - x: 4
+    z: 3
+  - x: 5
+    z: 3
+  - x: 6
+    z: 3
+  - x: 7
+    z: 3
+  thinWalls:
+  - a:
+      x: 3
+      z: 1
+    b:
+      x: 4
+      z: 1
+  - a:
+      x: 5
+      z: 1
+    b:
+      x: 6
+      z: 1
+  - a:
+      x: 5
+      z: 0
+    b:
+      x: 6
+      z: 0
+  heroSpawn:
+    x: 3
+    z: 7
+  nmeSpawns:
+  - x: 1
+    z: 6
+  nmeFacings: 
+  heroEntry: 0
+  passThroughWalls:
+  - x: 0
+    z: 5
+  arrowTraps:
+  - triggerCell:
+      x: 5
+      z: 5
+    startCell:
+      x: 5
+      z: 4
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    linkToDisco: 0
+    emissions: []
+  - triggerCell:
+      x: 0
+      z: 2
+    startCell:
+      x: 0
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    linkToDisco: 0
+    emissions: []
+  - triggerCell:
+      x: 1
+      z: 0
+    startCell:
+      x: 1
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    linkToDisco: 0
+    emissions: []
+  - triggerCell:
+      x: 2
+      z: 2
+    startCell:
+      x: 2
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    linkToDisco: 0
+    emissions: []
+  - triggerCell:
+      x: 2
+      z: 0
+    startCell:
+      x: 2
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    linkToDisco: 0
+    emissions: []
+  - triggerCell:
+      x: 4
+      z: 1
+    startCell:
+      x: 4
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    linkToDisco: 0
+    emissions: []
+  - triggerCell:
+      x: 5
+      z: 1
+    startCell:
+      x: 5
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    linkToDisco: 0
+    emissions: []
+  - triggerCell:
+      x: 7
+      z: 1
+    startCell:
+      x: 7
+      z: 0
+    travelDir: 0
+    arrowSpeed: 6
+    canRearm: 0
+    rearmDelay: 0
+    linkToDisco: 0
+    emissions: []
+  timedDoors:
+  - cell:
+      x: 1
+      z: 4
+    openSeconds: 4
+  levers:
+  - cell:
+      x: 4
+      z: 6
+    requireFacing: 0
+    linkedDoorIndex: 0
+  messages:
+  - cell: {x: 0, y: 6}
+    triggerKeys: []
+    text: "Cet endroit respire... ou plut\xF4t soupire..."
+    displaySeconds: 4
+    voiceClip: {fileID: 8300000, guid: 21124b32ac434bf4f91102c015b56fe3, type: 3}
+  - cell: {x: 1, y: 1}
+    triggerKeys: []
+    text: "Allez bouge moi ce boule, \xE7a vient du bas..."
+    displaySeconds: 4
+    voiceClip: {fileID: 8300000, guid: a1221e28227fa5c4598a321b5ee6dcb9, type: 3}
+  - cell: {x: 7, y: 2}
+    triggerKeys: []
+    text: Tout est affaire de sensation, suivre le rythme et les pulsions.
+    displaySeconds: 6
+    voiceClip: {fileID: 8300000, guid: 97edbf8a9daad764eadd66ad422e0648, type: 3}
+  discoStartTiles:
+  - x: 2
+    z: 4
+  discoSequences:
+  - cells:
+    - x: 0
+      z: 4
+    - x: 1
+      z: 2
+    - x: 4
+      z: 2
+    - x: 4
+      z: 0
+    - x: 5
+      z: 0
+    - x: 6
+      z: 2
+    stepSeconds:
+    - 2
+    - 2
+    - 2
+    - 2.5
+    - 1
+    - 4
+    startOnDoorIndex: 0
+    defaultStepSeconds: 8
+  gridGates:
+  - cell:
+      x: 7
+      z: 0
+    side: 1
+    initiallyOpen: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 1005578639947334003
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 4, y: 7}
+        triggerKeys:
+        - door0
+        type: 2
+        attachedTo: 2
+        rearmType: 3
+        timeToRearm: 4
+    - rid: 1005578639947334004
+      type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 0, y: 6}
+        triggerKeys: []
+        text: "Cet endroit respire... ou plut\xF4t soupire..."
+        displaySeconds: 4
+        voiceClip: {fileID: 8300000, guid: 21124b32ac434bf4f91102c015b56fe3, type: 3}
+    - rid: 1005578639947334005
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 5, y: 5}
+        triggerKeys:
+        - arrowTrap_0
+        type: 1
+        attachedTo: 0
+        rearmType: 0
+        timeToRearm: 0
+    - rid: 1005578639947334006
+      type: {class: FakeWallData, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 0, y: 5}
+        triggerKeys: []
+    - rid: 1005578639947334007
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 2, y: 4}
+        triggerKeys:
+        - disco0
+        - discoStart
+        type: 1
+        attachedTo: 0
+        rearmType: 1
+        timeToRearm: 0
+    - rid: 1005578639947334008
+      type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 7, y: 2}
+        triggerKeys: []
+        text: Tout est affaire de sensation, suivre le rythme et les pulsions.
+        displaySeconds: 6
+        voiceClip: {fileID: 8300000, guid: 97edbf8a9daad764eadd66ad422e0648, type: 3}
+    - rid: 1005578639947334009
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 2, y: 2}
+        triggerKeys:
+        - arrowTrap_3
+        type: 1
+        attachedTo: 0
+        rearmType: 0
+        timeToRearm: 0
+    - rid: 1005578639947334010
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 0, y: 2}
+        triggerKeys:
+        - arrowTrap_1
+        type: 1
+        attachedTo: 0
+        rearmType: 0
+        timeToRearm: 0
+    - rid: 1005578639947334011
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 7, y: 1}
+        triggerKeys:
+        - arrowTrap_7
+        type: 1
+        attachedTo: 0
+        rearmType: 0
+        timeToRearm: 0
+    - rid: 1005578639947334012
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 5, y: 1}
+        triggerKeys:
+        - arrowTrap_6
+        type: 1
+        attachedTo: 0
+        rearmType: 0
+        timeToRearm: 0
+    - rid: 1005578639947334013
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 4, y: 1}
+        triggerKeys:
+        - arrowTrap_5
+        type: 1
+        attachedTo: 0
+        rearmType: 0
+        timeToRearm: 0
+    - rid: 1005578639947334014
+      type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 1, y: 1}
+        triggerKeys: []
+        text: "Allez bouge moi ce boule, \xE7a vient du bas..."
+        displaySeconds: 4
+        voiceClip: {fileID: 8300000, guid: a1221e28227fa5c4598a321b5ee6dcb9, type: 3}
+    - rid: 1005578639947334015
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 2, y: 0}
+        triggerKeys:
+        - arrowTrap_3
+        type: 1
+        attachedTo: 0
+        rearmType: 0
+        timeToRearm: 0
+    - rid: 1005578639947334016
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 1, y: 0}
+        triggerKeys:
+        - arrowTrap_2
+        type: 1
+        attachedTo: 0
+        rearmType: 0
+        timeToRearm: 0
+    - rid: 1005578639947334017
+      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 5, y: 4}
+        triggerKey: arrowTrap_0
+        travelDir: 0
+        arrowSpeed: 6
+        canRearm: 0
+        rearmTimeDelay: 0
+    - rid: 1005578639947334018
+      type: {class: GateConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 1, y: 4}
+        triggerKey: door0
+        type: 2
+        direction: 3
+        timer: 4
+        startopen: 1
+    - rid: 1005578639947334019
+      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 7, y: 0}
+        triggerKey: arrowTrap_7
+        travelDir: 0
+        arrowSpeed: 6
+        canRearm: 0
+        rearmTimeDelay: 0
+    - rid: 1005578639947334020
+      type: {class: GateConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 7, y: 0}
+        triggerKey: door1
+        type: 1
+        direction: 1
+        timer: 0
+        startopen: 0
+    - rid: 1005578639947334021
+      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 5, y: 0}
+        triggerKey: arrowTrap_6
+        travelDir: 0
+        arrowSpeed: 6
+        canRearm: 0
+        rearmTimeDelay: 0
+    - rid: 1005578639947334022
+      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 4, y: 0}
+        triggerKey: arrowTrap_5
+        travelDir: 0
+        arrowSpeed: 6
+        canRearm: 0
+        rearmTimeDelay: 0
+    - rid: 1005578639947334023
+      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 2, y: 0}
+        triggerKey: arrowTrap_3
+        travelDir: 0
+        arrowSpeed: 6
+        canRearm: 0
+        rearmTimeDelay: 0
+    - rid: 1005578639947334024
+      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 1, y: 0}
+        triggerKey: arrowTrap_2
+        travelDir: 0
+        arrowSpeed: 6
+        canRearm: 0
+        rearmTimeDelay: 0
+    - rid: 1005578639947334025
+      type: {class: ArrowTrapConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 0, y: 0}
+        triggerKey: arrowTrap_1
+        travelDir: 0
+        arrowSpeed: 6
+        canRearm: 0
+        rearmTimeDelay: 0
 --- !u!1 &1468027463
 GameObject:
   m_ObjectHideFlags: 0
@@ -3308,38 +3173,16 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1473780542}
   m_CullTransparentMesh: 1
---- !u!1 &1537606096
+--- !u!1 &1537606096 stripped
 GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 8009057712080140620, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+  m_PrefabInstance: {fileID: 1439012650646644481}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1537606097}
-  m_Layer: 0
-  m_Name: Enter
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1537606097
+--- !u!4 &1537606098 stripped
 Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 8842845387917760382, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+  m_PrefabInstance: {fileID: 1439012650646644481}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1537606096}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.5, y: -0.009999752, z: 7.5}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 290268956}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1561477407
 GameObject:
   m_ObjectHideFlags: 0
@@ -3529,6 +3372,7 @@ MonoBehaviour:
   wallPrefab: {fileID: 4484211654490024867, guid: bc7f5c343f7944b4bbc4f0fe40695cdd, type: 3}
   thinWallPrefab: {fileID: 4484211654490024867, guid: aee89fce5f43d7a4eafc32a223b8b3c8, type: 3}
   Exit: {fileID: 1119770610}
+  Enter: {fileID: 1537606096}
   lineWidth: 0.03
   lineY: 0.01
   lineMaterial: {fileID: 2100000, guid: 031f2185ee7d6964497e2dce35d5ff6d, type: 2}
@@ -3609,20 +3453,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   displayFilter: -1
-  currentTool: 3
+  currentTool: 2
   levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
-  dataCopy: {fileID: 808184266}
+  dataCopy: {fileID: 1465134134}
   hotCopyCreated: 1
   hotCopyModified: 1
-  objectIsSelected: 0
+  objectIsSelected: 1
   selectedColor: {r: 0, g: 0.025510311, b: 1, a: 0.83137256}
   selectedObjectType: 2
   selectedObjectIndex: 0
-  selectedCell: {x: 7, y: 2}
+  selectedCell: {x: 4, y: 7}
   listenerDummies:
-  - rid: 1441731545853853696
-  - rid: 1441731545853853697
-  - rid: 1441731545853853698
+  - rid: 1005578639947333862
+  - rid: 1005578639947333863
+  - rid: 1005578639947333864
   listenerNames:
   - FakeWall
   - Message
@@ -3631,12 +3475,12 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 1441731545853853696
+    - rid: 1005578639947333862
       type: {class: FakeWallData, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 0}
         triggerKeys: []
-    - rid: 1441731545853853697
+    - rid: 1005578639947333863
       type: {class: MessageConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 0}
@@ -3644,12 +3488,12 @@ MonoBehaviour:
         text: text here
         displaySeconds: 3
         voiceClip: {fileID: 0}
-    - rid: 1441731545853853698
+    - rid: 1005578639947333864
       type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 0}
         triggerKeys: []
-        type: 1
+        type: 2
         attachedTo: 2
         rearmType: 0
         timeToRearm: 1
@@ -3832,21 +3676,106 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1439012650646644481
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 619786942}
+    m_Modifications:
+    - target: {fileID: 823810804738609066, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 823810804738609066, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: -180
+      objectReference: {fileID: 0}
+    - target: {fileID: 8009057712080140620, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_Name
+      value: Enter
+      objectReference: {fileID: 0}
+    - target: {fileID: 8842845387917760382, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8842845387917760382, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8842845387917760382, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8842845387917760382, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8842845387917760382, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8842845387917760382, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8842845387917760382, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8842845387917760382, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8842845387917760382, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8842845387917760382, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ab5c7818e8849394abe22c708366bdb5, type: 3}
 --- !u!1001 &6707965940767310448
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 619786942}
     m_Modifications:
     - target: {fileID: 842631983811810369, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
       propertyPath: m_Name
       value: Exit
       objectReference: {fileID: 0}
+    - target: {fileID: 4715246590587518764, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4715246590587518764, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4715246590587518764, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4715246590587518764, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4715246590587518764, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4744049033777101950, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 7.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4744049033777101950, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3854,11 +3783,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4744049033777101950, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4744049033777101950, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7071061
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4744049033777101950, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
       propertyPath: m_LocalRotation.x
@@ -3866,7 +3795,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4744049033777101950, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.7071075
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 4744049033777101950, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
       propertyPath: m_LocalRotation.z
@@ -3878,7 +3807,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4744049033777101950, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: -90
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4744049033777101950, guid: ee47e5050c7204149bd67507010c6bb7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -3907,5 +3836,3 @@ SceneRoots:
   - {fileID: 1929999199}
   - {fileID: 1369825146}
   - {fileID: 1782864857}
-  - {fileID: 1537606097}
-  - {fileID: 6707965940767310448}

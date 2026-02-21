@@ -19,8 +19,7 @@ public interface ISensorExtension
     void Deactivate();
 }
 
-public interface ISignalerEnxtension
+public interface ISignalerExtension
 {
-    public string[] triggerableKeys { get;}
-
+    
 }

@@ -1,8 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class InteractionSystem
 {
+    private Dictionary<string, UnityEvent> globalEvents = new();
+    private Dictionary<IListener,UnityEvent> globalEventsLinks = new();
+
     private Dictionary<Vector2Int, IListener> listeners = new();
     private Dictionary<string, ITriggerable> triggerables = new();
 
@@ -26,6 +30,15 @@ public class InteractionSystem
         LevelEntityEvents.OnSignalSent += SendSignal;
 
         ActorEvents.OnActorMove += ActorMoved;
+    }
+
+    public void ImportGlobalEvents(List<EventTriggerable> _globalEvents)
+    {
+        foreach (var item in _globalEvents)
+        {
+            globalEvents[item.triggerKey] = item._event;
+        }
+
     }
 
     public void UnSubscribeToEvents()
@@ -70,42 +83,63 @@ public class InteractionSystem
                 callbackLinks[triggerable] = cbListener;
             }
 
+            return;
         }
-        else
+
+        if (globalEvents.TryGetValue(triggerKey, out UnityEvent _event))
         {
-            Debug.LogError($"Link by {_listener.ToString()} with key {triggerKey} points to nothing");
+            globalEventsLinks[_listener] = _event;
+            Debug.Log("Added global event link " +  triggerKey);
+            return;
         }
+
+        Debug.LogError($"Link by {_listener.ToString()} with key {triggerKey} points to nothing");
+
     }
-    private void SendSignal(ISignalerEnxtension signaler)
+    private void SendSignal(string[] keys)
     {
-        foreach (var signal in signaler.triggerableKeys)
+        foreach (string signal in keys)
         {
             if(triggerables.TryGetValue(signal, out ITriggerable triggerable))
             {
                 triggerable.Trigger();
+                continue;
             }
-            else
+
+            if (globalEvents.TryGetValue(signal, out UnityEvent _event))
             {
-                Debug.Log($"Signaler {signaler} was unsuccessful with signal - {signal}");
+                _event.Invoke();
+                continue;
             }
+
+            Debug.Log($"Signaler was unsuccessful with signal - {signal}");
+
         }
     }
 
 
     private void SendEventToTriggerable(IListener _listener)
     {
+        bool eventfired = false;
         if (triggerLinks.TryGetValue(_listener, out List<ITriggerable> _targets))
         {
             foreach (var target in _targets)
             {
                 target.Trigger();
             }
+
+            eventfired = true;
         }
-        else
+
+        if (globalEventsLinks.TryGetValue(_listener, out UnityEvent _event))
         {
-            Debug.Log($"{_listener} fired event at nothing - no triggerlink registred");
+            _event.Invoke();
+            eventfired = true;
         }
+
+        if (!eventfired) Debug.Log($"{_listener} fired event at nothing - no triggerlink registred");
     }
+
 
     private void SendTriggerableCallback(ITriggerable triggerable)
     {

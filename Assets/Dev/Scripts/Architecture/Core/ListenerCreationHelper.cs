@@ -20,7 +20,7 @@ public static class AbsoluteObjectNamer
                     case TriggerObjectType.InvisibleTrigger: name = "InvisTrigger";break;
                     case TriggerObjectType.TriggerPad: name = "PressurePad";break;
                     case TriggerObjectType.Lever: name = "Lever";break;
-                    default: name = "unkownType"; break;
+                    default: name = "unknownType"; break;
                 }
                 break;
 
