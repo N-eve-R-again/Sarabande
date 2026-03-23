@@ -13,6 +13,7 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
     private Transform thinWallsParent;
     private Transform staticVisualsFolder;
 
+    private Transform ParentOfAll;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject wallPrefab;
@@ -32,10 +33,10 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
     {
 
     }
-    public void BuildStaticVisuals(LevelData _levelData)
+    public void BuildStaticVisuals(LevelData _levelData,Transform parent)
     {
         if(!PrefabAreValid()) return;
-
+        ParentOfAll = parent;
         CreateFolders();
 
         BuildGridLines(_levelData);
@@ -81,6 +82,8 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
         gridParent.SetParent(staticVisualsFolder, false);
         wallsParent.SetParent(staticVisualsFolder, false);
         thinWallsParent.SetParent(staticVisualsFolder, false);
+
+        staticVisualsFolder.SetParent(ParentOfAll, true);
     }
 
     private void BuildObstacles(LevelData _levelData)

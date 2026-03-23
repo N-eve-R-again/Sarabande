@@ -1,10 +1,16 @@
+using Sarabande.Levels;
 using UnityEngine;
 
 
 public interface ITriggerable
 {
+    public TriggerableData triggerableData { get; }
     public void Trigger();
 
+    public void Register()
+    {
+        RegistryEvents.NotifyTriggerableRegistry(this);  
+    }
 }
 
 public interface ISensorExtension

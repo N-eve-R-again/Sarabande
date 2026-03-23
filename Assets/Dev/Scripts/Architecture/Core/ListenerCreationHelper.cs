@@ -24,7 +24,7 @@ public static class AbsoluteObjectNamer
                 }
                 break;
 
-            default: name = "unkownType"; break;
+            default: name = "unknownType"; break;
         }
         return $"{name} {data.cell}";
     }
@@ -42,16 +42,6 @@ public class ListenerCreationHelper
         // 1. Nommer l'objet
         mono.gameObject.name = AbsoluteObjectNamer.GetListenerName(data);
         mono.transform.position = GridUtils.CenterXZ(data.cell);
-
-        // 5. Notifier via events (pas de référence au manager!)
-        RegistryEvents.NotifyListenerRegistry(data.cell, listener);
-
-        if(data.triggerKeys.Length < 0) return; //pas de keys à register
-
-        foreach (var key in data.triggerKeys)
-        {
-            RegistryEvents.NotifyTryTriggerLinkRegistry(key, listener);
-        }
 
     }
 

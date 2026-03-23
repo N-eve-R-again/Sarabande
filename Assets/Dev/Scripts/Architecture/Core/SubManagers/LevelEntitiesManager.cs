@@ -7,11 +7,6 @@ using UnityEngine;
 
 public class LevelEntitiesManager : MonoBehaviour, IClearable
 {
-
-
-    //private static LevelEntitiesManager Instance;
-    //public static LevelEntitiesManager I => Instance;
-
     public List<EventTriggerable> eventTrig = new List<EventTriggerable>();
 
     [Header("SubManagers")]
@@ -23,9 +18,6 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
     {
         // S'abonner aux events
         interactionSystem = new InteractionSystem();
-        interactionSystem.SubscribeToEvents();
-        interactionSystem.ImportGlobalEvents(eventTrig);
-
         navigationManager = new NavigationManager();
         navigationManager.SubscribeToEvents();
 
@@ -36,16 +28,6 @@ public class LevelEntitiesManager : MonoBehaviour, IClearable
         Debug.Log("LEM Subscribed to LevelEntityEvents");
     }
 
-    private void OnDisable()
-    {
-        if(interactionSystem != null) interactionSystem.UnSubscribeToEvents();
-
-        if (navigationManager != null) navigationManager.UnSubscribeToEvents();
-
-        if (messageSystem != null) messageSystem.UnSubscribeToEvents();
-
-        Debug.Log("LEM Unsubscribed to LevelEntityEvents");
-    }
 
     public void Ready(LevelData _levelData)
     {

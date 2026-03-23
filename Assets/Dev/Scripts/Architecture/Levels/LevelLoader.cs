@@ -30,35 +30,32 @@ namespace Sarabande.Levels
     /// </summary>
     public class LevelLoader : MonoBehaviour
     {
-        [Header("Refs")]
-        [SerializeField] private LevelContext levelContext;
-        [SerializeField] private LevelEntitiesManager entitiesManager;
+        public bool ready = false;
 
         [Header("Factories")]
         [SerializeField] private StaticVisualsFactory staticVisualsFactory;
         [SerializeField] private ListenerFactory listenerFactory;
         [SerializeField] private TriggerableFactory triggerableFactory;
 
-        [Header("Debug")]
-        [SerializeField, HideInInspector] private LevelData levelData;
-
-        private void Awake()
+        public void Construct(LevelData levelData,Transform Root)
         {
+            ready = false;
+
             if (levelData == null)
             {
                 Debug.LogError("[LevelLoader] LevelData manquant.");
                 return;
             }
-            levelData = levelContext.LevelData;
-            entitiesManager.Ready(levelData);
 
-            staticVisualsFactory.BuildStaticVisuals(levelData); //Walls, ThinWalls, Grid
-            triggerableFactory.BuildTriggerables(levelData);//ArrowTraps, Doors, Disco, Grilles
-            listenerFactory.BuildListeners(levelData); //Message, FakeWalls, Exit, Messages
+            staticVisualsFactory.BuildStaticVisuals(levelData, Root); //Walls, ThinWalls, Grid
+            triggerableFactory.BuildTriggerables(levelData, Root);//ArrowTraps, Doors, Disco, Grilles
+            listenerFactory.BuildListeners(levelData, Root); //Message, FakeWalls, Exit, Messages
 
             BuildActors();//Player, NMEs
 
             Debug.Log("[LevelLoader] Build terminé.");
+
+            ready = true;
         }
 
         private void BuildActors()

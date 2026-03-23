@@ -51,6 +51,8 @@ public class NavigationManager
                 _thinBlockers.Add(item);
             }
         }
+
+        Debug.Log("Collision Sets Done");
     }
 
     public bool CheckForExitPortalAccess(Vector2Int from, Vector2Int to, CardinalDirection _actorDir)

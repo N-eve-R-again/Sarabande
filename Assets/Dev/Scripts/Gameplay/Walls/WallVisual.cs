@@ -1,7 +1,6 @@
 using Sarabande.Core;
 using Sarabande.Levels;
 using UnityEngine;
-using static UnityEngine.Rendering.STP;
 public class WallVisual : MonoBehaviour
 {
     [SerializeField] ObstacleData config;

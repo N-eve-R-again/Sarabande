@@ -374,11 +374,10 @@ namespace Sarabande.Levels
 
 
     [System.Serializable]
-    public class DiscoSequenceConfig
+    public class DiscoSequenceConfig : TriggerableData
     {
         public string[] successTriggerKeys = new string[0];
         public string[] failTriggerKeys = new string[0];
-        public string triggerKey = "undefined";
 
         [Header("Chemin à fouler (ordre strict)")]
         public List<GridCoord> cells = new List<GridCoord>();
@@ -523,13 +522,27 @@ namespace Sarabande.Levels
         }
     }
 
+    [System.Serializable]
+    public class DefaultTriggerableData : TriggerableData
+    {
+        public DefaultTriggerableData(Vector2Int cell, string triggerKey)
+        {
+            this.cell = cell;
+            this.triggerKey = triggerKey;
+        }
+        public DefaultTriggerableData() : base()
+        {
+        }
+    }
+
 
     [System.Serializable]
     public abstract class TriggerableData
     {
         public Vector2Int cell;
         public string triggerKey;
-
+        public TriggerableData() 
+        {}
     }
 
     [System.Serializable]

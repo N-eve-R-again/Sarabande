@@ -1,14 +1,18 @@
 using Sarabande.Core;
 using Sarabande.Levels;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using UnityEngine;
 
 public class TriggerableFactory : MonoBehaviour, IClearable
 {
     [Header("GameObject Folders")]
+    
     private Transform arrowTrapsParent;
     private Transform gatesParent;
     private Transform triggerableFolder;
+
+    private Transform ParentOfAll;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject arrowTrapPrefab;
@@ -34,10 +38,11 @@ public class TriggerableFactory : MonoBehaviour, IClearable
         gatesParent = new GameObject("Gates").transform;
         gatesParent.SetParent(triggerableFolder, false);
 
+        triggerableFolder.SetParent(ParentOfAll);
     }
-    public void BuildTriggerables(LevelData _levelData)
+    public void BuildTriggerables(LevelData _levelData, Transform parent)
     {
-
+        ParentOfAll = parent;
         CreateFolders();
 
         foreach (var triggerable in _levelData.triggerables)
@@ -85,7 +90,8 @@ public class TriggerableFactory : MonoBehaviour, IClearable
             dalles.Add(dalle);
             i++;
         }
-        entity.Init(config,dalles);
+        entity.Init(config);
+        entity.GetDalles(dalles);
     }
     private void CreateGate(GateConfig gate)
     {

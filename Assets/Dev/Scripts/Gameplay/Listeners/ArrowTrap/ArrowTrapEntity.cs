@@ -8,6 +8,8 @@ public class ArrowTrapEntity : MonoBehaviour, ITriggerable
     [SerializeField] private ArrowTrapConfig config;
     [SerializeField] private bool armed = true;
     [SerializeField] private ArrowTrapVisual visual;
+
+    public TriggerableData triggerableData => config;
     public void Init(ArrowTrapConfig _config, string _name)
     {
         config = _config;
@@ -16,10 +18,13 @@ public class ArrowTrapEntity : MonoBehaviour, ITriggerable
         triggerableKey = config.triggerKey;
         transform.position = SetPosition(config.cell);
 
-        RegistryEvents.NotifyTriggerableRegistry(triggerableKey, this);
+
 
     }
     private float timer = 0;
+
+
+
     private void Update()
     {
         if (!armed && config.canRearm)

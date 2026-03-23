@@ -1,163 +1,92 @@
+using Sarabande.Levels;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class InteractionSystem
 {
-    private Dictionary<string, UnityEvent> globalEvents = new();
-    private Dictionary<IListener,UnityEvent> globalEventsLinks = new();
-
-    private Dictionary<Vector2Int, IListener> listeners = new();
-    private Dictionary<string, ITriggerable> triggerables = new();
-
-    private Dictionary<IListener, List<ITriggerable>> triggerLinks = new();
-    private Dictionary<ITriggerable, IListenerWithCallback> callbackLinks = new();
-
-    private Dictionary<Vector2Int,ISensorExtension> sensorExtensions = new();
     
     private List<InteractionBuffer> interactions = new List<InteractionBuffer>();
 
-    public void SubscribeToEvents()
-    {
-        RegistryEvents.OnListenerRegistry += RegisterListener;
-        RegistryEvents.OnTryTriggerLinkRegistry += RegisterTriggerLink;
-        RegistryEvents.OnTriggerableRegistry += RegisterTriggerable;
-        RegistryEvents.OnSensorRegistry += RegisterSensor;
-
-        LevelEntityEvents.OnListenerTryCallTrigger += SendEventToTriggerable;
-        LevelEntityEvents.OnTriggerableCallback += SendTriggerableCallback;
-
-        LevelEntityEvents.OnSignalSent += SendSignal;
-
-        ActorEvents.OnActorMove += ActorMoved;
-    }
-
-    public void ImportGlobalEvents(List<EventTriggerable> _globalEvents)
-    {
-        foreach (var item in _globalEvents)
-        {
-            globalEvents[item.triggerKey] = item._event;
-        }
-
-    }
-
-    public void UnSubscribeToEvents()
-    {
-        RegistryEvents.OnListenerRegistry -= RegisterListener;
-        RegistryEvents.OnTryTriggerLinkRegistry -= RegisterTriggerLink;
-        RegistryEvents.OnTriggerableRegistry -= RegisterTriggerable;
-        RegistryEvents.OnSensorRegistry -= RegisterSensor;
-
-        LevelEntityEvents.OnListenerTryCallTrigger -= SendEventToTriggerable;
-        LevelEntityEvents.OnTriggerableCallback -= SendTriggerableCallback;
-
-        LevelEntityEvents.OnSignalSent -= SendSignal;
-
-        ActorEvents.OnActorMove -= ActorMoved;
-    }
-
-    private void OnDestroy()
-    {
-        UnSubscribeToEvents();
-    }
-
-    private void RegisterSensor(Vector2Int cell, ISensorExtension sensor) => sensorExtensions[cell] = sensor;
-
-    private void RegisterListener(Vector2Int _gridCoord, IListener _listener) => listeners[_gridCoord] = _listener;
-
-    private void RegisterTriggerable(string _triggerableKey, ITriggerable _triggerable) => triggerables[_triggerableKey] = (_triggerable);
-
-    private void RegisterTriggerLink(string triggerKey, IListener _listener)
-    {
-        if (triggerables.TryGetValue(triggerKey, out ITriggerable triggerable))
-        {
-            if (!triggerLinks.ContainsKey(_listener))
-            {
-                triggerLinks[_listener] = new List<ITriggerable>();
-            }
-
-            triggerLinks[_listener].Add(triggerable);
-
-            if (_listener is IListenerWithCallback cbListener && cbListener.wantsCallback)
-            {
-                callbackLinks[triggerable] = cbListener;
-            }
-
-            return;
-        }
-
-        if (globalEvents.TryGetValue(triggerKey, out UnityEvent _event))
-        {
-            globalEventsLinks[_listener] = _event;
-            Debug.Log("Added global event link " +  triggerKey);
-            return;
-        }
-
-        Debug.LogError($"Link by {_listener.ToString()} with key {triggerKey} points to nothing");
-
-    }
-    private void SendSignal(string[] keys)
+    public void SendSignal(RegistryDatabase database, string[] keys)
     {
         foreach (string signal in keys)
         {
-            if(triggerables.TryGetValue(signal, out ITriggerable triggerable))
+            ITriggerable triggerable = database.GetTriggerableByKey(signal);
+            if (triggerable != null) 
             {
                 triggerable.Trigger();
                 continue;
             }
 
-            if (globalEvents.TryGetValue(signal, out UnityEvent _event))
+            UnityEvent _event = database.GetGlobalEventByKey(signal);
+
+            if (_event != null)
             {
                 _event.Invoke();
                 continue;
             }
 
-            Debug.Log($"Signaler was unsuccessful with signal - {signal}");
+            Debug.Log($"[Interaction System] Signaler was unsuccessful with signal - {signal}");
 
         }
     }
 
 
-    private void SendEventToTriggerable(IListener _listener)
+    public void SendEventToTriggerable(RegistryDatabase database, IListener _listener)
     {
         bool eventfired = false;
-        if (triggerLinks.TryGetValue(_listener, out List<ITriggerable> _targets))
+
+        List<ITriggerable> _targets = database.GetTriggerablesByLinks(_listener);
+
+        if (_targets != null && _targets.Count > 0) 
         {
             foreach (var target in _targets)
             {
                 target.Trigger();
             }
+            eventfired = true;
 
+        }
+
+        List<UnityEvent> _events = database.GetGlobalEventsByLinks(_listener);
+
+        if(_events!= null && _events.Count > 0)
+        {
+            foreach (var _event in _events)
+            {
+                _event.Invoke();
+            }
             eventfired = true;
         }
 
-        if (globalEventsLinks.TryGetValue(_listener, out UnityEvent _event))
-        {
-            _event.Invoke();
-            eventfired = true;
-        }
 
-        if (!eventfired) Debug.Log($"{_listener} fired event at nothing - no triggerlink registred");
+        if (!eventfired) Debug.Log($"[Interaction System] {_listener} fired event at nothing - no triggerlink registred");
     }
 
 
-    private void SendTriggerableCallback(ITriggerable triggerable)
+    public void SendTriggerableCallback(RegistryDatabase database, ITriggerable triggerable)
     {
-        if (callbackLinks.TryGetValue(triggerable, out IListenerWithCallback _target))
+        List<IListenerWithCallback> _targets = database.GetCallbacksByLinks(triggerable);
+
+        if (_targets != null && _targets.Count > 0)
         {
-            _target.OnCallback();
-            Debug.Log($"{triggerable}'s callback was heard by {_target}");
+            foreach (var _target in _targets)
+            {
+                _target.OnCallback();
+                Debug.Log($"[Interaction System] {triggerable}'s callback was heard by {_target}");
+            }
         }
     }
 
-    private void ActorMoved(IActor _actor, ActorInteractionData _interaction)
+    public void ActorMoved(RegistryDatabase database, IActor _actor, ActorInteractionData _interaction)
     {
 
-        TrySensors(_interaction.cell, _interaction);
+        TrySensors(database, _interaction.cell, _interaction);
 
         if(_interaction.interactionType != ActorInteractionType.OnLeave)// OnMove, OnIntent, OnBump
         {
-            (IListener _listener, bool _createBuffer) = TryTriggerInteractAt(_interaction.cell, _interaction);//On essaye de faire une interaction
+            (IListener _listener, bool _createBuffer) = TryTriggerInteractAt(database,_interaction.cell, _interaction);//On essaye de faire une interaction
 
             if (_listener != null && _createBuffer)
             {
@@ -173,14 +102,15 @@ public class InteractionSystem
 
     }
 
-    private void TrySensors(Vector2Int _eventPos, ActorInteractionData data)
+    private void TrySensors(RegistryDatabase database, Vector2Int _eventPos, ActorInteractionData data)
     {
-        if (sensorExtensions.TryGetValue(_eventPos, out ISensorExtension sensor)) //est ce que j'ai un listener à _eventPos
-        {
+        ISensorExtension sensor = database.GetSensorExtensionByCell(_eventPos);
+
+        if (sensor != null) {
             if (!sensor.IsActive) return;
             if (!sensor.interactionLayer.CanInteractWith(data.actorType)) return;
 
-            if(data.interactionType == ActorInteractionType.OnLeave)
+            if (data.interactionType == ActorInteractionType.OnLeave)
             {
                 sensor.OnExit(); return;
             }
@@ -192,17 +122,17 @@ public class InteractionSystem
         }
     }
 
-    private (IListener,bool) TryTriggerInteractAt(Vector2Int _eventPos, ActorInteractionData _interaction)
+    private (IListener,bool) TryTriggerInteractAt(RegistryDatabase database, Vector2Int _eventPos, ActorInteractionData _interaction)
     {
-        if (listeners.TryGetValue(_eventPos, out IListener listener)) //est ce que j'ai un listener à _eventPos
-        {
+        IListener listener = database.GetListenerByCell(_eventPos);
+        if (listener != null) {
             if (!listener.interactionLayer.CanInteractWith(_interaction.actorType)) return (null, false); //si l'acteur est pas du bon type on ignore
 
             bool willCreateBuffer = listener.OnInteract(_interaction);
             //on fait la logique du listener
             return (listener, willCreateBuffer);
-        }
 
+        }
         return (null, false);
     }
 

@@ -1,21 +1,26 @@
 using Sarabande.Core;
+using Sarabande.Levels;
 using UnityEngine;
 
 public class ExitDoorEntity : MonoBehaviour, ITriggerable
 {
-    [SerializeField] private Vector2Int cell;
     [SerializeField] private CardinalDirection direction;
     [SerializeField] private Transform pivot;
     private int frameSkip;
     public Animator animator;
     private bool opened = false;
     private bool activated = false;
+
+    public TriggerableData triggerableData => data;
+    public DefaultTriggerableData data = new();
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void Init(EdgeExit config)
     {
-        cell = config.fromCell;
+
         direction = config.direction;
-        transform.position = GridUtils.CenterXZ(cell);
+        data.cell = config.fromCell;
+        data.triggerKey = "exit";
+        transform.position = GridUtils.CenterXZ(data.cell);
         SetRotation();
         frameSkip = 0;
 
@@ -28,7 +33,6 @@ public class ExitDoorEntity : MonoBehaviour, ITriggerable
         {
             opened = false;
         }
-        RegistryEvents.NotifyTriggerableRegistry("exit", this);
     }
 
     private void SetRotation()
@@ -57,7 +61,7 @@ public class ExitDoorEntity : MonoBehaviour, ITriggerable
         else
         {
             frameSkip = 0;
-            bool obstructed = NavigationEvents.QueryExitPortal(cell, cell + GridUtils.DirToVec2(direction), direction);
+            bool obstructed = NavigationEvents.QueryExitPortal(data.cell, data.cell + GridUtils.DirToVec2(direction), direction);
             //fallback si la porte devient obstruée
             if (obstructed)
             {

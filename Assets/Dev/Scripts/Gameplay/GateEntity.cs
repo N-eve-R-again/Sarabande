@@ -1,7 +1,6 @@
 using Sarabande.Core;
 using Sarabande.Levels;
 using UnityEngine;
-using static UnityEngine.Rendering.STP;
 
 public class GateEntity : MonoBehaviour, ITriggerable
 {
@@ -12,6 +11,9 @@ public class GateEntity : MonoBehaviour, ITriggerable
     [SerializeField] private GateVisual visual;
     private float timer;
     private bool down = false;
+
+    public TriggerableData triggerableData => config;
+
     public void Init(GateConfig _config, string _name)
     {
         config = _config;
@@ -21,7 +23,7 @@ public class GateEntity : MonoBehaviour, ITriggerable
         triggerableKey = config.triggerKey;
         transform.position = GridUtils.CenterXZ(config.cell);
         if (config.startopen) OpenDoor();
-        RegistryEvents.NotifyTriggerableRegistry(triggerableKey, this);
+
         NavigationEvents.NotifyDynamicObstacle(obstacleData);
 
     }

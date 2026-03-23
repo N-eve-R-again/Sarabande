@@ -13,6 +13,8 @@ public class ListenerFactory : MonoBehaviour, IClearable
     private Transform leversParent;
     private Transform listenerFolder;
 
+    private Transform ParentOfAll;
+
     [Header("Prefabs")]
     [SerializeField] private GameObject fakeWallPrefab;
     [SerializeField] private GameObject messagePrefab;
@@ -28,10 +30,10 @@ public class ListenerFactory : MonoBehaviour, IClearable
         
     }
 
-    public void BuildListeners(LevelData _levelData)
+    public void BuildListeners(LevelData _levelData, Transform parent)
     {
         if (!PrefabAreValid()) return;
-
+        ParentOfAll = parent;
         CreateFolders();
 
         foreach (var item in _levelData.listeners)
@@ -111,6 +113,8 @@ public class ListenerFactory : MonoBehaviour, IClearable
 
         leversParent = new GameObject("Levers").transform;
         leversParent.SetParent(listenerFolder, false);
+
+        listenerFolder.SetParent(ParentOfAll, true);
     }
 
     private void CreateFakeWall(FakeWallData fk)

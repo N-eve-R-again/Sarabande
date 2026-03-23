@@ -26,9 +26,11 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
     InteractionLayer IListener.interactionLayer => interactsWith;
     bool IListenerWithCallback.wantsCallback => needsCallback;
 
+    public ListenerData listenerData => config;
+
     public void Init(TriggerObjectConfig _config)
     {
-        config = _config; //je recupere ma config
+        config = _config;
         ListenerCreationHelper.SetupListenerEntity(this, this, _config); //comportment de base de setup
 
         visual.InitVisual(); //initialisation du visuel

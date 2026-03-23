@@ -24,25 +24,19 @@ public class LevelEntityEvents
 public static class RegistryEvents
 {
     // Quand un listener est créé
-    public static event Action<Vector2Int, IListener> OnListenerRegistry; // Event
-    public static void NotifyListenerRegistry(Vector2Int cell, IListener listener) // Fonction Call
-    => OnListenerRegistry?.Invoke(cell, listener);
+    public static event Action<IListener> OnListenerRegistry; // Event
+    public static void NotifyListenerRegistry(IListener listener) // Fonction Call
+    => OnListenerRegistry?.Invoke(listener);
 
+    // Quand un sensor est crée
     public static event Action<Vector2Int, ISensorExtension> OnSensorRegistry; // Event
     public static void NotifySensorRegistry(Vector2Int cell, ISensorExtension sensor) // Fonction Call
     => OnSensorRegistry?.Invoke(cell, sensor);
 
     // Quand un triggerable est créé
-    public static event Action<string, ITriggerable> OnTriggerableRegistry; // Event
-    public static void NotifyTriggerableRegistry(string triggerableKey, ITriggerable triggerable) // Fonction Call
-    => OnTriggerableRegistry?.Invoke(triggerableKey, triggerable);
-
-
-    // Quand un listener veut créer un triggerlink
-    public static event Action<string, IListener> OnTryTriggerLinkRegistry; // Event
-    public static void NotifyTryTriggerLinkRegistry(string _triggerKey, IListener listener) // Fonction Call
-    => OnTryTriggerLinkRegistry?.Invoke(_triggerKey, listener);
-
+    public static event Action<ITriggerable> OnTriggerableRegistry; // Event
+    public static void NotifyTriggerableRegistry(ITriggerable triggerable) // Fonction Call
+    => OnTriggerableRegistry?.Invoke(triggerable);
 
 }
 

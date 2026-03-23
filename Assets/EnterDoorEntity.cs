@@ -8,15 +8,20 @@ public class EnterDoorEntity : MonoBehaviour, ITriggerable
     [SerializeField] private CardinalDirection direction;
     [SerializeField] private Transform pivot;
     public Animator animator;
+
+    public TriggerableData triggerableData => data;
+    public DefaultTriggerableData data = new();
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void Init(ActorSpawn config)
     {
-        cell = config.spawnCell;
+
         direction = config.spawnDirection;
-        transform.position = GridUtils.CenterXZ(cell);
+        data.cell = config.spawnCell;
+        data.triggerKey = "enter";
+        transform.position = GridUtils.CenterXZ(data.cell);
+
         SetRotation();
 
-        RegistryEvents.NotifyTriggerableRegistry("enter", this);
     }
 
     private void SetRotation()

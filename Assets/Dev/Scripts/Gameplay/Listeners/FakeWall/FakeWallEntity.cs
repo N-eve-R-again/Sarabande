@@ -1,6 +1,5 @@
 using Sarabande.Core;
 using Sarabande.Levels;
-using UnityEditor.ShaderKeywordFilter;
 using UnityEngine;
 
 public class FakeWallEntity : MonoBehaviour, IListener, IResettable
@@ -15,8 +14,12 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
     [SerializeField] private InteractionLayer interactsWith;
     public InteractionLayer interactionLayer => interactsWith;
 
+    public ListenerData listenerData => wallData;
+    public FakeWallData wallData;
+
     public void Init(FakeWallData _config)
     {
+        wallData = _config;
         ListenerCreationHelper.SetupListenerEntity(this, this, _config);
         SetSize(); //bientot dans le visual
         SetPosition();

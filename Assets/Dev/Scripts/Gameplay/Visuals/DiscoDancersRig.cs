@@ -11,7 +11,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Sarabande.Core;
-using Sarabande.Disco;
+
 
 namespace Sarabande.VFX
 {
@@ -21,7 +21,7 @@ namespace Sarabande.VFX
     public class DiscoDancersRig : MonoBehaviour
     {
         [Header("Wiring")]
-        [SerializeField] private DiscoSequenceSystem disco;  // Référence au DiscoSequenceSystem pour les contrôles
+
         [SerializeField] private LevelContext levelContext; // Contexte du niveau pour obtenir les données de niveau
         [SerializeField, Min(0.001f)] private float cellSize = 1f; // Taille des cellules du niveau
 
@@ -72,34 +72,6 @@ namespace Sarabande.VFX
         /// </summary>
         public void OnDiscoStop() { StopRig(); if (destroyOnStop) DestroyRig(); }
 
-        /// <summary>
-        /// S'abonne aux événements du système Disco.
-        /// </summary>
-        private void OnEnable()
-        {
-            if (disco)
-            {
-                disco.onSequenceStart.AddListener(OnDiscoStart);
-                disco.onSequenceFail.AddListener(OnDiscoStop);
-                disco.onSequenceSuccess.AddListener(OnDiscoStop);
-            }
-            if (!onlyWhenDisco) { EnsureBuilt(); StartRig(); }
-        }
-
-        /// <summary>
-        /// Se désabonne des événements du système Disco et nettoie le rig des danseurs.
-        /// </summary>
-        private void OnDisable()
-        {
-            if (disco)
-            {
-                disco.onSequenceStart.RemoveListener(OnDiscoStart);
-                disco.onSequenceFail.RemoveListener(OnDiscoStop);
-                disco.onSequenceSuccess.RemoveListener(OnDiscoStop);
-            }
-            StopRig();
-            if (destroyOnStop) DestroyRig();
-        }
 
         /// <summary>
         /// Assure que le rig des danseurs est bien construit avant de commencer.

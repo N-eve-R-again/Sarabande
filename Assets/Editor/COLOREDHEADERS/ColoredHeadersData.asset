@@ -23,3 +23,5 @@ MonoBehaviour:
     color: {r: 1, g: 0, b: 0.38591814, a: 0.3529412}
   - name: Static Visuals
     color: {r: 1, g: 0.7673603, b: 0, a: 0.3529412}
+  - name: BootStraper
+    color: {r: 1, g: 0.2501845, b: 0, a: 0.8862745}

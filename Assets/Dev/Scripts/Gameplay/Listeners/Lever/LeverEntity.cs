@@ -22,11 +22,13 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
     InteractionLayer IListener.interactionLayer => interactsWith;
     bool IListenerWithCallback.wantsCallback => needsCallback;
 
+    public ListenerData listenerData => config;
+
     public void Init(TriggerObjectConfig _config)
     {
         config = _config;
         ListenerCreationHelper.SetupListenerEntity(this, this, config);
-        visual.InitVisual(_config.attachedTo,config.rearmType == RearmType.Instant);
+        visual.InitVisual(config.attachedTo,config.rearmType == RearmType.Instant);
         
         //transform.localScale = SetSize();
 

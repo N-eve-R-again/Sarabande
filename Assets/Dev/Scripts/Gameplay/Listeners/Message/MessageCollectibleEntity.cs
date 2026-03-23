@@ -21,12 +21,13 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
     [SerializeField] private InteractionLayer interactsWith;
     InteractionLayer IListener.interactionLayer => interactsWith;
 
+    public ListenerData listenerData => specs;
 
-    public void Init(MessageConfig _specs)
+    public void Init(ListenerData _config)
     {
-        specs = _specs;
+        specs = (MessageConfig)_config;
 
-        ListenerCreationHelper.SetupListenerEntity(this,this,_specs);
+        ListenerCreationHelper.SetupListenerEntity(this,this, _config);
 
         SetPosition();
         transform.localScale = SetSize();

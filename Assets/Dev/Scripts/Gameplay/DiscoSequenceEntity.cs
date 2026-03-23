@@ -10,15 +10,19 @@ public class DiscoSequenceEntity : MonoBehaviour, ITriggerable, ISignalerExtensi
     public List<DalleDiscoEntity> dalles;
     public int progress = 0;
 
-    public void Init(DiscoSequenceConfig _config, List<DalleDiscoEntity> dalleDiscos)
+    public TriggerableData triggerableData => config;
+
+    public void Init(DiscoSequenceConfig _config)
     {
         config = _config;
-        dalles = dalleDiscos;
+        
         progress = 0;
         successTriggerableKeys = config.successTriggerKeys;
         failTriggerableKeys = config.failTriggerKeys;
-        RegistryEvents.NotifyTriggerableRegistry(config.triggerKey, this);
+
     }
+    public void GetDalles(List<DalleDiscoEntity> dalleDiscos) => dalles = dalleDiscos;
+
     public void Trigger()
     {
         /*foreach (var item in dalles)

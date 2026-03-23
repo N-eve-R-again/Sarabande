@@ -74,8 +74,6 @@ namespace Sarabande.Traps
         [Tooltip("Durée de vie fallback si le prefab n’auto-détruit pas.")]
         [SerializeField, Min(0.1f)] private float fxLifetime = 1.5f;
         [SerializeField] private float fxYOffset = 0.05f;
-
-        [SerializeField] private Sarabande.Disco.DiscoSequenceSystem disco; // assigner dans l’Inspector (ou auto-find)
         private bool _discoRunning = false;
 
         // ????????????? Runtime caches ?????????????

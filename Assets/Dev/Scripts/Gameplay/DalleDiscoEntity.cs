@@ -50,7 +50,6 @@ public class DalleDiscoEntity : MonoBehaviour, ISensorExtension
 
     private void Success()
     {
-        Debug.Log("MAMAN");
         state = DiscoState.Validated;
         animator.SetTrigger("Validate");
         validateFillCenter.fillAmount = 1;

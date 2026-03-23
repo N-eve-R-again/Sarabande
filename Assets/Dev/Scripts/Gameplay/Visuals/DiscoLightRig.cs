@@ -18,7 +18,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Sarabande.Core;   // LevelContext (optionnel)
-using Sarabande.Disco; // DiscoSequenceSystem
 using UnityEngine.Rendering;
 
 namespace Sarabande.VFX
@@ -29,7 +28,6 @@ namespace Sarabande.VFX
     public class DiscoLightRig : MonoBehaviour
     {
         [Header("Wiring")]
-        [SerializeField] private DiscoSequenceSystem disco;       // Système Disco à écouter
         [SerializeField] private LevelContext levelContext;       // Facultatif (pour width/height)
         [SerializeField, Min(0.001f)] private float cellSize = 1f;
 
@@ -112,12 +110,6 @@ namespace Sarabande.VFX
         /// </summary>
         private void OnEnable()
         {
-            if (disco)
-            {
-                disco.onSequenceStart.AddListener(OnDiscoStart);
-                disco.onSequenceSuccess.AddListener(OnDiscoStop);
-                disco.onSequenceFail.AddListener(OnDiscoStop);
-            }
             // Si visible hors Disco, on construit dès maintenant.
             if (!onlyWhenDisco) EnsureBuilt();
         }
@@ -127,12 +119,7 @@ namespace Sarabande.VFX
         /// </summary>
         private void OnDisable()
         {
-            if (disco)
-            {
-                disco.onSequenceStart.RemoveListener(OnDiscoStart);
-                disco.onSequenceSuccess.RemoveListener(OnDiscoStop);
-                disco.onSequenceFail.RemoveListener(OnDiscoStop);
-            }
+
             if (destroyOnStop) DestroyRig();
             else SetRigEnabled(false);
         }
