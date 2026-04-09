@@ -1,7 +1,6 @@
 using Sarabande.Core;
 using Sarabande.Levels;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using UnityEngine;
 
 public class TriggerableFactory : MonoBehaviour, IClearable
@@ -9,9 +8,11 @@ public class TriggerableFactory : MonoBehaviour, IClearable
     [Header("GameObject Folders")]
     
     private Transform arrowTrapsParent;
+    private Transform levelEnterExitParent;
     private Transform gatesParent;
     private Transform triggerableFolder;
 
+    private int triggeablecount = 0;
     private Transform ParentOfAll;
 
     [Header("Prefabs")]
@@ -19,6 +20,8 @@ public class TriggerableFactory : MonoBehaviour, IClearable
     [SerializeField] private GameObject gatePrefab;
     [SerializeField] private GameObject discoSeqPrefab;
     [SerializeField] private GameObject discoDallePrefab;
+    [SerializeField] private GameObject ExitPrefab;
+    [SerializeField] private GameObject EnterPrefab;
 
     [SerializeField] private bool jobDone = false;
     public bool IsJobDone() => jobDone;
@@ -35,13 +38,17 @@ public class TriggerableFactory : MonoBehaviour, IClearable
         arrowTrapsParent = new GameObject("ArrowTraps").transform;
         arrowTrapsParent.SetParent(triggerableFolder, false);
 
+        levelEnterExitParent = new GameObject("Enter Exit").transform;
+        levelEnterExitParent.SetParent(triggerableFolder, false);
+
         gatesParent = new GameObject("Gates").transform;
         gatesParent.SetParent(triggerableFolder, false);
 
         triggerableFolder.SetParent(ParentOfAll);
     }
-    public void BuildTriggerables(LevelData _levelData, Transform parent)
+    public int BuildTriggerables(LevelData _levelData, Transform parent)
     {
+        triggeablecount = 0;
         ParentOfAll = parent;
         CreateFolders();
 
@@ -51,9 +58,11 @@ public class TriggerableFactory : MonoBehaviour, IClearable
             {
                 case ArrowTrapConfig arrowTrap:
                     CreateArrowTrap(arrowTrap);
+                    triggeablecount++;
                     break;
                 case GateConfig gate:
                     CreateGate(gate);
+                    triggeablecount++;
                     break;
 
 
@@ -63,16 +72,34 @@ public class TriggerableFactory : MonoBehaviour, IClearable
         foreach (var disco in _levelData.discoSequencesConfigs)
         {
             CreateDiscoSeq(disco);
+            triggeablecount++;
         }
+
+        BuildEnterExit(_levelData);
 
         //arrow traps
         //doors et timed doors
         //grilles
 
         jobDone = true; 
+        return triggeablecount;
 
     }
+    private void BuildEnterExit(LevelData _levelData)
+    {
+        GameObject temp2 = Instantiate(EnterPrefab, levelEnterExitParent);
+        temp2.name = "Enter Door";
+        EnterDoorEntity enterDoorEntity = temp2.GetComponent<EnterDoorEntity>();
+        enterDoorEntity.Init(_levelData.heroSpawnConfig);
+        triggeablecount++;
 
+        GameObject temp = Instantiate(ExitPrefab, levelEnterExitParent);
+        temp.name = "Exit Door";
+        ExitDoorEntity exitDoorEntity = temp.GetComponent<ExitDoorEntity>();
+        exitDoorEntity.Sync(_levelData.exit);
+        exitDoorEntity.SyncVisual();
+        triggeablecount++;
+    }
     private void CreateDiscoSeq(DiscoSequenceConfig config)
     {
 
@@ -98,7 +125,8 @@ public class TriggerableFactory : MonoBehaviour, IClearable
 
         GameObject temp = Instantiate(gatePrefab, gatesParent);
         GateEntity entity = temp.GetComponent<GateEntity>();
-        entity.Init(gate, $"Gate_{gate.cell.ToString()}");
+        entity.Sync(gate, $"Gate_{gate.cell.ToString()}");
+        entity.SyncVisual();
     }
 
     private void CreateArrowTrap(ArrowTrapConfig config)

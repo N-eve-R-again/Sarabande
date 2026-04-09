@@ -2,9 +2,8 @@ using Sarabande.Core;
 using Sarabande.Levels;
 using UnityEngine;
 
-public class GateEntity : MonoBehaviour, ITriggerable
+public class GateEntity : MonoBehaviour, ITriggerable, IInitializable
 {
-    public string triggerableKey;
     [SerializeField] private GateConfig config;
     [SerializeField] private ObstacleData obstacleData;
 
@@ -14,14 +13,22 @@ public class GateEntity : MonoBehaviour, ITriggerable
 
     public TriggerableData triggerableData => config;
 
-    public void Init(GateConfig _config, string _name)
+    public void Sync(GateConfig _config, string _name)
     {
         config = _config;
-        obstacleData = new ObstacleData(ObstacleData.ObstacleType.ThinWall, config.cell, config.direction);
-        visual.InitVisual(config.direction);
-        gameObject.name = _name;
-        triggerableKey = config.triggerKey;
+    }
+
+    public void SyncVisual()
+    {
+
         transform.position = GridUtils.CenterXZ(config.cell);
+        visual.InitVisual(config.direction);
+    }
+    public void Init()
+    {
+
+        obstacleData = new ObstacleData(ObstacleData.ObstacleType.ThinWall, config.cell, config.direction);
+
         if (config.startopen) OpenDoor();
 
         NavigationEvents.NotifyDynamicObstacle(obstacleData);

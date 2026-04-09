@@ -1,22 +1,3 @@
-// FILE: Assets/DEV/Scripts/Player/HeroController.cs
-//
-// Rôle du script (résumé pour la passation)
-// - Contrôle du déplacement case par case du héros sur une grille, en “temps réel court” (step + courte pause).
-// - Lit l'action "Move" (Vector2) via le New Input System (PlayerInput en mode "Send Messages").
-// - Gère : limites de niveau, murs pleins (nonWalkables), murs fins (thin walls / grid gates), conflits avec NME.
-// - Déclenche la sortie uniquement si l'on part depuis la cellule et l'arête d’Exit définies dans LevelData.
-// - S’intègre au cycle de Reset (IResettable) : le reset vient des systèmes externes (NME/ResetManager).
-//
-// Invariants (ne pas casser)
-// - Aucun renommage de champs sérialisés, propriétés, événements, ni méthodes publiques.
-// - Aucune modification de la logique métier ou des appels utilitaires existants.
-// - Les quelques renommages de **variables locales** sont purement lisibles (portée limitée au bloc concerné).
-//
-// Dépendances
-// - Sarabande.Core.GridUtils : utilitaires grille (InsideBounds, Center, DirToVec, NormalizeEdge, etc.)
-// - Sarabande.Levels.LevelData : données de niveau (spawn, walls, thin walls, exit, etc.)
-// - Sarabande.NME.NMEController : informations de progression NME pour éviter chevauchements et conflits.
-
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Sarabande.Core;
@@ -25,7 +6,6 @@ using Sarabande.NME;
 using static Sarabande.Core.GridUtils;
 using System.Collections.Generic;
 using UnityEngine.Events;
-using LEM = LevelEntitiesManager;
 using Sarabande.Visuals;
 
 namespace Sarabande.Player
@@ -38,7 +18,7 @@ namespace Sarabande.Player
     /// - Sortie : autorisée si on part depuis la case/direction configurée dans LevelData.
     /// </summary>
     [RequireComponent(typeof(PlayerInput))]
-    public class HeroController : MonoBehaviour, Sarabande.Core.IResettable, IActor
+    public class HeroController : MonoBehaviour, Sarabande.Core.IResettable, IActor, IInitializable
     {
         // ?????????????????????????????????????????????????????????????????????????????
         // Serialized fields (groupés par thème) — NOMS CONSERVÉS (NE PAS RENOMMER)
@@ -47,6 +27,7 @@ namespace Sarabande.Player
         [Header("ActorSettings")]
         [EnumButtons]
         [SerializeField] private ActorType _actorType;
+        [SerializeField] private ActorSpawn spawn;
         ActorType IActor.type => _actorType;
 
         //On prépare des ActorInteractionData pour les reutiliser (eviter le garbage collector)
@@ -56,12 +37,6 @@ namespace Sarabande.Player
         [SerializeField] private ActorInteractionData bumpInteraction;
 
         [SerializeField] private CardinalDirection actorDirection;
-
-        [Header("Data")]
-        [SerializeField] private bool useLevelContext = true;
-        [SerializeField] private Sarabande.Core.LevelContext levelContext;
-        [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
-        [SerializeField, Min(0.001f)] private float cellSize = 1f;
 
         [Header("Movement")]
         [SerializeField, Min(0.01f)] private float stepDuration = 0.18f;
@@ -81,10 +56,6 @@ namespace Sarabande.Player
         [SerializeField, Range(0f, 0.5f)] private float nmeVacateThreshold = 0.25f;  // une case quittée par le NME reste occupée jusqu’au seuil
         private NMEController[] _nmes;
 
-        [Header("Exit")]
-        [SerializeField] private UnityEvent onExit;
-        [SerializeField] private bool disableOnExit = true;
-
         [Header("Facing")]
         [SerializeField] private bool faceOnMove = true;
         [SerializeField] private CardinalSpriteVisual spriteVisual;
@@ -95,8 +66,6 @@ namespace Sarabande.Player
         [SerializeField, Range(0f, 0.5f)] private float overlapEarlyCheckFromT = 0.15f;
         [SerializeField, Range(0f, 1f)] private float validateMoveTime = 0.45f;
         // on commence à vérifier à partir de 15% du step (évite les faux positifs très tôt)
-
-        [SerializeField] private Sarabande.Core.ResetManager resetManager;
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Runtime caches / état (NOMS CONSERVÉS)
@@ -112,7 +81,7 @@ namespace Sarabande.Player
         public float MoveProgress { get; private set; } // 0..1 pendant un step
 
         // Position logique sur la grille
-        private Vector2Int _gridPos;
+        [SerializeField] private Vector2Int _gridPos;
         public Vector2Int GridPos => _gridPos;
         public Vector3 WorldPos => transform.position;
 
@@ -128,15 +97,16 @@ namespace Sarabande.Player
         /// Initialisation au démarrage : construit les sets de collisions, positionne le héros
         /// juste "hors" de la grille en fonction de l'entrée choisie, puis lance un step d’entrée.
         /// </summary>
-        private void Start()
+        /// 
+        public void Sync(ActorSpawn _spawn)
         {
-            if (levelData == null)
-            {
-                Debug.LogError("[HeroController] LevelData manquant.");
-                enabled = false;
-                return;
-            }
-            levelData = levelContext.LevelData;
+            spawn = _spawn;
+        }
+
+
+        public void Init()
+        {
+
             moveInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnMove);
             bumpInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnBump);
             leaveInteraction = new ActorInteractionData(_actorType, ActorInteractionType.OnLeave);
@@ -144,12 +114,12 @@ namespace Sarabande.Player
 
 
             _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            ActorSpawn spawn = levelData.heroSpawnConfig;
+
             // Coord grille du spawn (ex. D8)
-            _gridPos = (Vector2Int)spawn.spawnCell;
+            _gridPos = spawn.spawnCell;
 
             // Centre monde de la case de spawn
-            Vector3 spawnCenterWorld = Center(_gridPos, cellSize);
+            Vector3 spawnCenterWorld = CenterXZ(_gridPos);
 
             // Position initiale : une case "à l'extérieur" depuis la direction choisie
             Vector3 outsideWorldPosition = spawnCenterWorld + EntryOffset(spawn.spawnDirection);
@@ -169,7 +139,6 @@ namespace Sarabande.Player
         /// </summary>
         private void Update()
         {
-            if (resetManager != null && resetManager.IsResetInProgress) return;
 
             Vector2Int intendedDir = HeldToCardinal(_held, inputDeadzone);
             CurrentIntentDir = intendedDir;
@@ -184,21 +153,15 @@ namespace Sarabande.Player
             actorDirection = GetCardinalDirection(intendedDir);
             if (faceOnMove) FaceDirection();
             // Tentative de sortie : autorisée depuis la case/direction d'Exit
-            if (IsExitMove(_gridPos, intendedDir))
+            if (IsExitMove(_gridPos, targetCell, actorDirection))
             {
-                bool collidedexit = NavigationEvents.QueryExitPortal(_gridPos, targetCell, actorDirection);
-                if (collidedexit)
-                {
-                    StartCoroutine(Bump(intendedDir));
-                    return;
-                }
 
                 StartCoroutine(StepTo(targetCell, isExitMove: true));
                 return;
             }
 
             // 1) hors-grille -> bump
-            if (!InsideBounds(targetCell, levelData.width, levelData.height))
+            if (!InsideBounds(targetCell, 8, 8))
             {
                 StartCoroutine(Bump(intendedDir));
                 return;
@@ -263,7 +226,7 @@ namespace Sarabande.Player
             MoveProgress = 0f;
             bool actionvalidated = false;
             Vector3 worldStart = transform.position;
-            Vector3 worldEnd = Center(target, cellSize);
+            Vector3 worldEnd = CenterXZ(target);
             ActorEvents.NotifyActorMove(this, intentInteraction);
             float lerpT = 0f;
             while (lerpT < stepDuration)
@@ -344,8 +307,7 @@ namespace Sarabande.Player
             // Gestion de la sortie si ce step correspond à un “exit move”
             if (isExitMove)
             {
-                onExit?.Invoke();
-                if (disableOnExit) enabled = false; // coupe ce contrôleur pour éviter tout input post-sortie
+                Debug.Log("Exited");
             }
 
         }
@@ -424,7 +386,7 @@ namespace Sarabande.Player
         /// <summary>
         /// Décale d’une cellule vers l’extérieur de la grille selon l’edge d’entrée choisi.
         /// </summary>
-        private Vector3 EntryOffset(CardinalDirection dir) => DirToWorld(dir) * cellSize;
+        private Vector3 EntryOffset(CardinalDirection dir) => DirToWorld(dir) * LevelGlobalSettings.cellSize;
 
         /// <summary>
         /// Step d’entrée depuis l’extérieur jusqu’à la cellule de spawn.
@@ -516,11 +478,9 @@ namespace Sarabande.Player
         /// <summary>
         /// Détermine si le mouvement tenté correspond à une sortie valide (cellule + direction d’Exit).
         /// </summary>
-        private bool IsExitMove(Vector2Int from, Vector2Int dir)
+        private bool IsExitMove(Vector2Int from, Vector2Int to, CardinalDirection dir)
         {
-            var exit = levelData.exit;
-            var exitCell = new Vector2Int(exit.fromCell.x, exit.fromCell.z);
-            return from == exitCell && dir == DirToVec2(exit.direction);
+            return NavigationEvents.QueryExitPortal(from, to, dir);
         }
 
 
@@ -543,9 +503,8 @@ namespace Sarabande.Player
             _readyAtTime = 0f;
 
             // 3) (la GridGateSystem & TimedDoorSystem vont réinjecter leurs verrous juste après leur propre Reset)
-            _gridPos = new Vector2Int(levelData.heroSpawn.x, levelData.heroSpawn.z);
-            var spawnCenter = Center(_gridPos, cellSize);
-            var outside = spawnCenter + EntryOffset(levelData.heroEntry);
+            _gridPos = spawn.spawnCell;
+            var outside = GridUtils.CenterXZ(_gridPos) + EntryOffset(spawn.spawnDirection);
             transform.position = outside;
 
             _isMoving = true;

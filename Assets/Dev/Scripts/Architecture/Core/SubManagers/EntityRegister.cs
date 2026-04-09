@@ -1,11 +1,14 @@
 using System.Collections.Generic;
-using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class EntityRegister
 {
-    public void ImportGlobalEvents(RegistryDatabase database, List<EventTriggerable> _globalEvents)
+    private RegistryDatabase database;
+
+    public void SetDatabase(RegistryDatabase _database) => database = _database;
+
+    public void ImportGlobalEvents(List<EventTriggerable> _globalEvents)
     {
         foreach (var item in _globalEvents)
         {
@@ -13,16 +16,16 @@ public class EntityRegister
         }
     }
 
-    public void RegisterSensor(RegistryDatabase database, Vector2Int cell, ISensorExtension sensor)
+    public void RegisterSensor(Vector2Int cell, ISensorExtension sensor)
     => database.SetSensorExtension(cell,sensor);
 
-    public void RegisterTriggerable(RegistryDatabase database, ITriggerable _triggerable)
+    public void RegisterTriggerable(ITriggerable _triggerable)
     {
         Debug.Log("[EntityRegister] Triggerable " + _triggerable.ToString() + " registered");
         database.SetTriggerable(_triggerable.triggerableData.triggerKey, _triggerable);
     }
 
-    public void RegisterListener(RegistryDatabase database, IListener _listener)
+    public void RegisterListener(IListener _listener)
     {
         Debug.Log("[EntityRegister] Listener " + _listener.ToString() + " registered");
         Vector2Int gridCoord = _listener.listenerData.cell;
@@ -32,12 +35,12 @@ public class EntityRegister
 
         if (triggerKeys.Length > 0)
         {
-            TryCreateTriggerLinks(database, triggerKeys, _listener);
+            TryCreateTriggerLinks(triggerKeys, _listener);
         }
     }
 
 
-    private void TryCreateTriggerLinks(RegistryDatabase database, string[] _triggerKeys, IListener _listener)
+    private void TryCreateTriggerLinks(string[] _triggerKeys, IListener _listener)
     {
         foreach (var triggerKey in _triggerKeys)
         {

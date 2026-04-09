@@ -220,7 +220,10 @@ public partial class LevelEditorInspector : Editor
         EditorGUILayout.PropertyField(heightlevel);
         EditorGUILayout.PropertyField(exit);
         EditorGUILayout.PropertyField(hero);
-        EditorGUILayout.PropertyField(discosSequences.GetArrayElementAtIndex(0));
+        if (discosSequences.arraySize > 0)
+        {
+            EditorGUILayout.PropertyField(discosSequences.GetArrayElementAtIndex(0));
+        }
 
         EditorGUILayout.Space();
         dataCopySO.ApplyModifiedProperties();

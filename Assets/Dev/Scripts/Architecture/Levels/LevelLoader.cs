@@ -1,8 +1,6 @@
 using Sarabande.Core;
 using System.Collections.Generic;
-using System.Drawing;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 namespace Sarabande.Levels
 {
@@ -36,9 +34,13 @@ namespace Sarabande.Levels
         [SerializeField] private StaticVisualsFactory staticVisualsFactory;
         [SerializeField] private ListenerFactory listenerFactory;
         [SerializeField] private TriggerableFactory triggerableFactory;
+        [SerializeField] private ActorFactory actorFactory;
+        [SerializeField] private LevelEditor levelEditor;
 
-        public void Construct(LevelData levelData,Transform Root)
+        public void Construct(Transform Root)
         {
+            LogGen.LogAs(this, "Found Level Data", "white");
+            LevelData levelData = levelEditor.levelData;
             ready = false;
 
             if (levelData == null)
@@ -46,22 +48,26 @@ namespace Sarabande.Levels
                 Debug.LogError("[LevelLoader] LevelData manquant.");
                 return;
             }
+            int act = 0;
+            int lis = 0;
+            int tri = 0;
+            int obs = 0;
+            LogGen.LogAs(this, "Started Construct", "orange");
 
-            staticVisualsFactory.BuildStaticVisuals(levelData, Root); //Walls, ThinWalls, Grid
-            triggerableFactory.BuildTriggerables(levelData, Root);//ArrowTraps, Doors, Disco, Grilles
-            listenerFactory.BuildListeners(levelData, Root); //Message, FakeWalls, Exit, Messages
+            obs = staticVisualsFactory.BuildStaticVisuals(levelData, Root); //Walls, ThinWalls, Grid
+            tri = triggerableFactory.BuildTriggerables(levelData, Root);//ArrowTraps, Doors, Disco, Grilles
+            lis = listenerFactory.BuildListeners(levelData, Root); //Message, FakeWalls, Exit, Messages
+            act = actorFactory.BuildActors(levelData, Root); //Hero, Nmes
 
-            BuildActors();//Player, NMEs
 
-            Debug.Log("[LevelLoader] Build terminé.");
+            LogGen.LogAs(this, $"{obs} Obstacles Created");
+            LogGen.LogAs(this, $"{lis} Listeners Created");
+            LogGen.LogAs(this, $"{tri} Triggerables Created");
+            LogGen.LogAs(this, $"{act} Actors Created");
+
+            LogGen.LogAs(this, "Finished Construct", "green");
 
             ready = true;
-        }
-
-        private void BuildActors()
-        {
-            //player
-            //enemies
         }
 
 

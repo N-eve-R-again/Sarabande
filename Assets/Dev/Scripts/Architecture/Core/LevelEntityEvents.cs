@@ -62,9 +62,21 @@ public static class UIEvents
 
 public static class NavigationEvents
 {
+    public static event Action<ObstacleData> OnRegisterStaticObstacle;
+    public static void NotifyStaticObstacleRegistry(ObstacleData _obstacleData)
+    => OnRegisterStaticObstacle?.Invoke(_obstacleData);
+
+
+    public static event Action<ExitConfig> OnRegisterPortal;
+    public static void NotifyPortalRegistry(ExitConfig _portalConfig)
+    => OnRegisterPortal.Invoke(_portalConfig);
+
+    public static event Action<Vector2Int, bool> OnModifyPortal;
+    public static void NotifyPortalModification(Vector2Int key, bool newActivatedState)
+    => OnModifyPortal?.Invoke(key, newActivatedState);
+
 
     public static event Action<ObstacleData, bool> OnRegisterDynamicObstacle;
-
     public static void NotifyDynamicObstacle(ObstacleData obstacleData, bool originalState = true)
     => OnRegisterDynamicObstacle?.Invoke(obstacleData, originalState);
 
@@ -76,12 +88,15 @@ public static class NavigationEvents
     public static void NotifyDynamicObstacleMove(Vector2Int key, Vector2Int newKey)
     => OnMoveDynamicObstacle?.Invoke(key, newKey);
 
+
+
+
     public static event Func<Vector2Int, Vector2Int, CardinalDirection, bool> OnQueryCollision;
     public static bool QueryCollision(Vector2Int from, Vector2Int to, CardinalDirection actorDir)
     => OnQueryCollision?.Invoke(from, to, actorDir) ?? false;
 
-    public static event Func<Vector2Int, Vector2Int, CardinalDirection, bool> OnQueryExitPortal;
+    public static event Func<Vector2Int, Vector2Int, CardinalDirection, bool> OnQueryPortal;
     public static bool QueryExitPortal(Vector2Int from, Vector2Int to, CardinalDirection actorDir)
-    => OnQueryExitPortal?.Invoke(from, to, actorDir) ?? false;
+    => OnQueryPortal?.Invoke(from, to, actorDir) ?? false;
  
 }

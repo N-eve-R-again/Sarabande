@@ -3,12 +3,15 @@ using Sarabande.Levels;
 using UnityEngine;
 
 
-public class ThinWallVisual : MonoBehaviour
+public class ThinWallEntity : MonoBehaviour, IObstacle
 {
     [SerializeField] ObstacleData config;
 
     [SerializeField, Min(0.1f)] private float wallHeight = 1f;
     [SerializeField, Min(0.01f)] private float thinThickness = 0.10f;
+
+    public ObstacleData obstacleData => config;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void Init(ObstacleData _config, string _name)
     {

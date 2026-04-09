@@ -118,7 +118,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4484211654490024867}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a27b89d2c1965745a55e958a3b2bf0f, type: 3}
+  m_Script: {fileID: 11500000, guid: 45e9c4b9bc5ee9c4da64fb5da3c3b470, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   config:
@@ -126,4 +126,4 @@ MonoBehaviour:
     type: 0
     thinWallDirection: 0
   wallInset: 0
-  wallHeight: 0.8
+  wallHeight: 1

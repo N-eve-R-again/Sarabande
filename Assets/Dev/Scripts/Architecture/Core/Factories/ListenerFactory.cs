@@ -13,6 +13,7 @@ public class ListenerFactory : MonoBehaviour, IClearable
     private Transform leversParent;
     private Transform listenerFolder;
 
+    private int listenerCount;
     private Transform ParentOfAll;
 
     [Header("Prefabs")]
@@ -30,9 +31,10 @@ public class ListenerFactory : MonoBehaviour, IClearable
         
     }
 
-    public void BuildListeners(LevelData _levelData, Transform parent)
+    public int BuildListeners(LevelData _levelData, Transform parent)
     {
-        if (!PrefabAreValid()) return;
+        listenerCount = 0;
+
         ParentOfAll = parent;
         CreateFolders();
 
@@ -50,29 +52,13 @@ public class ListenerFactory : MonoBehaviour, IClearable
                     CreateTriggerObject(triggerObjectConfig);
                     break;
             }
+            listenerCount++;
         }
 
         //tiles
-
         jobDone = true;
-    }
-    private bool PrefabAreValid()
-    {
+        return listenerCount;
 
-        if (fakeWallPrefab == null || messagePrefab == null)
-        {
-            Debug.LogError("Missing one or all Prefabs");
-            return false;
-        }
-
-        bool valid = true;
-
-        if (fakeWallPrefab.GetComponent<FakeWallEntity>() == null)
-        {
-            Debug.LogError("FakeWallPrefab has no FakeWallEntity attached");
-            valid = false;
-        }
-        return valid;
     }
 
     private void CreateTriggerObject(TriggerObjectConfig config)

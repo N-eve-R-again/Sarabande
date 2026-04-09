@@ -2,29 +2,39 @@ using Sarabande.Core;
 using Sarabande.Levels;
 using UnityEngine;
 
-public class ExitDoorEntity : MonoBehaviour, ITriggerable
+public class ExitDoorEntity : MonoBehaviour, IInitializable, ITriggerable
 {
-    [SerializeField] private CardinalDirection direction;
+    [SerializeField] private ExitConfig exitConfig;
     [SerializeField] private Transform pivot;
     private int frameSkip;
     public Animator animator;
-    private bool opened = false;
-    private bool activated = false;
+    [SerializeField] private bool opened = false;
 
     public TriggerableData triggerableData => data;
-    public DefaultTriggerableData data = new();
+    private DefaultTriggerableData data = new();
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public void Init(EdgeExit config)
+    public void Sync(ExitConfig config)
+    {
+        exitConfig = config;
+        data.cell = exitConfig.cell;
+        data.triggerKey = "exit";
+    }
+
+    [ContextMenu("Sync Visual to Local Data")]
+    public void SyncVisual()
+    {
+        transform.position = GridUtils.CenterXZ(exitConfig.cell);
+        SetRotation();
+    }
+
+    public void Init()
     {
 
-        direction = config.direction;
-        data.cell = config.fromCell;
+        data.cell = exitConfig.cell;
         data.triggerKey = "exit";
-        transform.position = GridUtils.CenterXZ(data.cell);
-        SetRotation();
         frameSkip = 0;
 
-        if (!config.startObstructed)
+        if (exitConfig.startState)
         {
             animator.SetTrigger("Open");
             opened = true;
@@ -33,12 +43,14 @@ public class ExitDoorEntity : MonoBehaviour, ITriggerable
         {
             opened = false;
         }
+
+        NavigationEvents.NotifyPortalRegistry(exitConfig);
     }
 
     private void SetRotation()
     {
         float yRot = 0f;
-        switch (direction)
+        switch (exitConfig.direction)
         {
             case CardinalDirection.South:
                 yRot = 0f; break;
@@ -52,8 +64,10 @@ public class ExitDoorEntity : MonoBehaviour, ITriggerable
 
     private void Update()
     {
+        if (!opened) return;
+
         //if (!activated) return;
-         if(frameSkip < 120)
+        if (frameSkip < 120)
         {
             frameSkip++;
             return;
@@ -61,17 +75,16 @@ public class ExitDoorEntity : MonoBehaviour, ITriggerable
         else
         {
             frameSkip = 0;
-            bool obstructed = NavigationEvents.QueryExitPortal(data.cell, data.cell + GridUtils.DirToVec2(direction), direction);
-            //fallback si la porte devient obstruée
-            if (obstructed)
-            {
-                if (opened)
-                {
-                    animator.SetTrigger("Close");
-                    opened = false;
-                }
+            bool obstructed = !NavigationEvents.QueryExitPortal(exitConfig.cell, exitConfig.cell + GridUtils.DirToVec2(exitConfig.direction), exitConfig.direction);
+            Debug.Log(obstructed);
+            if(!obstructed) return; //on laisse open;
 
-            }
+            //on referme
+            animator.SetTrigger("Close");
+            opened = false;
+            NavigationEvents.NotifyPortalModification(exitConfig.cell, false);
+            Debug.Log("obstructed, closed portal");
+
 
         }
     }
@@ -82,7 +95,9 @@ public class ExitDoorEntity : MonoBehaviour, ITriggerable
         {
             animator.SetTrigger("Open");
             opened = true;
+            NavigationEvents.NotifyPortalModification(exitConfig.cell, true);
         }
+
 
     }
 }

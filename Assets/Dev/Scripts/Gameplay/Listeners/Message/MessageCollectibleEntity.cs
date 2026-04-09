@@ -2,7 +2,6 @@ using Sarabande.Core;
 using Sarabande.Levels;
 using Sarabande.Messages;
 using UnityEngine;
-using LEM = LevelEntitiesManager;
 
 public class MessageCollectibleEntity : MonoBehaviour, IListener
 {

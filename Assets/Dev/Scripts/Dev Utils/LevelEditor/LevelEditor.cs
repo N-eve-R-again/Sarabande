@@ -152,7 +152,7 @@ public class LevelEditor : MonoBehaviour
         }
         DrawBounds();
         DrawDoor(dataCopy.heroSpawnConfig.spawnCell, dataCopy.heroSpawnConfig.spawnDirection, new Color(1f, 0.5f, 0f));
-        DrawDoor(dataCopy.exit.fromCell, dataCopy.exit.direction, Color.green);
+        DrawDoor(dataCopy.exit.cell, dataCopy.exit.direction, Color.green);
 
         foreach (var space in lookupTable)
         {
@@ -959,7 +959,7 @@ public class LevelDataSnapshot
     [SerializeReference] public List<DiscoSequenceConfig> discoSequences;
     public int width;
     public int height;
-    public EdgeExit exit;
+    public ExitConfig exit;
     public ActorSpawn heroSpawnConfig;
 
     // ... seulement tes données de gameplay

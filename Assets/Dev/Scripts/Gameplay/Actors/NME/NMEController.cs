@@ -22,7 +22,6 @@ using Sarabande.Core;
 using Sarabande.Levels;
 using Sarabande.Player; // HeroController
 using static Sarabande.Core.GridUtils;
-using LEM = LevelEntitiesManager;
 
 namespace Sarabande.NME
 {

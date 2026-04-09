@@ -5,10 +5,12 @@ using UnityEngine.Events;
 
 public class InteractionSystem
 {
-    
+    private RegistryDatabase database;
     private List<InteractionBuffer> interactions = new List<InteractionBuffer>();
 
-    public void SendSignal(RegistryDatabase database, string[] keys)
+    public void SetDatabase(RegistryDatabase _database) => database = _database;
+
+    public void SendSignal(string[] keys)
     {
         foreach (string signal in keys)
         {
@@ -33,7 +35,7 @@ public class InteractionSystem
     }
 
 
-    public void SendEventToTriggerable(RegistryDatabase database, IListener _listener)
+    public void SendEventToTriggerable(IListener _listener)
     {
         bool eventfired = false;
 
@@ -65,7 +67,7 @@ public class InteractionSystem
     }
 
 
-    public void SendTriggerableCallback(RegistryDatabase database, ITriggerable triggerable)
+    public void SendTriggerableCallback(ITriggerable triggerable)
     {
         List<IListenerWithCallback> _targets = database.GetCallbacksByLinks(triggerable);
 
@@ -79,14 +81,14 @@ public class InteractionSystem
         }
     }
 
-    public void ActorMoved(RegistryDatabase database, IActor _actor, ActorInteractionData _interaction)
+    public void ActorMoved(IActor _actor, ActorInteractionData _interaction)
     {
 
-        TrySensors(database, _interaction.cell, _interaction);
+        TrySensors(_interaction.cell, _interaction);
 
         if(_interaction.interactionType != ActorInteractionType.OnLeave)// OnMove, OnIntent, OnBump
         {
-            (IListener _listener, bool _createBuffer) = TryTriggerInteractAt(database,_interaction.cell, _interaction);//On essaye de faire une interaction
+            (IListener _listener, bool _createBuffer) = TryTriggerInteractAt(_interaction.cell, _interaction);//On essaye de faire une interaction
 
             if (_listener != null && _createBuffer)
             {
@@ -102,7 +104,7 @@ public class InteractionSystem
 
     }
 
-    private void TrySensors(RegistryDatabase database, Vector2Int _eventPos, ActorInteractionData data)
+    private void TrySensors(Vector2Int _eventPos, ActorInteractionData data)
     {
         ISensorExtension sensor = database.GetSensorExtensionByCell(_eventPos);
 
@@ -122,7 +124,7 @@ public class InteractionSystem
         }
     }
 
-    private (IListener,bool) TryTriggerInteractAt(RegistryDatabase database, Vector2Int _eventPos, ActorInteractionData _interaction)
+    private (IListener,bool) TryTriggerInteractAt(Vector2Int _eventPos, ActorInteractionData _interaction)
     {
         IListener listener = database.GetListenerByCell(_eventPos);
         if (listener != null) {

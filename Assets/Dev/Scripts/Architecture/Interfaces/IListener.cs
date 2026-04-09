@@ -13,6 +13,13 @@ public interface IListener
 
 }
 
+public class ListenerBufferSubscription
+{
+    public ActorInteractionType interactionType;
+    public CardinalDirection cardinalDirection;
+
+}
+
 public interface IListenerWithCallback : IListener
 {
     public bool wantsCallback { get; }

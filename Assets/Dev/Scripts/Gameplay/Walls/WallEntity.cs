@@ -1,12 +1,14 @@
 using Sarabande.Core;
 using Sarabande.Levels;
 using UnityEngine;
-public class WallVisual : MonoBehaviour
+public class WallEntity : MonoBehaviour, IObstacle
 {
     [SerializeField] ObstacleData config;
 
     [SerializeField, Min(0f)] private float wallInset = 0.05f;
     [SerializeField, Min(0.1f)] private float wallHeight = 1f;
+
+    public ObstacleData obstacleData => config;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void Init(ObstacleData _config, string _name)

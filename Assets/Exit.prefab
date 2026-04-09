@@ -186,10 +186,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 235fc38f2b4c4904c95de0366e5d830a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cell: {x: 0, y: 0}
-  direction: 0
+  exitConfig:
+    cell: {x: 0, y: 0}
+    activated: 1
+    direction: 0
   pivot: {fileID: 4715246590587518764}
   animator: {fileID: 678988005263256782}
+  opened: 0
 --- !u!1 &1887669237239645678
 GameObject:
   m_ObjectHideFlags: 0

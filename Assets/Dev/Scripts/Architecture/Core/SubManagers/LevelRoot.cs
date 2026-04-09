@@ -10,28 +10,24 @@ public class LevelRoot : MonoBehaviour
     private InteractionSystem interactionSystem;
     private NavigationManager navigationManager;
 
-    [Header("SubManagers")]
-    public MessageSystem messageSystem;
-
     public void Init()
-    { 
-        interactionSystem = new InteractionSystem();
-        navigationManager = new NavigationManager();
-
+    {
         registryDatabase = new RegistryDatabase();
+
+        interactionSystem = new InteractionSystem();
+        interactionSystem.SetDatabase(registryDatabase);
+
         entityRegister = new EntityRegister();
+        entityRegister.SetDatabase(registryDatabase);
 
-
+        navigationManager = new NavigationManager();
         navigationManager.SubscribeToEvents();
+
         SubscribeToLevelEntityEvents();
         SubscribeToRegistyEvents();
     }
 
-    public void BuildCollisionSets(LevelData levelData)
-    {
-        navigationManager.BuildCollisionSets(levelData);
 
-    }
 
     private void OnDisable()
     {
@@ -72,17 +68,17 @@ public class LevelRoot : MonoBehaviour
 
 
     private void RegisterSensor(Vector2Int cell, ISensorExtension extension) 
-        => entityRegister.RegisterSensor(registryDatabase, cell, extension);
+        => entityRegister.RegisterSensor(cell, extension);
     private void RegisterTriggerable(ITriggerable triggerable) 
-        => entityRegister.RegisterTriggerable(registryDatabase, triggerable);
+        => entityRegister.RegisterTriggerable(triggerable);
     private void RegisterListener(IListener listener) 
-        => entityRegister.RegisterListener(registryDatabase, listener);
+        => entityRegister.RegisterListener(listener);
     private void ActorMoved(IActor actor, ActorInteractionData data) 
-        => interactionSystem.ActorMoved(registryDatabase, actor, data);
+        => interactionSystem.ActorMoved(actor, data);
     private void SendSignal(string[] signal) 
-        => interactionSystem.SendSignal(registryDatabase, signal);   
+        => interactionSystem.SendSignal(signal);   
     private void SendTriggerableCallback(ITriggerable triggerable)
-        => interactionSystem.SendTriggerableCallback(registryDatabase, triggerable);
+        => interactionSystem.SendTriggerableCallback(triggerable);
     private void SendEventToTriggerable(IListener listener)
-        => interactionSystem.SendEventToTriggerable(registryDatabase, listener);
+        => interactionSystem.SendEventToTriggerable(listener);
 }

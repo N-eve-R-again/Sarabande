@@ -2,7 +2,7 @@ using Sarabande.Core;
 using UnityEngine;
 
 public enum ActorInteractionType
-{ OnMove, OnIntent,  OnBump, OnLeave}
+{ None, OnMove, OnIntent,  OnBump, OnLeave}
 
 public enum ActorType 
 { None, NME, Hero }

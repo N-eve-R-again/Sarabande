@@ -1,4 +1,5 @@
 using Sarabande.Core;
+using Sarabande.Levels;
 using System.Drawing;
 using UnityEngine;
 
@@ -43,12 +44,11 @@ namespace Sarabande.Core
 
     /// <summary>Sortie située "en dehors" d'un bord depuis une case</summary>
     [System.Serializable]
-    public class EdgeExit
+    public class ExitConfig
     {
-        public bool startObstructed;
-        public GridCoord fromCell;     // ex: H1 = (7,0)
+        public Vector2Int cell;
+        public bool startState;
         public CardinalDirection direction; // ex: East (sortir à droite)
-
 
     }
 

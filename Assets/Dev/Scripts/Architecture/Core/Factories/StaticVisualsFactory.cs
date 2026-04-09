@@ -11,15 +11,14 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
     private Transform gridParent;
     private Transform wallsParent;
     private Transform thinWallsParent;
-    private Transform staticVisualsFolder;
+    private Transform obstaclesFolder;
 
     private Transform ParentOfAll;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject wallPrefab;
     [SerializeField] private GameObject thinWallPrefab;
-    [SerializeField] private GameObject Exit;
-    [SerializeField] private GameObject Enter;
+    private int obstaclecount = 0;
 
     [Header("Grid Visuals")]
     [SerializeField, Min(0.001f)] private float lineWidth = 0.03f;
@@ -33,57 +32,36 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
     {
 
     }
-    public void BuildStaticVisuals(LevelData _levelData,Transform parent)
+    public int BuildStaticVisuals(LevelData _levelData,Transform parent)
     {
-        if(!PrefabAreValid()) return;
+        obstaclecount = 0;
         ParentOfAll = parent;
+
         CreateFolders();
 
         BuildGridLines(_levelData);
         BuildObstacles(_levelData);
 
-        Exit.GetComponent<ExitDoorEntity>().Init(_levelData.exit);
-        Enter.GetComponent<EnterDoorEntity>().Init(_levelData.heroSpawnConfig);
-
         jobDone = true;
+        return obstaclecount;
+
     }
 
-    private bool PrefabAreValid()
-    {
-        if(wallPrefab == null || thinWallPrefab == null)
-        {
-            Debug.LogError("Missing Prefabs");
-            return false;
-        }
 
-        bool valid = true;
-        if (wallPrefab.GetComponent<WallVisual>() == null)
-        {
-            Debug.LogError("WallPrefab has no WallVisual attached");
-            valid = false;
-        }
-        if (thinWallPrefab.GetComponent<ThinWallVisual>() == null)
-        {
-            Debug.LogError("ThinWallPrefab has no ThinWallVisual attached");
-            valid = false;
-        }
-
-        return valid;
-    }
     private void CreateFolders()
     {
-        staticVisualsFolder = new GameObject("Static Visuals").transform;
-        staticVisualsFolder.SetParent(transform.parent);
+        obstaclesFolder = new GameObject("Obstacles").transform;
+        obstaclesFolder.SetParent(transform.parent);
 
         gridParent = new GameObject("GridLines").transform;
         wallsParent = new GameObject("Walls").transform;
         thinWallsParent = new GameObject("ThinWalls").transform;
 
-        gridParent.SetParent(staticVisualsFolder, false);
-        wallsParent.SetParent(staticVisualsFolder, false);
-        thinWallsParent.SetParent(staticVisualsFolder, false);
+        gridParent.SetParent(obstaclesFolder, false);
+        wallsParent.SetParent(obstaclesFolder, false);
+        thinWallsParent.SetParent(obstaclesFolder, false);
 
-        staticVisualsFolder.SetParent(ParentOfAll, true);
+        obstaclesFolder.SetParent(ParentOfAll, true);
     }
 
     private void BuildObstacles(LevelData _levelData)
@@ -101,16 +79,17 @@ public class StaticVisualsFactory : MonoBehaviour, IClearable
 
             if( obstacle.type == ObstacleData.ObstacleType.Wall)
             {
+                obstaclecount++;
                 GameObject temp = Instantiate(wallPrefab, wallsParent);
-                WallVisual visual = temp.GetComponent<WallVisual>();
+                WallEntity visual = temp.GetComponent<WallEntity>();
 
                 visual.Init(obstacle, $"Wall_{obstacle.cell.ToString()}");
             }
             else
             {
-
+                obstaclecount++;
                 GameObject temp = Instantiate(thinWallPrefab, Vector3.zero, Quaternion.identity, thinWallsParent);
-                ThinWallVisual visual = temp.GetComponent<ThinWallVisual>();
+                ThinWallEntity visual = temp.GetComponent<ThinWallEntity>();
 
                 visual.Init(obstacle, $"Thin_{obstacle.cell.ToString()}");
             }
