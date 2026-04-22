@@ -40,8 +40,8 @@ public static class HierarchyWindowGroupHeader
     {
         GameObject gameObject = (GameObject)EditorUtility.InstanceIDToObject(instanceID);
 
-        selectionRect.xMax = 50f; 
-        selectionRect.xMin = 40f;
+        selectionRect.xMax = 45f; 
+        selectionRect.xMin = 35f;
 
         if (gameObject != null)
         {

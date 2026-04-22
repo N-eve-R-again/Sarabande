@@ -14,4 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   coloredTitles:
   - name: Main Camera
-    color: {r: 0.28773582, g: 0.9325813, b: 1, a: 0.3529412}
+    color: {r: 0.28773582, g: 0.9325813, b: 1, a: 0.7490196}
+  - name: LevelRoot
+    color: {r: 1, g: 1, b: 1, a: 0.9137255}
+  - name: Listeners
+    color: {r: 0.42968425, g: 1, b: 0.2971698, a: 0.3529412}
+  - name: Triggerables
+    color: {r: 1, g: 0, b: 0.38591814, a: 0.3529412}
+  - name: Obstacles
+    color: {r: 1, g: 0.7673603, b: 0, a: 0.3529412}
+  - name: BootStraper
+    color: {r: 1, g: 0.2501845, b: 0, a: 0.8862745}
+  - name: Actors
+    color: {r: 1, g: 0.2971698, b: 0.8820444, a: 0.40392157}

@@ -333,7 +333,7 @@ namespace FolderIcons
                 {
                 savePath = EditorGUILayout.TextField ("Save Path", savePath);
 
-                if (GUILayout.Button ("Select", GUILayout.MaxWidth(80f)))
+                if (GUILayout.Button ("Edit", GUILayout.MaxWidth(80f)))
                     {
                     savePath = EditorUtility.OpenFolderPanel ("Texture Save Path", "Assets", "");
                     GUIUtility.ExitGUI ();

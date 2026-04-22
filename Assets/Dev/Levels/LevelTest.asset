@@ -14,22 +14,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 8
   height: 8
+  exit:
+    cell: {x: 7, y: 0}
+    startState: 0
+    direction: 1
+  obstacles: []
+  listeners:
+  - rid: 11956306945245506
+  - rid: 11956306945245507
+  - rid: 11956306945245508
+  triggerables: []
+  discoSequencesConfigs: []
+  heroSpawnConfig:
+    spawnCell: {x: 0, y: 0}
+    spawnDirection: 3
   nonWalkables: []
   thinWalls: []
   heroSpawn:
     x: 7
     z: 4
-  nmeSpawn:
-    x: 7
-    z: 7
   nmeSpawns: []
   nmeFacings: 
   heroEntry: 1
-  exit:
-    fromCell:
-      x: 7
-      z: 4
-    direction: 1
   passThroughWalls: []
   arrowTraps:
   - triggerCell:
@@ -72,5 +78,31 @@ MonoBehaviour:
       z: 5
     side: 1
     initiallyOpen: 0
-  triggerPads: []
-  triggerBindings: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 11956306945245506
+      type: {class: FakeWallData, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 5, y: 3}
+        triggerKeys: []
+    - rid: 11956306945245507
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 4, y: 1}
+        triggerKeys:
+        - door
+        type: 1
+        attachedTo: 2
+        rearmType: 2
+        timeToRearm: 1
+    - rid: 11956306945245508
+      type: {class: TriggerObjectConfig, ns: Sarabande.Levels, asm: Assembly-CSharp}
+      data:
+        cell: {x: 3, y: 0}
+        triggerKeys:
+        - exit
+        type: 1
+        attachedTo: 2
+        rearmType: 2
+        timeToRearm: 1
