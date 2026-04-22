@@ -1,7 +1,7 @@
 using Sarabande.Core;
-using Sarabande.Levels;
-using Unity.VisualScripting;
+using Sarabande.Listeners;
 using UnityEngine;
+using Sarabande.EntityExtensions;
 
 public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
 {
@@ -24,14 +24,18 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
 
     public ListenerData listenerData => config;
 
-    public void Init(TriggerObjectConfig _config)
+    public void Sync(TriggerObjectConfig _config)
     {
         config = _config;
-        ListenerCreationHelper.SetupListenerEntity(this, this, config);
-        visual.InitVisual(config.attachedTo,config.rearmType == RearmType.Instant);
-        
-        //transform.localScale = SetSize();
-
+    }
+    public void SyncVisual()
+    {
+        transform.position = GridUtils.CenterXZ(config.cell);
+        visual.SetRotation(config.attachedTo);
+    }
+    public void Init(TriggerObjectConfig _config)
+    {
+        visual.InitVisual(config.rearmType == RearmType.Instant);
     }
 
 

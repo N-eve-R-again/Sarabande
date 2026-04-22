@@ -14,6 +14,7 @@
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
+using Sarabande.EntityExtensions;
 
 namespace Sarabande.Core
 {

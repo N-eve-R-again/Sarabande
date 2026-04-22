@@ -1,10 +1,17 @@
-using Sarabande.Core;
-using Sarabande.Levels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using UnityEditor;
 using UnityEngine;
+
+using Sarabande.Core;
+using Sarabande.Levels;
+
+using Sarabande.Listeners;
+using Sarabande.Actors;
+using Sarabande.Triggerables;
+using Sarabande.Obstacles;
 
 
 public enum EditorToolType
@@ -13,6 +20,14 @@ public enum EditorToolType
     Erase,
     Edit,
     Misc
+}
+
+public enum PlaceObjectType
+{
+    Obstacle,
+    Listener,
+    Triggerable,
+    Actor
 }
 
 public enum SelectedObjectType
@@ -64,6 +79,39 @@ public class TriggerLink
     }
 }
 
+[System.Serializable]
+public class ObjectBrush
+{
+    private string name;
+    [SerializeReference] public object data;
+
+    public ObjectBrush(string name, object data)
+    {
+        this.name = name;
+        this.data = data;
+    }
+
+    public string GetName() => name;
+    public object GetObject() => data;
+}
+
+[System.Serializable]
+public class BrushPack
+{
+    [SerializeReference]
+    public List<ObjectBrush> brushes = new();
+    public BrushPack(List<ObjectBrush> _brushes) 
+    { 
+        brushes = _brushes;
+    }
+
+    public BrushPack()
+    {
+
+    }
+}
+
+
 public class LevelEditor : MonoBehaviour
 {
     // Usage
@@ -82,6 +130,7 @@ public class LevelEditor : MonoBehaviour
     public Color selectedColor;
 
     public SelectedObjectType selectedObjectType;
+
     public int selectedObjectIndex;
     public List<object> conflictedSelection;
     public Vector2Int selectedCell;
@@ -91,46 +140,92 @@ public class LevelEditor : MonoBehaviour
     public Dictionary<string, Vector2Int> availableKeys = new();
 
     private string originalJson; // Stocke l'état initial
-    private Type[] availableListenerTypes = new Type[0];
-    [SerializeReference]
-    public List<ListenerData> listenerDummies = new List<ListenerData>();
 
-    public string[] listenerNames = new string[0];
+    public PlaceObjectType placeObjectType;
+    [SerializeReference]
+    public List<ListenerData> listenerDummies = new();
+    public List<string> listenerDummiesNames = new();
+    [SerializeReference]
+    public List<TriggerableData> triggerableDummies = new();
+    public List<string> triggerableDummiesNames = new();
+
+    [SerializeReference]
+    public ObstacleData obstacleDummy = new ObstacleData();
 
     public int selectedPlaceTypeIndex = 0;
+
     Vector3[] bounds;
 
 
-    public Type[] GetListenersTypes()
+
+    
+    public void GetListenerBrushes()
     {
+        if(listenerDummies == null)
+        {
+            CreateListenerBrushes();
+        }
         if(listenerDummies.Count == 0)
         {
-            availableListenerTypes = null;
+            CreateListenerBrushes();
         }
-        if (availableListenerTypes == null) {
-            availableListenerTypes = new Type[0]; }
-        if(availableListenerTypes.Length == 0)
+
+
+    }
+    public void GetTriggerableBrushes()
+    {
+        if(triggerableDummies == null)
         {
-            availableListenerTypes = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a => a.GetTypes())
-                .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(ListenerData)))
-                .OrderBy(t => t.Name) // Tri alphabétique
-                .ToArray();
-            listenerNames = new string[availableListenerTypes.Length];
-            listenerDummies.Clear();
-            for (int i = 0; i < availableListenerTypes.Length; i++)
-            {
-                listenerDummies.Add((ListenerData)Activator.CreateInstance(availableListenerTypes[i]));
-                listenerNames[i] = availableListenerTypes[i].Name.Replace("Config", "").Replace("Data", "");
-            }
-
+            CreateTriggerableBrushes();
         }
+        if(triggerableDummies.Count == 0)
+        {
+            CreateTriggerableBrushes();
+        }
+    }
 
-        return availableListenerTypes;
+
+
+    private void CreateListenerBrushes()
+    {
+        listenerDummies.Clear();
+        listenerDummiesNames.Clear();
+
+        var fakeWall = new FakeWallData();
+        var message = new MessageConfig();
+        var triggerobject = new TriggerObjectConfig();
+
+
+        listenerDummies.Add(fakeWall);
+        listenerDummies.Add(message);
+        listenerDummies.Add(triggerobject);
+
+        listenerDummiesNames.Add("Fake Wall");
+        listenerDummiesNames.Add("Message");
+        listenerDummiesNames.Add("Trigger Object");
+
+
+    }
+    private void CreateTriggerableBrushes()
+    {
+        triggerableDummies.Clear();
+        triggerableDummiesNames.Clear();
+
+        var gate = new GateConfig();
+        var trap = new ArrowTrapConfig();
+
+        triggerableDummies.Add(gate);
+        triggerableDummies.Add(trap);
+
+        triggerableDummiesNames.Add("Gate");
+        triggerableDummiesNames.Add("Trap");
+
     }
 
     private void OnDrawGizmos()
     {
+        if (Application.isPlaying) return;
+
         if(lookupTable.Count == 0 && dataCopy != null)
         {
             UpdateLookUpList();
@@ -151,7 +246,7 @@ public class LevelEditor : MonoBehaviour
             Updatebounds();
         }
         DrawBounds();
-        DrawDoor(dataCopy.heroSpawnConfig.spawnCell, dataCopy.heroSpawnConfig.spawnDirection, new Color(1f, 0.5f, 0f));
+        DrawDoor(dataCopy.hero.spawnCell, dataCopy.hero.spawnDirection, new Color(1f, 0.5f, 0f));
         DrawDoor(dataCopy.exit.cell, dataCopy.exit.direction, Color.green);
 
         foreach (var space in lookupTable)
@@ -174,7 +269,7 @@ public class LevelEditor : MonoBehaviour
             }
         }
 
-        DrawSpriteIcon("Gizmo_Hero", dataCopy.heroSpawnConfig.spawnCell, new Color(1f, 0.5f, 0f), false);
+        DrawSpriteIcon("Gizmo_Hero", dataCopy.hero.spawnCell, new Color(1f, 0.5f, 0f), false);
 
 
         Gizmos.color = Color.white;
@@ -342,7 +437,7 @@ public class LevelEditor : MonoBehaviour
             Gizmos.color = new Color(0.2f, 0.9f, 0.9f);
 
         }
-        if(triggerObject.type == TriggerObjectType.TriggerPad)
+        if(triggerObject.type == TriggerObjectConfig.Type.TriggerPad)
         {
             DrawPressurePadAt(triggerObject.cell, selectionGizmo);
         }
@@ -642,6 +737,8 @@ public class LevelEditor : MonoBehaviour
 
     private bool HasChanges()
     {
+        if (Application.isPlaying) return false;
+
         return (CreateSnapshot(dataCopy) != originalJson);
     }
 
@@ -665,7 +762,7 @@ public class LevelEditor : MonoBehaviour
             width = data.width,
             height = data.height,
             exit = data.exit,
-            heroSpawnConfig = data.heroSpawnConfig
+            heroData = data.hero
 
 
         };
@@ -849,6 +946,9 @@ public class LevelEditor : MonoBehaviour
                 selectedObjectIndex = dataCopy.triggerables.IndexOf((TriggerableData)obj);
                 selectedCell = dataCopy.triggerables[selectedObjectIndex].cell;
                 break;
+            case ActorData:
+                selectedObjectType = SelectedObjectType.Actor;
+                break;
 
             default:
                 selectedObjectType = SelectedObjectType.None;
@@ -926,11 +1026,22 @@ public class LevelEditor : MonoBehaviour
 
     public void CreateCell(Vector2Int cell)
     {
+        /*
         Undo.RecordObject(dataCopy, $"Place OBJ {availableListenerTypes[selectedPlaceTypeIndex].Name} {cell}");
         Type typeToPlace = availableListenerTypes[selectedPlaceTypeIndex];
 
         ListenerData brush = listenerDummies[selectedPlaceTypeIndex];
 
+        switch (placeObjectType)
+        {
+            case PlaceObjectType.Obstacle:
+
+                break;
+            case PlaceObjectType.Listener:
+                break;
+            case PlaceObjectType.Triggerable:
+                break;
+        }
         // Clone le brush
         string json = JsonUtility.ToJson(brush);
         ListenerData newObject = (ListenerData)Activator.CreateInstance(brush.GetType());
@@ -960,7 +1071,7 @@ public class LevelDataSnapshot
     public int width;
     public int height;
     public ExitConfig exit;
-    public ActorSpawn heroSpawnConfig;
+    public HeroData heroData;
 
     // ... seulement tes données de gameplay
 }

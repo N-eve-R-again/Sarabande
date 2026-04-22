@@ -1,5 +1,7 @@
 using Sarabande.Core;
 using Sarabande.Levels;
+using Sarabande.Listeners;
+using Sarabande.EntityExtensions;
 using UnityEngine;
 
 public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettable
@@ -28,11 +30,18 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
 
     public ListenerData listenerData => config;
 
-    public void Init(TriggerObjectConfig _config)
+    public void Sync(TriggerObjectConfig _config)
     {
         config = _config;
-        ListenerCreationHelper.SetupListenerEntity(this, this, _config); //comportment de base de setup
+    }
+    public void SyncVisual()
+    {
+        gameObject.name = AbsoluteObjectNamer.GetName(config);
+        transform.position = GridUtils.CenterXZ(config.cell);
+    }
 
+    public void Init(TriggerObjectConfig _config)
+    {
         visual.InitVisual(); //initialisation du visuel
     }
 

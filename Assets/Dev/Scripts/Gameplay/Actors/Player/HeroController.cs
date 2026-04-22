@@ -1,11 +1,14 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+
 using Sarabande.Core;
 using Sarabande.Levels;
+using Sarabande.Actors;
+using Sarabande.EntityExtensions;
+
 using Sarabande.NME;
 using static Sarabande.Core.GridUtils;
-using System.Collections.Generic;
-using UnityEngine.Events;
+
 using Sarabande.Visuals;
 
 namespace Sarabande.Player
@@ -18,7 +21,7 @@ namespace Sarabande.Player
     /// - Sortie : autorisée si on part depuis la case/direction configurée dans LevelData.
     /// </summary>
     [RequireComponent(typeof(PlayerInput))]
-    public class HeroController : MonoBehaviour, Sarabande.Core.IResettable, IActor, IInitializable
+    public class HeroController : MonoBehaviour, IResettable, IActor, IInitializable
     {
         // ?????????????????????????????????????????????????????????????????????????????
         // Serialized fields (groupés par thème) — NOMS CONSERVÉS (NE PAS RENOMMER)
@@ -27,7 +30,7 @@ namespace Sarabande.Player
         [Header("ActorSettings")]
         [EnumButtons]
         [SerializeField] private ActorType _actorType;
-        [SerializeField] private ActorSpawn spawn;
+        [SerializeField] private HeroData spawn;
         ActorType IActor.type => _actorType;
 
         //On prépare des ActorInteractionData pour les reutiliser (eviter le garbage collector)
@@ -98,7 +101,7 @@ namespace Sarabande.Player
         /// juste "hors" de la grille en fonction de l'entrée choisie, puis lance un step d’entrée.
         /// </summary>
         /// 
-        public void Sync(ActorSpawn _spawn)
+        public void Sync(HeroData _spawn)
         {
             spawn = _spawn;
         }

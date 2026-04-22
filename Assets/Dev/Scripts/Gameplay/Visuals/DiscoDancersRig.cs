@@ -22,7 +22,7 @@ namespace Sarabande.VFX
     {
         [Header("Wiring")]
 
-        [SerializeField] private LevelContext levelContext; // Contexte du niveau pour obtenir les données de niveau
+
         [SerializeField, Min(0.001f)] private float cellSize = 1f; // Taille des cellules du niveau
 
         [System.Serializable]
@@ -82,12 +82,12 @@ namespace Sarabande.VFX
 
             // Récupère les dimensions du niveau
             int w = 8, h = 8;
-            if (levelContext && levelContext.LevelData)
+            /*if (levelContext && levelContext.LevelData)
             {
                 w = Mathf.Max(1, levelContext.LevelData.width);
                 h = Mathf.Max(1, levelContext.LevelData.height);
             }
-
+            */
             // Crée l'anneau des positions de départ des danseurs
             _ring = new List<Vector2Int>();
             for (int y = 1; y < h; y += 2) _ring.Add(new Vector2Int(-1, y));        // côté gauche

@@ -1,6 +1,8 @@
 using Sarabande.Core;
 using Sarabande.Levels;
 using UnityEngine;
+using Sarabande.Listeners;
+using Sarabande.EntityExtensions;
 
 public class FakeWallEntity : MonoBehaviour, IListener, IResettable
 {
@@ -17,21 +19,28 @@ public class FakeWallEntity : MonoBehaviour, IListener, IResettable
     public ListenerData listenerData => wallData;
     public FakeWallData wallData;
 
-    public void Init(FakeWallData _config)
+    public void Sync(FakeWallData _config)
     {
         wallData = _config;
-        ListenerCreationHelper.SetupListenerEntity(this, this, _config);
+
+    }
+
+    public void SyncVisual()
+    {
+        AbsoluteObjectNamer.GetName(wallData);
         SetSize(); //bientot dans le visual
         SetPosition();
     }
 
     public void SetSize()
     {
+
         float scaleXZ = Mathf.Max(0.001f, LevelGlobalSettings.cellSize - 2f * wallInset);
         transform.localScale = new Vector3(scaleXZ, wallHeight, scaleXZ);
     }
     private void SetPosition()
     {
+        transform.position = GridUtils.CenterXZ(wallData.cell);
         transform.position += new Vector3(0, wallHeight * 0.5f, 0);
     }
 

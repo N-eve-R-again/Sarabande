@@ -28,7 +28,6 @@ namespace Sarabande.VFX
     public class DiscoLightRig : MonoBehaviour
     {
         [Header("Wiring")]
-        [SerializeField] private LevelContext levelContext;       // Facultatif (pour width/height)
         [SerializeField, Min(0.001f)] private float cellSize = 1f;
 
         [Header("Rig")]
@@ -223,11 +222,11 @@ namespace Sarabande.VFX
 
             // Centre/extent depuis LevelContext si dispo, sinon fallback 8x8.
             int w = 8, h = 8;
-            if (levelContext && levelContext.LevelData)
+            /*if (levelContext && levelContext.LevelData)
             {
                 w = Mathf.Max(1, levelContext.LevelData.width);
                 h = Mathf.Max(1, levelContext.LevelData.height);
-            }
+            }*/
             _center = new Vector3(w * cellSize * 0.5f, 0f, h * cellSize * 0.5f);
             _half = new Vector2(w * cellSize * 0.5f, h * cellSize * 0.5f);
 

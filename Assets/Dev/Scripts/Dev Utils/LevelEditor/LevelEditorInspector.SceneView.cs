@@ -2,10 +2,14 @@ using Sarabande.Core;
 using Sarabande.Levels;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
+
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering;
+using Sarabande.Triggerables;
+using Sarabande.Listeners;
+using Sarabande.Actors;
+using Sarabande.Obstacles;
+
 
 public partial class LevelEditorInspector
 {
@@ -338,7 +342,7 @@ public partial class LevelEditorInspector
         Handles.color = placeColor;
         Vector3 pos = GridUtils.CenterXZ(cell);
         Handles.DrawWireCube(pos, new Vector3(0.8f, 0f, 0.8f));
-        DrawTextBubble(cell, 0, editor.listenerNames[editor.selectedPlaceTypeIndex],Color.green);
+        //DrawTextBubble(cell, 0, editor.listenerNames[editor.selectedPlaceTypeIndex],Color.green);
     }
 
 

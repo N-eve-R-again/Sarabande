@@ -9,9 +9,8 @@ public class LeverVisual : MonoBehaviour
     private bool pressed = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public void InitVisual(CardinalDirection dir, bool instant)
+    public void InitVisual(bool instant)
     {
-        SetRotation(dir);
         animator.SetBool("Instant", instant);
     }
 
@@ -30,7 +29,7 @@ public class LeverVisual : MonoBehaviour
         pressed = false;
         animator.SetTrigger("Reset");
     }
-    private void SetRotation(CardinalDirection dir)
+    public void SetRotation(CardinalDirection dir)
     {
 
         float yRot = 0f;

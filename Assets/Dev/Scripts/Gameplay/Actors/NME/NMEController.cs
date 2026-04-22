@@ -19,7 +19,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Sarabande.Core;
-using Sarabande.Levels;
+using Sarabande.Actors;
+using Sarabande.EntityExtensions;
 using Sarabande.Player; // HeroController
 using static Sarabande.Core.GridUtils;
 
@@ -47,7 +48,6 @@ namespace Sarabande.NME
         [SerializeField] private CardinalDirection actorDirection;
 
         [Header("Data & Refs")]
-        [SerializeField] private Sarabande.Core.LevelContext levelContext;
         [SerializeField, HideInInspector] private Sarabande.Levels.LevelData levelData;
         [SerializeField, Min(0.001f)] private float cellSize = 1f;
         [SerializeField] private HeroController hero;
@@ -164,7 +164,7 @@ namespace Sarabande.NME
             else
             {
                 // migration vers 0/1/N spawns
-                spawnCell = new Vector2Int(levelData.nmeSpawns[0].x, levelData.nmeSpawns[0].z);
+                spawnCell = levelData.actors[0].spawnCell;
             }
 
             _gridPos = spawnCell;
@@ -416,15 +416,15 @@ namespace Sarabande.NME
                 yield return null;
             }
 
-            moveInteraction.UpdateInteraction(actorDirection,ToCell);
-            leaveInteraction.UpdateInteraction(actorDirection,FromCell);
+            moveInteraction.UpdateInteraction(actorDirection, ToCell);
+            leaveInteraction.UpdateInteraction(actorDirection, FromCell);
             ActorEvents.NotifyActorMove(this, leaveInteraction);
 
             _gridPos = target;
             _isMoving = false;
             _readyAt = Time.time + interStepPause;
 
-            ActorEvents.NotifyActorMove(this,moveInteraction);
+            ActorEvents.NotifyActorMove(this, moveInteraction);
 
 
             MoveProgress = 0f;
@@ -527,6 +527,8 @@ namespace Sarabande.NME
         /// <summary>Reconstruit les caches de collision à partir du LevelData + dynamiques.</summary>
         private void BuildCollisionSets()
         {
+            return;
+            /*
             _blockedCells = new HashSet<Vector2Int>();
             foreach (var c in levelData.nonWalkables)
                 _blockedCells.Add(new Vector2Int(c.x, c.z));
@@ -543,7 +545,7 @@ namespace Sarabande.NME
                 var a = new Vector2Int(e.a.x, e.a.z);
                 var b = new Vector2Int(e.b.x, e.b.z);
                 _thinBlockers.Add(NormalizeEdge(a, b));
-            }
+            }*/
         }
 
         /// <summary>Vrai s’il existe un “thin wall” (statique ou dynamique) entre from et to.</summary>
@@ -691,7 +693,7 @@ namespace Sarabande.NME
             }
             else
             {
-                spawnCell = new Vector2Int(levelData.nmeSpawns[0].x, levelData.nmeSpawns[0].z);
+                spawnCell = levelData.actors[0].spawnCell;
             }
 
             _gridPos = spawnCell;
@@ -890,45 +892,6 @@ namespace Sarabande.NME
             if (_blockedCells == null) BuildCollisionSets();
         }
 
-        public void AddDynamicBlockCell(Vector2Int c)
-        {
-            EnsureSets();
-            _dynamicBlockCells.Add(c);
-            _blockedCells.Add(c);
-        }
-
-        public void RemoveDynamicBlockCell(Vector2Int c)
-        {
-            EnsureSets();
-            _dynamicBlockCells.Remove(c);
-
-            bool isStatic = false;
-            foreach (var gc in levelData.nonWalkables)
-                if (gc.x == c.x && gc.z == c.y) { isStatic = true; break; }
-
-            if (!isStatic) _blockedCells.Remove(c);
-        }
-
-        public void AddDynamicEdgeBlock(Vector2Int a, Vector2Int b)
-        {
-            EnsureSets();
-            _dynamicEdgeBlocks.Add(NormalizeEdge(a, b));
-        }
-        public void AddDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
-        {
-            EnsureSets();
-            _dynamicEdgeBlocks.Add(NormalizeEdge(a, a + DirToVec2(side)));
-        }
-        public void RemoveDynamicEdgeBlock(Vector2Int a, Vector2Int b)
-        {
-            EnsureSets();
-            _dynamicEdgeBlocks.Remove(NormalizeEdge(a, b));
-        }
-        public void RemoveDynamicEdgeBlock(Vector2Int a, CardinalDirection side)
-        {
-            EnsureSets();
-            _dynamicEdgeBlocks.Remove(NormalizeEdge(a, a + DirToVec2(side)));
-        }
 
         // ?????????????????????????????????????????????????????????????????????????????
         // Events & LevelContext wiring
@@ -937,7 +900,7 @@ namespace Sarabande.NME
         private void OnEnable()
         {
             NoiseSystem.NoiseRaised += OnNoiseRaised;
-            AttachContext();
+
         }
 
         private void OnDisable()
@@ -957,45 +920,5 @@ namespace Sarabande.NME
             }
         }
 
-        /// <summary>Abonnement au LevelContext (si présent) + init immédiate.</summary>
-        private void AttachContext()
-        {
-            // if (!useLevelContext) return;  // laissé commenté comme dans la version source
-            if (!levelContext)
-                levelContext = GetComponentInParent<Sarabande.Core.LevelContext>();
-
-            if (levelContext != null)
-            {
-                //levelContext.LevelDataChanged += HandleContextLevelDataChanged;
-                HandleContextLevelDataChanged(levelContext.LevelData); // init immédiate
-            }
-            else
-            {
-                Debug.LogWarning($"[{GetType().Name}] Aucun LevelContext parent trouvé.");
-            }
-        }
-
-        /// <summary>Se désabonne du LevelContext.</summary>
-
-
-        /// <summary>Réagit au changement de LevelData : en jeu, reset complet.</summary>
-        private void HandleContextLevelDataChanged(Sarabande.Levels.LevelData ld)
-        {
-            if (levelData == ld) return;
-            levelData = ld;
-
-#if UNITY_EDITOR
-            if (!Application.isPlaying)
-                UnityEditor.EditorUtility.SetDirty(this);
-#endif
-
-            // En jeu, on se replace proprement sur le nouveau LevelData
-            if (Application.isPlaying && isActiveAndEnabled && levelData != null)
-                ResetToInitial();
-        }
-
-#if UNITY_EDITOR
-        private void OnValidate() { if (!Application.isPlaying) AttachContext(); }
-#endif
     }
 }

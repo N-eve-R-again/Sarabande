@@ -1,9 +1,11 @@
 using Sarabande.Core;
+using Sarabande.Listeners;
+using Sarabande.EntityExtensions;
 using Sarabande.Levels;
 using Sarabande.Messages;
 using UnityEngine;
 
-public class MessageCollectibleEntity : MonoBehaviour, IListener
+public class MessageCollectibleEntity : MonoBehaviour, IListener, IInitializable
 {
 
     [SerializeField] private bool collected = false;
@@ -22,32 +24,43 @@ public class MessageCollectibleEntity : MonoBehaviour, IListener
 
     public ListenerData listenerData => specs;
 
-    public void Init(ListenerData _config)
+    public void Sync(MessageConfig _config)
     {
-        specs = (MessageConfig)_config;
-
-        ListenerCreationHelper.SetupListenerEntity(this,this, _config);
-
-        SetPosition();
-        transform.localScale = SetSize();
-        messageIndex = UIEvents.NotifyRegisterMsgCollectible(specs);
-        if (messageIndex == -1) Debug.Log("Something went wrong in message registry");
-
+        specs = _config;
     }
 
-    private Vector3 SetSize()
+    public void SyncVisual()
     {
+        gameObject.name = AbsoluteObjectNamer.GetName(specs);
+        SetPosition();
+        SetSize();
+    }
+
+    public void Init()
+    {
+        messageIndex = UIEvents.NotifyRegisterMsgCollectible(specs);
+        if (messageIndex == -1) Debug.Log("Something went wrong in message registry");
+    }
+
+    private void SetSize()
+    {
+
         if (fitToCell)
         {
             float scale = LevelGlobalSettings.cellSize * spriteScale;
-            return new Vector3(scale, scale, scale);
+            transform.localScale = Vector3.one * scale;
         }
-        else return Vector3.one * spriteScale;
+        else
+        {
+            transform.localScale = Vector3.one * spriteScale;
+        }
+
 
     }
 
     private void SetPosition()
     {
+        transform.position = GridUtils.CenterXZ(specs.cell);
         transform.position += new Vector3(0, markerY, 0);
     }
 

@@ -2,7 +2,11 @@
 using System;
 using UnityEditor;
 using UnityEngine;
-using static UnityEditor.Progress;
+using Sarabande.Actors;
+using Sarabande.Obstacles;
+using Sarabande.Listeners;
+using Sarabande.Triggerables;
+using System.Collections.Generic;
 
 [CustomEditor(typeof(LevelEditor))]
 public partial class LevelEditorInspector : Editor
@@ -46,7 +50,7 @@ public partial class LevelEditorInspector : Editor
         SerializedProperty data = serializedObject.FindProperty("levelData");
         SerializedProperty copy = serializedObject.FindProperty("levelDataCopy");
 
-
+        if (Application.isPlaying) return;
         EditorGUILayout.BeginVertical(windowStyle);
         EditorGUILayout.LabelField("File", EditorStyles.boldLabel);
 
@@ -214,7 +218,7 @@ public partial class LevelEditorInspector : Editor
         SerializedProperty heightlevel = dataCopySO.FindProperty("height");
         SerializedProperty discosSequences = dataCopySO.FindProperty("discoSequencesConfigs");
         SerializedProperty exit = dataCopySO.FindProperty("exit");
-        SerializedProperty hero = dataCopySO.FindProperty("heroSpawnConfig");
+        SerializedProperty hero = dataCopySO.FindProperty("hero");
 
         EditorGUILayout.PropertyField(widthLevel);
         EditorGUILayout.PropertyField(heightlevel);
@@ -237,47 +241,124 @@ public partial class LevelEditorInspector : Editor
     private void DrawPlaceToolInspector()
     {
         GUIStyle windowStyle = new GUIStyle(GUI.skin.window);
-        windowStyle.padding = new RectOffset(10, 10, 10, 10);
+        windowStyle.padding = new RectOffset(20, 20, 10, 10);
+        GUI.backgroundColor = Color.gray * 1.75f;
         EditorGUILayout.BeginVertical(windowStyle);
-        EditorGUILayout.LabelField("Select Type to Place", EditorStyles.boldLabel);
-        Type[] listenerTypes = editor.GetListenersTypes();
+
         EditorGUILayout.BeginHorizontal();
 
-        for (int i = 0; i < listenerTypes.Length; i++)
+        for (int i = 0; i < 4; i++)
         {
-            bool isSelected = editor.selectedPlaceTypeIndex == i;
-            GUI.backgroundColor = isSelected ? Color.white : Color.gray;
+            bool isSelected = (int)editor.placeObjectType == i;
 
-            string nametype = editor.listenerNames[i];
-            string label = nametype;
+            GUI.backgroundColor = isSelected ? Color.green : Color.white;
 
-            if (GUILayout.Button(label, GUILayout.Height(30)))
+            if (GUILayout.Button(((PlaceObjectType)i).ToString(), GUILayout.Height(25)))
             {
-                editor.selectedPlaceTypeIndex = i;
+                Undo.RecordObject(editor, "Object Place Type Change");
+                editor.placeObjectType = (PlaceObjectType)i;
+                editor.selectedPlaceTypeIndex = 0;
             }
         }
 
         GUI.backgroundColor = Color.white;
         EditorGUILayout.EndHorizontal();
 
+        DrawSeparator();
 
-        SerializedProperty brushesProp = serializedObject.FindProperty("listenerDummies");
-        SerializedProperty currentBrush = brushesProp.GetArrayElementAtIndex(editor.selectedPlaceTypeIndex);
+        switch (editor.placeObjectType)
+        {
+            case PlaceObjectType.Obstacle:
+                ObstaclePlaceTool();
+                break;
+            case PlaceObjectType.Listener:
+                ListenerPlaceTool();
+                break;
+            case PlaceObjectType.Triggerable:
+                TriggerablePlaceTool();
+                break;
+            case PlaceObjectType.Actor:
+                EditorGUILayout.LabelField("Actor", EditorStyles.boldLabel);
+                break;
+        }
+
+        EditorGUILayout.EndVertical();
+        return;
+
+    }
+
+    private void DrawPlaceBrushes(List<string> names)
+    {
+        EditorGUILayout.BeginHorizontal();
+
+
+        for (int i = 0; i < names.Count; i++)
+        {
+            bool isSelected = editor.selectedPlaceTypeIndex == i;
+            GUI.backgroundColor = isSelected ? Color.gray : Color.white;
+
+            string nametype = names[i];
+            string label = nametype;
+
+            if (GUILayout.Button(label, GUILayout.Height(30)))
+            {
+                editor.selectedPlaceTypeIndex = i;
+            }
+
+            GUI.backgroundColor = Color.white;
+            
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private void ListenerPlaceTool()
+    {
+        editor.GetListenerBrushes();
+        DrawPlaceBrushes(editor.listenerDummiesNames);
+        DrawSeparator(false, false);
+
+        SerializedProperty listprop = serializedObject.FindProperty("listenerDummies");
+        SerializedProperty currentBrush = listprop.GetArrayElementAtIndex(editor.selectedPlaceTypeIndex);
+
         currentBrush.isExpanded = true;
-
-        DrawSeparator(false,false);
 
         switch (editor.listenerDummies[editor.selectedPlaceTypeIndex])
         {
             case TriggerObjectConfig:
+
                 InspectTriggerObject(currentBrush, false);
                 break;
-            default: EditorGUILayout.PropertyField(currentBrush, true);
+            default:
+                EditorGUILayout.PropertyField(currentBrush, true);
                 break;
         }
-        //EditorGUILayout.PropertyField(currentBrush, true);
-        EditorGUILayout.EndVertical();
+
     }
+
+    private void TriggerablePlaceTool()
+    {
+        editor.GetTriggerableBrushes();
+        DrawPlaceBrushes(editor.triggerableDummiesNames);
+        DrawSeparator(false, false);
+
+        SerializedProperty listprop = serializedObject.FindProperty("triggerableDummies");
+        SerializedProperty currentBrush = listprop.GetArrayElementAtIndex(editor.selectedPlaceTypeIndex);
+        currentBrush.isExpanded = true;
+
+        EditorGUILayout.PropertyField(currentBrush, true);
+
+
+    }
+
+    private void ObstaclePlaceTool()
+    {
+        SerializedProperty currentBrush = serializedObject.FindProperty("obstacleDummy");
+
+        currentBrush.isExpanded = true;
+        InspectObstacle(currentBrush, false);
+
+    }
+
     private void SelectToolInspector()
     {
 
@@ -377,18 +458,31 @@ public partial class LevelEditorInspector : Editor
         }
 
     }
-    private void InspectObstacle(SerializedProperty item)
+    private void InspectObstacle(SerializedProperty item, bool title = true)
     {
+        if (title) EditorGUILayout.LabelField($"Obstacle", EditorStyles.boldLabel);
+
 
         EditorGUILayout.Space();
+
+        GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
+        boxStyle.padding = new RectOffset(10, 5, 5, 10);
 
         SerializedProperty cell = item.FindPropertyRelative("cell");
         SerializedProperty type = item.FindPropertyRelative("type");
         SerializedProperty dir = item.FindPropertyRelative("thinWallDirection");
 
-        EditorGUILayout.PropertyField(type, GUIContent.none);
+        EditorGUILayout.BeginVertical(boxStyle);
 
-        EditorGUILayout.PropertyField(cell, GUIContent.none);
+        EditorGUILayout.LabelField($"Cell:", EditorStyles.label);
+
+        DrawDisabledField(cell);
+
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.Space();
+
+        EditorGUILayout.PropertyField(type, GUIContent.none);
 
         EditorGUILayout.BeginHorizontal();
 
@@ -465,7 +559,7 @@ public partial class LevelEditorInspector : Editor
             type.intValue = newType; // ou dir.enumValueIndex = newDir
         }
 
-        if (type.intValue == (int)TriggerObjectType.Lever)
+        if (type.intValue == (int)TriggerObjectConfig.Type.Lever)
         {
             EditorGUILayout.LabelField($"Attached to side:", EditorStyles.miniLabel);
             string[] dirLabels = { "↑", "→", "↓", "←" };

@@ -23,11 +23,6 @@ namespace Sarabande.Core
         {
             return new GridCoord(coord.x, coord.y);
         }
-
-
-
-
-
         public override string ToString() => $"({x}_{z})";
     }
 
@@ -49,7 +44,6 @@ namespace Sarabande.Core
         public Vector2Int cell;
         public bool startState;
         public CardinalDirection direction; // ex: East (sortir à droite)
-
     }
 
 
