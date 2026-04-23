@@ -42,6 +42,7 @@ public partial class LevelEditorInspector
 
         if (!editor.InsideBounds(gridPos))
         {
+            SceneView.RepaintAll();
             return;
         }
 
@@ -49,7 +50,17 @@ public partial class LevelEditorInspector
 
         switch (editor.currentTool)
         {
-            case EditorToolType.Edit: SelectTool(e, gridPos); break;
+            case EditorToolType.Edit:
+                if (editor.movingSubToolActivated)
+                {
+                    MoveToTool(e,gridPos);
+                }
+                else
+                {
+                    SelectTool(e, gridPos);
+                }
+
+                break;
             case EditorToolType.Place: PlaceTool(e, gridPos); break;
             case EditorToolType.Erase: RemoveTool(e, gridPos); break;
             case EditorToolType.Misc: break;
@@ -152,6 +163,18 @@ public partial class LevelEditorInspector
     }
 
     // Utilisation
+    private void MoveToTool(Event e, Vector2Int gridPos)
+    {
+        DrawSelector(gridPos, selectColor, true);
+        DrawLine(editor.selectedCell, gridPos, Color.blue, 0.2f);
+
+        if (e.type == EventType.MouseDown)
+        {
+            editor.MoveSelectedObjectToCell(gridPos);
+            editor.movingSubToolActivated = false;
+        }
+
+    }
 
     private void SelectTool(Event e, Vector2Int gridPos)
     {
@@ -278,6 +301,13 @@ public partial class LevelEditorInspector
                         () => editor.ResolveConflictedMenu(gate)
                     );
                     break;
+                case HeroData hero:
+                    menu.AddItem(
+                    new GUIContent($"[{i}] Hero - Spawn"),
+                    false,
+                    () => editor.ResolveConflictedMenu(hero)
+                    );
+                    break;
 
                 default:
                     menu.AddItem(
@@ -326,8 +356,26 @@ public partial class LevelEditorInspector
         if (editor.InsideBounds(gridPos))
         {
             // Ta logique ici 
+            switch (editor.placeObjectType)
+            {
+                case PlaceObjectType.Obstacle:
+                    DrawSelector(gridPos, placeColor, true);
+                    DrawPlace(gridPos, editor.obstacleDummy.type.ToString());
+                    break;
+                case PlaceObjectType.Listener:
+                    DrawPlace(gridPos, editor.listenerDummiesNames[editor.selectedPlaceTypeIndex]);
+                    DrawSelector(gridPos, placeColor, false);
+                    break;
+                case PlaceObjectType.Triggerable:
+                    DrawPlace(gridPos, editor.triggerableDummiesNames[editor.selectedPlaceTypeIndex]);
+                    DrawSelector(gridPos, placeColor, false);
+                    break;
+                case PlaceObjectType.Actor:
+                    break;
+                default:
+                    break;
+            }
 
-            DrawPlace(gridPos);
             DrawSelector(gridPos, placeColor, false);
             if (e.type == EventType.MouseDown)
             {
@@ -337,12 +385,12 @@ public partial class LevelEditorInspector
 
     }
 
-    private void DrawPlace(Vector2Int cell)
+    private void DrawPlace(Vector2Int cell, string name)
     {
         Handles.color = placeColor;
         Vector3 pos = GridUtils.CenterXZ(cell);
         Handles.DrawWireCube(pos, new Vector3(0.8f, 0f, 0.8f));
-        //DrawTextBubble(cell, 0, editor.listenerNames[editor.selectedPlaceTypeIndex],Color.green);
+        DrawTextBubble(cell, 0, name, Color.green);
     }
 
 

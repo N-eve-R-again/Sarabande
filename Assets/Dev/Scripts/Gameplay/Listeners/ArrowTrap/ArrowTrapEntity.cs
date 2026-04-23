@@ -36,7 +36,7 @@ public class ArrowTrapEntity : MonoBehaviour, ITriggerable
                 armed = true;
                 timer = 0f;
                 visual.SetArmed(armed);
-                LevelEntityEvents.NotifyTriggerableCallback(this);
+                this.SendTriggerableCallback();
             }
         }
     }

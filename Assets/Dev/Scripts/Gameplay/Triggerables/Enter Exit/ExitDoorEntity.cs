@@ -4,7 +4,7 @@ using UnityEngine;
 using Sarabande.Triggerables;
 using Sarabande.EntityExtensions;
 
-public class ExitDoorEntity : MonoBehaviour, IInitializable, ITriggerable
+public class ExitDoorEntity : MonoBehaviour, IInitializable, ITriggerable, IPortalCreator
 {
     [SerializeField] private ExitConfig exitConfig;
     [SerializeField] private Transform pivot;
@@ -18,22 +18,25 @@ public class ExitDoorEntity : MonoBehaviour, IInitializable, ITriggerable
     public void Sync(ExitConfig config)
     {
         exitConfig = config;
-        data.cell = exitConfig.cell;
-        data.triggerKey = "exit";
+        CreateLocalData();
     }
 
-    [ContextMenu("Sync Visual to Local Data")]
     public void SyncVisual()
     {
         transform.position = GridUtils.CenterXZ(exitConfig.cell);
         SetRotation();
     }
 
+    private void CreateLocalData()
+    {
+        data.cell = exitConfig.cell;
+        data.triggerKey = "exit";
+    }
+
     public void Init()
     {
 
-        data.cell = exitConfig.cell;
-        data.triggerKey = "exit";
+
         frameSkip = 0;
 
         if (exitConfig.startState)
@@ -46,7 +49,8 @@ public class ExitDoorEntity : MonoBehaviour, IInitializable, ITriggerable
             opened = false;
         }
 
-        NavigationEvents.NotifyPortalRegistry(exitConfig);
+        this.RegisterPortal(exitConfig);
+
     }
 
     private void SetRotation()
@@ -84,7 +88,9 @@ public class ExitDoorEntity : MonoBehaviour, IInitializable, ITriggerable
             //on referme
             animator.SetTrigger("Close");
             opened = false;
-            NavigationEvents.NotifyPortalModification(exitConfig.cell, false);
+
+            this.ModifyPortal(exitConfig.cell, false);
+
             Debug.Log("obstructed, closed portal");
 
 
@@ -97,7 +103,7 @@ public class ExitDoorEntity : MonoBehaviour, IInitializable, ITriggerable
         {
             animator.SetTrigger("Open");
             opened = true;
-            NavigationEvents.NotifyPortalModification(exitConfig.cell, true);
+            this.ModifyPortal(exitConfig.cell, true);
         }
 
 

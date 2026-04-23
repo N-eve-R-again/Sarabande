@@ -2,6 +2,7 @@ using Sarabande.Core;
 using Sarabande.Levels;
 using Sarabande.Obstacles;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 public class NavigationManager
 {
@@ -14,9 +15,9 @@ public class NavigationManager
 
     public void SubscribeToEvents()
     {
-        NavigationEvents.OnRegisterDynamicObstacle += RegisterDynamicObstacle;
-        NavigationEvents.OnModifyDynamicObstacle += ModifyDynamicObstacle;
-        NavigationEvents.OnMoveDynamicObstacle += MoveDynamicObstacle;
+        NavigationEvents.OnDynamicObstacleRegistry += RegisterDynamicObstacle;
+        NavigationEvents.OnDirtyDynamicObstacleUpdate += UpdateDirtyDynamicObstacle;
+
 
         NavigationEvents.OnQueryCollision += CheckForCollision;
         NavigationEvents.OnQueryPortal += CheckForPortal;
@@ -28,9 +29,9 @@ public class NavigationManager
     }
     public void UnSubscribeToEvents()
     {
-        NavigationEvents.OnRegisterDynamicObstacle -= RegisterDynamicObstacle;
-        NavigationEvents.OnModifyDynamicObstacle -= ModifyDynamicObstacle;
-        NavigationEvents.OnMoveDynamicObstacle -= MoveDynamicObstacle;
+        NavigationEvents.OnDynamicObstacleRegistry -= RegisterDynamicObstacle;
+        NavigationEvents.OnDirtyDynamicObstacleUpdate -= UpdateDirtyDynamicObstacle;
+
 
         NavigationEvents.OnQueryCollision -= CheckForCollision;
         NavigationEvents.OnQueryPortal -= CheckForPortal;
@@ -159,37 +160,31 @@ public class NavigationManager
         }
     }
 
-    public void RegisterDynamicObstacle(ObstacleData obstacleData, bool originalState = true)
+    public void RegisterDynamicObstacle(DynamicObstacle obstacleData)
     {
-        bool isthin = (obstacleData.type == ObstacleData.ObstacleType.ThinWall);
-        DynamicObstacle temp = new DynamicObstacle(isthin, obstacleData.thinWallDirection, originalState);
-        dynamicObstacles[obstacleData.cell] = temp;
-        if (!isthin)
-        {
-            LogGen.LogAs(this, $"Registered Dynamic Wall at Cell {obstacleData.cell.x}:{obstacleData.cell.y} (original state : {originalState})");
-        }
-        else
-        {
-            LogGen.LogAs(this, $"Registered Dynamic ThinWall at Cell {obstacleData.cell.x}:{obstacleData.cell.y} (original state : {originalState})");
-        }
+        
+        dynamicObstacles[obstacleData.Cell] = obstacleData;
+        LogGen.LogAs(obstacleData, $"Registered at {obstacleData.Cell}, {obstacleData.Name}, with base state : {obstacleData.IsActivated}");
+
     }
 
-    private void ModifyDynamicObstacle(Vector2Int cell, bool newState)
+    private void UpdateDirtyDynamicObstacle(DynamicObstacle obstacleData)
     {
-        if (dynamicObstacles.TryGetValue(cell, out var obstacle))
+        LogGen.LogAs(obstacleData, $"Modified at {obstacleData.Cell}, {obstacleData.Name}, with base state : {obstacleData.IsActivated}");
+
+        if (!obstacleData.IsDirty) return;
+
+        var item = dynamicObstacles.First(kvp => kvp.Value == obstacleData);
+        if (item.Key != obstacleData.Cell)
         {
-            obstacle.SetActivated(newState);
+            LogGen.LogAs(this, $"Dynamic Obstacle is Dirty, Fixed old reference at {item.Key}");
+            dynamicObstacles.Remove(item.Key);
+            dynamicObstacles[obstacleData.Cell] = obstacleData;
         }
+
+        obstacleData.ResetDirtyFlag();
     }
 
-    private void MoveDynamicObstacle(Vector2Int oldCell, Vector2Int newCell)
-    {
-        if (dynamicObstacles.TryGetValue(oldCell, out DynamicObstacle obstacle))
-        {
-            dynamicObstacles.Remove(oldCell);
-            dynamicObstacles[newCell] = obstacle;
-        }
-    }
 }
 public class Portal
 {
@@ -199,36 +194,6 @@ public class Portal
     public Portal(CardinalDirection direction, bool activated)
     {
         this.direction = direction;
-        this.activated = activated;
-    }
-}
-
-public class DynamicObstacle
-{
-    private bool thin;
-    private CardinalDirection direction;
-    private bool activated;
-
-    public bool CollidesWith(bool isExitCheck, CardinalDirection _actorDir)
-    {
-        if (!activated) return false; //si je suis désactivé on m'ignore.
-
-        if (!thin)  // si je suis un wall
-            return !isExitCheck; //je collisionne que sur un EnterCheck( !isExitCheck)
-
-        //je suis un thin wall
-        return _actorDir == (isExitCheck ? direction : GridUtils.Opposite(direction));// si je suis en !ExitCheck alors j'inverse la direction qui bloque
-    }
-
-    public DynamicObstacle(bool thin, CardinalDirection direction, bool OriginalState)
-    {
-        this.thin = thin;
-        activated = OriginalState;
-        this.direction = direction;
-    }
-
-    public void SetActivated(bool activated)
-    {
         this.activated = activated;
     }
 }

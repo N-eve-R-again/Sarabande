@@ -34,6 +34,7 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
     {
         config = _config;
     }
+    
     public void SyncVisual()
     {
         gameObject.name = AbsoluteObjectNamer.GetName(config);
@@ -45,6 +46,7 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
         visual.InitVisual(); //initialisation du visuel
     }
 
+   
 
     private void Update()
     {
@@ -110,7 +112,7 @@ public class TriggerPadEntity : MonoBehaviour, IListenerWithCallback, IResettabl
         state = PadState.Disarmed;
         visual.PressAnim();
 
-        LevelEntityEvents.NotifyListenerTryCallTrigger(this);
+        this.TryCallTrigger();
 
         if (config.rearmType == RearmType.Timer)
         {

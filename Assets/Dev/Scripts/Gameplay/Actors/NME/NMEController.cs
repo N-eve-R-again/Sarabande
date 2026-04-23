@@ -418,13 +418,13 @@ namespace Sarabande.NME
 
             moveInteraction.UpdateInteraction(actorDirection, ToCell);
             leaveInteraction.UpdateInteraction(actorDirection, FromCell);
-            ActorEvents.NotifyActorMove(this, leaveInteraction);
+            this.ActorMove(leaveInteraction);
 
             _gridPos = target;
             _isMoving = false;
             _readyAt = Time.time + interStepPause;
 
-            ActorEvents.NotifyActorMove(this, moveInteraction);
+            this.ActorMove(moveInteraction);
 
 
             MoveProgress = 0f;

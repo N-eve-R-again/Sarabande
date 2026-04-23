@@ -17,7 +17,7 @@ namespace Sarabande.Obstacles {
         public ObstacleType type = ObstacleType.Wall;
         public CardinalDirection thinWallDirection = CardinalDirection.North;
 
-        public ObstacleData(ObstacleType type, Vector2Int cell, CardinalDirection thinWallDirection)
+        public ObstacleData(ObstacleType type, Vector2Int cell, CardinalDirection thinWallDirection = CardinalDirection.South)
         {
             this.type = type;
             this.cell = cell;

@@ -111,12 +111,12 @@ public class TriggerableFactory : MonoBehaviour, IClearable
         List<DalleDiscoEntity> dalles = new();
         DiscoSequenceEntity entity = temp.GetComponent<DiscoSequenceEntity>();
         int i = 0;
-        foreach (var item in config.cells)
+        foreach (var item in config.discoDalleDatas)
         {
             GameObject dalleob = Instantiate(discoDallePrefab, temp.transform);
             dalleob.name = "DalleDisco " + i;
             DalleDiscoEntity dalle = dalleob.GetComponent<DalleDiscoEntity>();
-            dalle.Init(item, entity);
+            dalle.Init(item.cell, entity);
             dalles.Add(dalle);
             i++;
         }

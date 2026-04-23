@@ -8,7 +8,7 @@ using Sarabande.EntityExtensions;
 public class GateEntity : MonoBehaviour, ITriggerable, IInitializable
 {
     [SerializeField] private GateConfig config;
-    [SerializeField] private ObstacleData obstacleData;
+    [SerializeReference] private DynamicObstacle dynamicObstacle;
 
     [SerializeField] private GateVisual visual;
     private float timer;
@@ -29,11 +29,11 @@ public class GateEntity : MonoBehaviour, ITriggerable, IInitializable
     public void Init()
     {
 
-        obstacleData = new ObstacleData(ObstacleData.ObstacleType.ThinWall, config.cell, config.direction);
+        dynamicObstacle = new DynamicObstacle( config.cell, ObstacleData.ObstacleType.ThinWall, config.direction,!config.startopen);
 
         if (config.startopen) OpenDoor();
 
-        NavigationEvents.NotifyDynamicObstacle(obstacleData);
+        dynamicObstacle.RegisterDynamicObstacle();
 
     }
 
@@ -45,15 +45,18 @@ public class GateEntity : MonoBehaviour, ITriggerable, IInitializable
         {
             timer = config.timer;
         }
-        NavigationEvents.NotifyDynamicObstacleModification(config.cell, false);
+        dynamicObstacle.SetActivated(false);
     }
 
     private void CloseDoor()
     {
         visual.UpAnim();
-        LevelEntityEvents.NotifyTriggerableCallback(this);
+
+        this.SendTriggerableCallback();
         down = false;
-        NavigationEvents.NotifyDynamicObstacleModification(config.cell, true);
+
+        dynamicObstacle.SetActivated(true);
+        dynamicObstacle.ChangeCell(dynamicObstacle.Cell + GridUtils.DirToVec2(CardinalDirection.East));
     }
 
     public void Trigger()

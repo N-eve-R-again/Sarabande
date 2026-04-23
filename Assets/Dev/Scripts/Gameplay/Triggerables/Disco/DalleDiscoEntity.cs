@@ -19,8 +19,7 @@ public class DalleDiscoEntity : MonoBehaviour, ISensor
     [SerializeField] private InteractionLayer interactsWith;
     [SerializeField] private DiscoSequenceEntity sequenceEntity;
     [SerializeField] private bool occupied;
-    [SerializeField] private bool isActive;
-    [SerializeField] private bool collected = false;
+    [SerializeField] private Vector2Int cell;
     [SerializeField] private Animator animator;
     [SerializeField] private Image validateFilledge;
     [SerializeField] private Image validateFillCenter;
@@ -38,11 +37,13 @@ public class DalleDiscoEntity : MonoBehaviour, ISensor
 
     public InteractionLayer interactionLayer => interactsWith;
 
+    Vector2Int ISensor.cell => cell;
+
     public void Init(Vector2Int cell, DiscoSequenceEntity _sequenceEntity)
     {
         sequenceEntity = _sequenceEntity;
         transform.position = GridUtils.CenterXZ(cell);
-        RegistryEvents.NotifySensorRegistry(cell,this);
+        this.RegisterSensor();
 
         timer = 2f;
     }
@@ -82,7 +83,6 @@ public class DalleDiscoEntity : MonoBehaviour, ISensor
         if (state == DiscoState.Standby)
         {
             state = DiscoState.WaitForPlayer;
-            isActive = true;
             animator.SetTrigger("Activate");
             timer = timertoreach + timertoactivate;
         }
@@ -90,7 +90,7 @@ public class DalleDiscoEntity : MonoBehaviour, ISensor
 
     public void Deactivate()
     {
-        isActive = false;
+
         occupied = false;
     }
 

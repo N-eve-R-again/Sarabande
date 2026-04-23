@@ -93,23 +93,12 @@ namespace Sarabande.Triggerables
         [Header("Dalles")]
         public List<DiscoDalleData> discoDalleDatas = new List<DiscoDalleData>();
 
-        [Header("Chemin à fouler (ordre strict)")]
-        public List<GridCoord> cells = new List<GridCoord>();
-
-        [Header("Timers par étape (optionnel)")]
-        public List<float> stepSeconds = new List<float>(); // si la taille ne match pas, utiliser defaultStepSeconds
-
-        [Header("Fallback timing")]
-        public float defaultStepSeconds = 0.8f;
 
         public DiscoSequenceConfig(string triggerKey, string[] successTriggerKeys, string[] failTriggerKeys, List<GridCoord> cells, List<float> stepSeconds, float defaultStepSeconds)
         {
             this.triggerKey = triggerKey;
             this.successTriggerKeys = successTriggerKeys;
             this.failTriggerKeys = failTriggerKeys;
-            this.cells = cells;
-            this.stepSeconds = stepSeconds;
-            this.defaultStepSeconds = defaultStepSeconds;
         }
         public DiscoSequenceConfig() : base()
         {
@@ -120,7 +109,7 @@ namespace Sarabande.Triggerables
     public class DiscoDalleData
     {
         public Vector2Int cell;
-        public float stepSecond;
+        public float stepSecond = 1f;
     }
 
 }

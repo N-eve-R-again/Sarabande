@@ -36,7 +36,9 @@ public enum SelectedObjectType
     Obstacle,
     Listener,
     Triggerable,
-    Actor
+    Actor,
+    Hero,
+    Exit
 }
 
 [System.Flags]
@@ -79,37 +81,6 @@ public class TriggerLink
     }
 }
 
-[System.Serializable]
-public class ObjectBrush
-{
-    private string name;
-    [SerializeReference] public object data;
-
-    public ObjectBrush(string name, object data)
-    {
-        this.name = name;
-        this.data = data;
-    }
-
-    public string GetName() => name;
-    public object GetObject() => data;
-}
-
-[System.Serializable]
-public class BrushPack
-{
-    [SerializeReference]
-    public List<ObjectBrush> brushes = new();
-    public BrushPack(List<ObjectBrush> _brushes) 
-    { 
-        brushes = _brushes;
-    }
-
-    public BrushPack()
-    {
-
-    }
-}
 
 
 public class LevelEditor : MonoBehaviour
@@ -134,6 +105,7 @@ public class LevelEditor : MonoBehaviour
     public int selectedObjectIndex;
     public List<object> conflictedSelection;
     public Vector2Int selectedCell;
+    public bool movingSubToolActivated = false;
 
     public Dictionary<Vector2Int,List<object>> lookupTable = new();
     public List<TriggerLink> links = new();
@@ -229,7 +201,7 @@ public class LevelEditor : MonoBehaviour
         if(lookupTable.Count == 0 && dataCopy != null)
         {
             UpdateLookUpList();
-            Debug.Log("refreshedLookup");
+            //Debug.Log("refreshedLookup");
         }
 
         if (dataCopy == null) return;
@@ -287,6 +259,9 @@ public class LevelEditor : MonoBehaviour
 
                 case SelectedObjectType.Triggerable:
                     DrawTriggerable(dataCopy.triggerables[selectedObjectIndex], true);
+                    break;
+                case SelectedObjectType.Hero:
+                    DrawSpriteIcon("Gizmo_Hero", dataCopy.hero.spawnCell, selectedColor, true);
                     break;
             }
             
@@ -637,6 +612,15 @@ public class LevelEditor : MonoBehaviour
         }
         list.Add(item);
     }
+    private void AddActorToLookUpTable(ActorData item)
+    {
+        if (!lookupTable.TryGetValue(item.spawnCell, out var list))
+        {
+            list = new List<object>();
+            lookupTable[item.spawnCell] = list;
+        }
+        list.Add(item);
+    }
 
     private void UpdateLookUpList()
     {
@@ -665,6 +649,8 @@ public class LevelEditor : MonoBehaviour
         {
             AddListenerToLookUpTable(item);
         }
+
+        AddActorToLookUpTable(dataCopy.hero);
 
         UpdateLinks();
     }
@@ -858,8 +844,27 @@ public class LevelEditor : MonoBehaviour
                 selectedCell = dataCopy.triggerables[selectedObjectIndex].cell += dir; break;
             case SelectedObjectType.Obstacle:
                 selectedCell = dataCopy.obstacles[selectedObjectIndex].cell += dir; break;
+            case SelectedObjectType.Hero:
+                selectedCell = dataCopy.hero.spawnCell += dir; break;
         }
         UpdateLookUpList();
+    }
+
+    public void MoveSelectedObjectToCell(Vector2Int _to)
+    {
+        switch (selectedObjectType)
+        {
+            case SelectedObjectType.Listener:
+                selectedCell = dataCopy.listeners[selectedObjectIndex].cell = _to; break;
+            case SelectedObjectType.Triggerable:
+                selectedCell = dataCopy.triggerables[selectedObjectIndex].cell = _to; break;
+            case SelectedObjectType.Obstacle:
+                selectedCell = dataCopy.obstacles[selectedObjectIndex].cell = _to; break;
+            case SelectedObjectType.Hero:
+                selectedCell = dataCopy.hero.spawnCell = _to; break;
+        }
+        UpdateLookUpList();
+
     }
 
     public bool SelectCell(Vector2Int cell)
@@ -946,8 +951,10 @@ public class LevelEditor : MonoBehaviour
                 selectedObjectIndex = dataCopy.triggerables.IndexOf((TriggerableData)obj);
                 selectedCell = dataCopy.triggerables[selectedObjectIndex].cell;
                 break;
-            case ActorData:
-                selectedObjectType = SelectedObjectType.Actor;
+            case HeroData:
+                selectedObjectType = SelectedObjectType.Hero;
+                selectedObjectIndex = 0;
+                selectedCell = dataCopy.hero.spawnCell;
                 break;
 
             default:
@@ -1023,35 +1030,63 @@ public class LevelEditor : MonoBehaviour
         UpdateFlags();
 
     }
+    private void PlaceObstacle(Vector2Int cell)
+    {
+        string json = JsonUtility.ToJson(obstacleDummy);
+        ObstacleData newObject = (ObstacleData)Activator.CreateInstance(obstacleDummy.GetType());
+
+        JsonUtility.FromJsonOverwrite(json, newObject);
+
+        newObject.cell = cell;
+
+        dataCopy.obstacles.Add(newObject);
+    }
+
+    private void PlaceListener(Vector2Int cell)
+    {
+        ListenerData listbrush = listenerDummies[selectedPlaceTypeIndex];
+        string json = JsonUtility.ToJson(listbrush);
+        ListenerData newObject = (ListenerData)Activator.CreateInstance(listbrush.GetType());
+
+        JsonUtility.FromJsonOverwrite(json, newObject);
+
+        newObject.cell = cell;
+
+        dataCopy.listeners.Add(newObject);
+    }
+    private void PlaceTriggerable(Vector2Int cell)
+    {
+        TriggerableData trigbrush = triggerableDummies[selectedPlaceTypeIndex];
+        string json = JsonUtility.ToJson(trigbrush);
+        TriggerableData newObject = (TriggerableData)Activator.CreateInstance(trigbrush.GetType());
+
+        JsonUtility.FromJsonOverwrite(json, newObject);
+
+        newObject.cell = cell;
+
+        dataCopy.triggerables.Add(newObject);
+    }
+
 
     public void CreateCell(Vector2Int cell)
     {
-        /*
-        Undo.RecordObject(dataCopy, $"Place OBJ {availableListenerTypes[selectedPlaceTypeIndex].Name} {cell}");
-        Type typeToPlace = availableListenerTypes[selectedPlaceTypeIndex];
-
-        ListenerData brush = listenerDummies[selectedPlaceTypeIndex];
+        
+        Undo.RecordObject(dataCopy, $"Place OBJ {selectedObjectType} {selectedPlaceTypeIndex} {cell}");
 
         switch (placeObjectType)
         {
             case PlaceObjectType.Obstacle:
-
+                PlaceObstacle(cell);
                 break;
             case PlaceObjectType.Listener:
+                PlaceListener(cell);
                 break;
             case PlaceObjectType.Triggerable:
+                PlaceTriggerable(cell);
                 break;
         }
-        // Clone le brush
-        string json = JsonUtility.ToJson(brush);
-        ListenerData newObject = (ListenerData)Activator.CreateInstance(brush.GetType());
-        JsonUtility.FromJsonOverwrite(json, newObject);
 
-        newObject.cell = cell;
-        dataCopy.listeners.Add(newObject);
-        /*
-        ObstacleData temp = new ObstacleData(ObstacleData.ObstacleType.Wall, cell,CardinalDirection.North );
-        dataCopy.obstacles.Add(temp);*/
+
         ReorderList();
         UpdateLookUpList();
 

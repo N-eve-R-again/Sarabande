@@ -230,7 +230,9 @@ namespace Sarabande.Player
             bool actionvalidated = false;
             Vector3 worldStart = transform.position;
             Vector3 worldEnd = CenterXZ(target);
-            ActorEvents.NotifyActorMove(this, intentInteraction);
+
+            this.ActorMove(intentInteraction);
+
             float lerpT = 0f;
             while (lerpT < stepDuration)
             {
@@ -242,8 +244,8 @@ namespace Sarabande.Player
 
                 if (ratio >= validateMoveTime && !actionvalidated)
                 {
-                    ActorEvents.NotifyActorMove(this, leaveInteraction);
-                    ActorEvents.NotifyActorMove(this, moveInteraction);
+                    this.ActorMove(leaveInteraction);
+                    this.ActorMove(moveInteraction);
                     actionvalidated = true;
                 }
                     // position prévue à cette frame
@@ -341,7 +343,7 @@ namespace Sarabande.Player
                 if (!walltouched && ratio >= bumpEventPing)
                 {
                     walltouched = true;
-                    ActorEvents.NotifyActorMove(this, bumpInteraction);
+                    this.ActorMove(bumpInteraction);
                 }
 
                 Vector3 worldPosAtThisFrame = Vector3.LerpUnclamped(start, bumpVector, bumpLerpCurve.Evaluate(ratio));
