@@ -51,7 +51,7 @@ public partial class LevelEditorInspector : Editor
         SerializedProperty data = serializedObject.FindProperty("levelData");
         SerializedProperty copy = serializedObject.FindProperty("levelDataCopy");
 
-        if (Application.isPlaying) return;
+        //if (Application.isPlaying) return;
         EditorGUILayout.BeginVertical(windowStyle);
         EditorGUILayout.LabelField("File", EditorStyles.boldLabel);
 
@@ -79,6 +79,7 @@ public partial class LevelEditorInspector : Editor
             else
             {
                 DrawFileLoaded();
+                
             }
             
         }

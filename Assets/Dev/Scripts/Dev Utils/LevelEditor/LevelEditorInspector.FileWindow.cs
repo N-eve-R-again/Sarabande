@@ -12,7 +12,7 @@ public partial class LevelEditorInspector
 
         if (GUILayout.Button("New (+)"))
         {
-            editor.CreateNewFile();
+            EditorApplication.delayCall += editor.CreateNewFile;
         }
 
         EditorGUILayout.EndHorizontal();
@@ -20,6 +20,7 @@ public partial class LevelEditorInspector
 
         CustomStylesGUI.DrawHelpBox("Select a Level Data Asset or press [New] to begin");
     }
+
 
     private void DrawLinkBrokenWarning()
     {

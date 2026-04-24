@@ -111,7 +111,7 @@ public class LevelEditor : MonoBehaviour
     public List<TriggerLink> links = new();
     public Dictionary<string, Vector2Int> availableKeys = new();
 
-    private string originalJson; // Stocke l'état initial
+    [SerializeField] private string originalJson; // Stocke l'état initial
 
     public PlaceObjectType placeObjectType;
     [SerializeReference]
@@ -156,8 +156,6 @@ public class LevelEditor : MonoBehaviour
         }
     }
 
-
-
     private void CreateListenerBrushes()
     {
         listenerDummies.Clear();
@@ -196,7 +194,7 @@ public class LevelEditor : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (Application.isPlaying) return;
+        //if (Application.isPlaying) return;
 
         if(lookupTable.Count == 0 && dataCopy != null)
         {
@@ -723,8 +721,6 @@ public class LevelEditor : MonoBehaviour
 
     private bool HasChanges()
     {
-        if (Application.isPlaying) return false;
-
         return (CreateSnapshot(dataCopy) != originalJson);
     }
 
@@ -803,6 +799,29 @@ public class LevelEditor : MonoBehaviour
     }
     public void CreateNewFile()
     {
+
+        string path = EditorUtility.SaveFilePanelInProject(
+        "Créer un nouveau niveau",           // titre de la fenêtre
+        "LD_untitled",                           // nom de fichier par défaut
+        "asset",                              // extension (sans le point)
+        "Choisis un emplacement pour le niveau",
+        "Assets/Levels"                              // dossier de départ
+        );
+
+
+        if (string.IsNullOrEmpty(path))
+            return; // l'utilisatrice a annulé
+
+
+
+        var newLevel = ScriptableObject.CreateInstance<LevelData>();
+        AssetDatabase.CreateAsset(newLevel, path);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        levelData = newLevel;
+        ReImportLevel();
+        // optionnel : le sélectionner dans le Project et le charger dans ton éditeur
 
     }
 
