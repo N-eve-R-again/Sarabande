@@ -27,6 +27,7 @@ public class DiscoSequenceEntity : MonoBehaviour, ITriggerable, ISignaler
 
     public void Trigger()
     {
+        if(dalles.Count <= 0) return;
         /*foreach (var item in dalles)
         {
             item.SequenceStarted();
@@ -43,8 +44,9 @@ public class DiscoSequenceEntity : MonoBehaviour, ITriggerable, ISignaler
         {
             item.FailState();
         }
-        LevelEntityEvents.SendSignal(failTriggerableKeys);
-        LevelEntityEvents.NotifyTriggerableCallback(this);
+        this.SendSignal(failTriggerableKeys);
+
+        this.SendTriggerableCallback();
     }
 
     public void PreviewNext()
@@ -58,7 +60,7 @@ public class DiscoSequenceEntity : MonoBehaviour, ITriggerable, ISignaler
 
         if (progress >= dalles.Count)
         {
-            LevelEntityEvents.SendSignal(successTriggerableKeys);
+            this.SendSignal(successTriggerableKeys);
         }
         else
         {

@@ -20,8 +20,8 @@ public class EntityRegister
         }
     }
 
-    public void RegisterSensor(Vector2Int cell, ISensor sensor)
-    => database.SetSensorExtension(cell,sensor);
+    public void RegisterSensor(ISensor sensor)
+    => database.SetSensorExtension(sensor.cell, sensor);
 
     public void RegisterTriggerable(ITriggerable _triggerable)
     {

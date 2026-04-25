@@ -46,7 +46,7 @@ namespace Sarabande.VFX
         [SerializeField, Min(0.05f)] private float spinSeconds = 0.30f; // Durée du spin des danseurs
 
         [Header("Lifecycle")]
-        [SerializeField] private bool onlyWhenDisco = true; // Si true, les danseurs n'apparaissent que pendant la séquence disco
+        //[SerializeField] private bool onlyWhenDisco = true; // Si true, les danseurs n'apparaissent que pendant la séquence disco
         [SerializeField] private bool destroyOnStop = true; // Si true, les danseurs sont détruits lorsque la disco est terminée
 
         // Variables runtime

@@ -7,6 +7,7 @@ public enum ActorInteractionType
 public enum ActorType 
 { None, NME, Hero }
 
+[System.Serializable]
 public class ActorInteractionData
 {
     public ActorType actorType;

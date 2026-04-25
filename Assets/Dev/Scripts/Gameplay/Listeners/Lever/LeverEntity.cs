@@ -33,7 +33,7 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
         transform.position = GridUtils.CenterXZ(config.cell);
         visual.SetRotation(config.attachedTo);
     }
-    public void Init(TriggerObjectConfig _config)
+    public void Init()
     {
         visual.InitVisual(config.rearmType == RearmType.Instant);
     }
@@ -55,8 +55,8 @@ public class LeverEntity : MonoBehaviour, IListenerWithCallback, IResettable
     {
         state = LeverState.Activated;
         visual.PressAnim();
-        
-        LevelEntityEvents.NotifyListenerTryCallTrigger(this);
+
+        this.TryCallTrigger();
 
         if(config.rearmType == RearmType.Timer)
         {

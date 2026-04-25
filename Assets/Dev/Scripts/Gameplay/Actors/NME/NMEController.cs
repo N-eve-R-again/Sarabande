@@ -164,7 +164,7 @@ namespace Sarabande.NME
             else
             {
                 // migration vers 0/1/N spawns
-                spawnCell = levelData.actors[0].spawnCell;
+                spawnCell = levelData.actors[0].cell;
             }
 
             _gridPos = spawnCell;
@@ -418,13 +418,13 @@ namespace Sarabande.NME
 
             moveInteraction.UpdateInteraction(actorDirection, ToCell);
             leaveInteraction.UpdateInteraction(actorDirection, FromCell);
-            ActorEvents.NotifyActorMove(this, leaveInteraction);
+            this.ActorMove(leaveInteraction);
 
             _gridPos = target;
             _isMoving = false;
             _readyAt = Time.time + interStepPause;
 
-            ActorEvents.NotifyActorMove(this, moveInteraction);
+            this.ActorMove(moveInteraction);
 
 
             MoveProgress = 0f;
@@ -693,7 +693,7 @@ namespace Sarabande.NME
             }
             else
             {
-                spawnCell = levelData.actors[0].spawnCell;
+                spawnCell = levelData.actors[0].cell;
             }
 
             _gridPos = spawnCell;

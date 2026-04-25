@@ -24,7 +24,7 @@ namespace Sarabande.Levels
 
         [Min(1)] public int width = 8;     // colonnes (A..H)
         [Min(1)] public int height = 8;    // rangées  (1..8)
-        public ExitConfig exit;
+        [SerializeField] public ExitDoorData exit;
 
         [Header("ObstacleData")]
         public List<ObstacleData> obstacles = new List<ObstacleData>();

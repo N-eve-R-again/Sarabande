@@ -127,7 +127,7 @@ public class BootStrapper : MonoBehaviour
         LogGen.LogAs(this, "Started Triggerable Registry", "orange");
         foreach (var triggerable in triggerables)
         {
-            triggerable.Register();
+            triggerable.RegisterTriggerable();
         }
         LogGen.LogAs(this, "Finished Triggerable Registry", "green");
 
@@ -144,7 +144,7 @@ public class BootStrapper : MonoBehaviour
 
         foreach (var listener in listeners)
         {
-            listener.Register();
+            listener.RegisterListener();        
         }
         LogGen.LogAs(this, "Finished Listener Registry", "green");
 
@@ -161,6 +161,7 @@ public class BootStrapper : MonoBehaviour
         foreach (var actor in actors)
         {
             LogGen.LogAs(this, "No need to register actor for now");
+            actor.RegisterActor();
         }
 
         //aucune implementation
@@ -191,7 +192,7 @@ public class BootStrapper : MonoBehaviour
 
         foreach (var obstacle in obstacles)
         {
-            obstacle.Build();
+            obstacle.RegisterObstacle();
         }
 
         LogGen.LogAs(this, "Finished Navigation Build", "green");

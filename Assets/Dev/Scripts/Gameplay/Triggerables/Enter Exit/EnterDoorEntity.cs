@@ -4,7 +4,7 @@ using Sarabande.Triggerables;
 using Sarabande.EntityExtensions;
 using UnityEngine;
 
-public class EnterDoorEntity : MonoBehaviour, ITriggerable, IInitializable
+public class EnterDoorEntity : MonoBehaviour, ITriggerable
 {
     [SerializeField] private HeroData actorSpawn;
     [SerializeField] private Vector2Int cell;
@@ -19,18 +19,21 @@ public class EnterDoorEntity : MonoBehaviour, ITriggerable, IInitializable
     {
         actorSpawn = config;
         direction = actorSpawn.spawnDirection;
+        CreateLocalData();
     }
 
-    public void Init()
+    private void CreateLocalData()
     {
         data = new();
-        data.cell = actorSpawn.spawnCell;
+        data.cell = actorSpawn.cell;
         data.triggerKey = "enter";
     }
 
+
+
     public void SyncVisual()
     {
-        transform.position = GridUtils.CenterXZ(actorSpawn.spawnCell);
+        transform.position = GridUtils.CenterXZ(actorSpawn.cell);
         SetRotation();
     }
 

@@ -73,11 +73,13 @@ public class ListenerFactory : MonoBehaviour, IClearable
                 GameObject triggerpad = Instantiate(pressurePadPrefab, pressurePadsParent);
 
                 triggerpad.GetComponent<TriggerPadEntity>().Sync(config);
+                triggerpad.GetComponent<TriggerPadEntity>().SyncVisual();
                 break;
 
             case TriggerObjectConfig.Type.Lever:
                 GameObject lever = Instantiate(leverPrefab, leversParent);
-                lever.GetComponent<LeverEntity>().Init(config);
+                lever.GetComponent<LeverEntity>().Sync(config);
+                lever.GetComponent<LeverEntity>().SyncVisual();
                 break;
         }
         

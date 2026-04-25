@@ -37,14 +37,4 @@ namespace Sarabande.Core
         public GridCoord b;   // ex: E2 = (4,1)
     }
 
-    /// <summary>Sortie située "en dehors" d'un bord depuis une case</summary>
-    [System.Serializable]
-    public class ExitConfig
-    {
-        public Vector2Int cell;
-        public bool startState;
-        public CardinalDirection direction; // ex: East (sortir à droite)
-    }
-
-
 }

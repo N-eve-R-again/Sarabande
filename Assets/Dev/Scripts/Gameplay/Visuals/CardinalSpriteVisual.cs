@@ -149,9 +149,6 @@ namespace Sarabande.Visuals
         private void FixRotation()
         {
             return;
-            if (!_sr) return;
-            float parentYaw = transform.eulerAngles.y;
-            _sr.transform.localRotation = Quaternion.Euler(-90f, -parentYaw, 0f);
         }
     }
 }

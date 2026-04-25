@@ -11,7 +11,7 @@ namespace Sarabande.Triggerables
     public abstract class TriggerableData
     {
         public Vector2Int cell;
-        public string triggerKey = "undefined";
+        public string triggerKey = "";
         public TriggerableData()
         { }
     }
@@ -41,20 +41,7 @@ namespace Sarabande.Triggerables
         public bool canRearm = false;                   // si true, le piège se réarme
         [Min(0f)] public float rearmTimeDelay = 1f;      // délai avant réarmement (secondes)
 
-
-        public ArrowTrapConfig(GridCoord cell, CardinalDirection travelDir, float arrowSpeed, bool canRearm, float rearmDelay, string triggerKey)
-        {
-            this.cell = cell;
-            this.travelDir = travelDir;
-            this.arrowSpeed = arrowSpeed;
-            this.canRearm = canRearm;
-            this.rearmTimeDelay = rearmDelay;
-            this.triggerKey = triggerKey;
-        }
-
-        public ArrowTrapConfig() : base()
-        {
-        }
+        public ArrowTrapConfig() : base() { }
     }
 
     [System.Serializable]
@@ -72,14 +59,7 @@ namespace Sarabande.Triggerables
 
         public float timer;
         public bool startopen = false;
-        public GateConfig(Type type, CardinalDirection direction, string triggerKey, Vector2Int cell, float timer)
-        {
-            this.type = type;
-            this.direction = direction;
-            this.triggerKey = triggerKey;
-            this.cell = cell;
-            this.timer = timer;
-        }
+
         public GateConfig() : base() { }
 
     }
@@ -93,34 +73,23 @@ namespace Sarabande.Triggerables
         [Header("Dalles")]
         public List<DiscoDalleData> discoDalleDatas = new List<DiscoDalleData>();
 
-        [Header("Chemin à fouler (ordre strict)")]
-        public List<GridCoord> cells = new List<GridCoord>();
-
-        [Header("Timers par étape (optionnel)")]
-        public List<float> stepSeconds = new List<float>(); // si la taille ne match pas, utiliser defaultStepSeconds
-
-        [Header("Fallback timing")]
-        public float defaultStepSeconds = 0.8f;
-
-        public DiscoSequenceConfig(string triggerKey, string[] successTriggerKeys, string[] failTriggerKeys, List<GridCoord> cells, List<float> stepSeconds, float defaultStepSeconds)
-        {
-            this.triggerKey = triggerKey;
-            this.successTriggerKeys = successTriggerKeys;
-            this.failTriggerKeys = failTriggerKeys;
-            this.cells = cells;
-            this.stepSeconds = stepSeconds;
-            this.defaultStepSeconds = defaultStepSeconds;
-        }
-        public DiscoSequenceConfig() : base()
-        {
-        }
+        public DiscoSequenceConfig() : base() {}
     }
 
     [Serializable]
     public class DiscoDalleData
     {
         public Vector2Int cell;
-        public float stepSecond;
+        public float stepSecond = 1f;
+    }
+
+    [Serializable]
+    public class ExitDoorData : TriggerableData
+    {
+        public CardinalDirection direction = CardinalDirection.East;
+        public bool startState;
+        public ExitDoorData() : base() { }
+
     }
 
 }

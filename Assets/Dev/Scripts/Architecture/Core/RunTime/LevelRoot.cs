@@ -48,7 +48,7 @@ public class LevelRoot : MonoBehaviour
 
         LevelEntityEvents.OnSignalSent += SendSignal;
 
-        ActorEvents.OnActorMove += ActorMoved;
+        ActorRuntimeEvents.OnActorMove += ActorMoved;
     }
     private void UnSubscribeToLevelEntityEvents()
     {
@@ -57,7 +57,7 @@ public class LevelRoot : MonoBehaviour
 
         LevelEntityEvents.OnSignalSent -= SendSignal;
 
-        ActorEvents.OnActorMove -= ActorMoved;
+        ActorRuntimeEvents.OnActorMove -= ActorMoved;
     }
     private void SubscribeToRegistyEvents()
     {
@@ -73,8 +73,8 @@ public class LevelRoot : MonoBehaviour
     }
 
 
-    private void RegisterSensor(Vector2Int cell, ISensor extension) 
-        => entityRegister.RegisterSensor(cell, extension);
+    private void RegisterSensor(ISensor extension) 
+        => entityRegister.RegisterSensor(extension);
     private void RegisterTriggerable(ITriggerable triggerable) 
         => entityRegister.RegisterTriggerable(triggerable);
     private void RegisterListener(IListener listener) 
