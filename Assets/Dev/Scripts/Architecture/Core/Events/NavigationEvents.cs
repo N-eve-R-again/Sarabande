@@ -12,17 +12,15 @@ public static class NavigationEvents
     => OnRegisterStaticObstacle?.Invoke(_obstacleData);
 
 
-    public static event Action<ExitConfig> OnRegisterPortal;
-    [Obsolete("Utilise this.RegisterPortal() via l'extension IPortalCreator.")]
-    public static void NotifyPortalRegistry(ExitConfig _portalConfig)
+    public static event Action<Portal> OnRegisterPortal;
+    [Obsolete("Utilise this.RegisterPortal() via la classe Portal.")]
+    public static void Raise_PortalRegistry(Portal _portalConfig)
     => OnRegisterPortal.Invoke(_portalConfig);
 
-    public static event Action<Vector2Int, bool> OnModifyPortal;
-
-    [Obsolete("Utilise this.ModifyPortal() via l'extension IPortalCreator.")]
-    public static void NotifyPortalModification(Vector2Int key, bool newActivatedState)
-    => OnModifyPortal?.Invoke(key, newActivatedState);
-
+    public static event Action<Portal> OnUpdatePortal;
+    [Obsolete("Utilise this.UpdatePortal() via la classe Portal.")]
+    public static void Raise_PortalUpdate(Portal _portalConfig)
+    => OnUpdatePortal.Invoke(_portalConfig);
 
 
     public static event Action<DynamicObstacle> OnDynamicObstacleRegistry;

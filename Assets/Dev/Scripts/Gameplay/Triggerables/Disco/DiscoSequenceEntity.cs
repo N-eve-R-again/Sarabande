@@ -27,6 +27,7 @@ public class DiscoSequenceEntity : MonoBehaviour, ITriggerable, ISignaler
 
     public void Trigger()
     {
+        if(dalles.Count <= 0) return;
         /*foreach (var item in dalles)
         {
             item.SequenceStarted();

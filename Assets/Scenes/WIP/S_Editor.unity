@@ -119,65 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &658994338
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 658994339}
-  - component: {fileID: 658994340}
-  m_Layer: 0
-  m_Name: DiscoDancers
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &658994339
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 658994338}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6.655892, y: 3.927788, z: 7.1199384}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1974325059}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &658994340
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 658994338}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: de37a3c3327c4cb49acd6250ec8e336d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cellSize: 1
-  sprites:
-    north: {fileID: 21300000, guid: fcae0578bacc81441aff624a7e291e54, type: 3}
-    east: {fileID: 21300000, guid: 7284e0fdb032ac94f921da1d10089b63, type: 3}
-    south: {fileID: 21300000, guid: bf6a2b9cf50206f42a7418efa4096159, type: 3}
-    west: {fileID: 21300000, guid: e7a2327c597b5584eb3199a36246cfa2, type: 3}
-  yOffset: 0.02
-  spriteScale: 0.5
-  sortingLayer: Default
-  sortingOrder: 250
-  moveSeconds: 0.5
-  pauseSeconds: 0.2
-  spinSeconds: 0.5
-  destroyOnStop: 1
---- !u!114 &1022640926
+--- !u!114 &446841415
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -189,12 +131,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c1a542ffd2fa3743a4a7f83a79a553a, type: 3}
   m_Name: copy_Level_EVE
   m_EditorClassIdentifier: 
-  width: 9
+  width: 8
   height: 8
   exit:
     cell: {x: 7, y: 0}
-    startState: 0
+    triggerKey: exit
     direction: 1
+    startState: 1
   obstacles:
   - cell: {x: 7, y: 7}
     type: 0
@@ -263,26 +206,24 @@ MonoBehaviour:
     type: 1
     thinWallDirection: 1
   listeners:
-  - rid: 11956642377629842
-  - rid: 11956642377629843
-  - rid: 11956642377629844
-  - rid: 11956642377629845
-  - rid: 11956642377629846
-  - rid: 11956642377629847
+  - rid: 11956665249169594
+  - rid: 11956665249169595
+  - rid: 11956665249169596
+  - rid: 11956665249169597
+  - rid: 11956665249169598
+  - rid: 11956665249169599
   triggerables:
-  - rid: 11956642377629848
-  - rid: 11956642377629849
-  - rid: 11956642377629850
+  - rid: 11956665249169600
+  - rid: 11956665249169601
+  - rid: 11956665249169602
   actors: []
   hero:
-    spawnCell: {x: 3, y: 7}
+    cell: {x: 3, y: 7}
     spawnDirection: 0
   discoSequencesConfigs:
   - cell: {x: 0, y: 0}
     triggerKey: disco0
     successTriggerKeys:
-    - door1
-    - exit
     - discoEnd
     failTriggerKeys:
     - discoEnd
@@ -290,7 +231,7 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 11956642377629842
+    - rid: 11956665249169594
       type: {class: TriggerObjectConfig, ns: Sarabande.Listeners, asm: Assembly-CSharp}
       data:
         cell: {x: 4, y: 7}
@@ -301,7 +242,7 @@ MonoBehaviour:
         attachedTo: 2
         rearmType: 3
         timeToRearm: 1
-    - rid: 11956642377629843
+    - rid: 11956665249169595
       type: {class: MessageConfig, ns: Sarabande.Listeners, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 6}
@@ -309,23 +250,23 @@ MonoBehaviour:
         text: "Cet endroit respire... ou plut\xF4t soupire..."
         displaySeconds: 4
         voiceClip: {fileID: 8300000, guid: 21124b32ac434bf4f91102c015b56fe3, type: 3}
-    - rid: 11956642377629844
+    - rid: 11956665249169596
       type: {class: FakeWallData, ns: Sarabande.Listeners, asm: Assembly-CSharp}
       data:
         cell: {x: 0, y: 5}
         triggerKeys: []
-    - rid: 11956642377629845
+    - rid: 11956665249169597
       type: {class: TriggerObjectConfig, ns: Sarabande.Listeners, asm: Assembly-CSharp}
       data:
         cell: {x: 2, y: 4}
         triggerKeys:
-        - disco0
         - door1
+        - disco0
         type: 1
         attachedTo: 2
         rearmType: 2
         timeToRearm: 1
-    - rid: 11956642377629846
+    - rid: 11956665249169598
       type: {class: MessageConfig, ns: Sarabande.Listeners, asm: Assembly-CSharp}
       data:
         cell: {x: 7, y: 2}
@@ -333,7 +274,7 @@ MonoBehaviour:
         text: Tout est affaire de sensation, suivre le rythme et les pulsions.
         displaySeconds: 6
         voiceClip: {fileID: 8300000, guid: 97edbf8a9daad764eadd66ad422e0648, type: 3}
-    - rid: 11956642377629847
+    - rid: 11956665249169599
       type: {class: MessageConfig, ns: Sarabande.Listeners, asm: Assembly-CSharp}
       data:
         cell: {x: 1, y: 1}
@@ -341,7 +282,7 @@ MonoBehaviour:
         text: "Allez bouge moi ce boule, \xE7a vient du bas..."
         displaySeconds: 4
         voiceClip: {fileID: 8300000, guid: a1221e28227fa5c4598a321b5ee6dcb9, type: 3}
-    - rid: 11956642377629848
+    - rid: 11956665249169600
       type: {class: ArrowTrapConfig, ns: Sarabande.Triggerables, asm: Assembly-CSharp}
       data:
         cell: {x: 6, y: 4}
@@ -350,7 +291,7 @@ MonoBehaviour:
         arrowSpeed: 1
         canRearm: 0
         rearmTimeDelay: 1
-    - rid: 11956642377629849
+    - rid: 11956665249169601
       type: {class: GateConfig, ns: Sarabande.Triggerables, asm: Assembly-CSharp}
       data:
         cell: {x: 1, y: 4}
@@ -359,7 +300,7 @@ MonoBehaviour:
         direction: 3
         timer: 0
         startopen: 0
-    - rid: 11956642377629850
+    - rid: 11956665249169602
       type: {class: GateConfig, ns: Sarabande.Triggerables, asm: Assembly-CSharp}
       data:
         cell: {x: 2, y: 2}
@@ -368,6 +309,64 @@ MonoBehaviour:
         direction: 3
         timer: 0
         startopen: 0
+--- !u!1 &658994338
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 658994339}
+  - component: {fileID: 658994340}
+  m_Layer: 0
+  m_Name: DiscoDancers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &658994339
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 658994338}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 6.655892, y: 3.927788, z: 7.1199384}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1974325059}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &658994340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 658994338}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de37a3c3327c4cb49acd6250ec8e336d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cellSize: 1
+  sprites:
+    north: {fileID: 21300000, guid: fcae0578bacc81441aff624a7e291e54, type: 3}
+    east: {fileID: 21300000, guid: 7284e0fdb032ac94f921da1d10089b63, type: 3}
+    south: {fileID: 21300000, guid: bf6a2b9cf50206f42a7418efa4096159, type: 3}
+    west: {fileID: 21300000, guid: e7a2327c597b5584eb3199a36246cfa2, type: 3}
+  yOffset: 0.02
+  spriteScale: 0.5
+  sortingLayer: Default
+  sortingOrder: 250
+  moveSeconds: 0.5
+  pauseSeconds: 0.2
+  spinSeconds: 0.5
+  destroyOnStop: 1
 --- !u!1 &1574985456
 GameObject:
   m_ObjectHideFlags: 0
@@ -509,15 +508,19 @@ MonoBehaviour:
   displayFilter: -1
   currentTool: 2
   levelData: {fileID: 11400000, guid: e638062338bfa4b4f90bfa6b91ce423c, type: 2}
-  dataCopy: {fileID: 1022640926}
+  dataCopy: {fileID: 446841415}
   hotCopyCreated: 1
-  hotCopyModified: 1
-  objectIsSelected: 0
+  hotCopyModified: 0
+  objectIsSelected: 1
   selectedColor: {r: 0, g: 0.025510311, b: 1, a: 0.83137256}
-  selectedObjectType: 2
-  selectedObjectIndex: 3
-  selectedCell: {x: 2, y: 4}
+  selectedObjectType: 6
+  selectedObjectIndex: 0
+  selectedCell: {x: 7, y: 0}
   movingSubToolActivated: 0
+  originalJson: "{\"obstacles\":[{\"cell\":{\"x\":7,\"y\":7},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":6,\"y\":7},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":5,\"y\":7},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":4,\"y\":7},\"type\":0,\"thinWallDirection\":1},{\"cell\":{\"x\":2,\"y\":7},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":1,\"y\":7},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":0,\"y\":7},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":6,\"y\":5},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":4,\"y\":5},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":3,\"y\":5},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":2,\"y\":5},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":1,\"y\":5},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":7,\"y\":3},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":6,\"y\":3},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":5,\"y\":3},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":4,\"y\":3},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":3,\"y\":3},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":2,\"y\":3},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":1,\"y\":3},\"type\":0,\"thinWallDirection\":0},{\"cell\":{\"x\":5,\"y\":1},\"type\":1,\"thinWallDirection\":1},{\"cell\":{\"x\":3,\"y\":1},\"type\":1,\"thinWallDirection\":1},{\"cell\":{\"x\":5,\"y\":0},\"type\":1,\"thinWallDirection\":1}],\"listeners\":[{\"rid\":1000},{\"rid\":1001},{\"rid\":1002},{\"rid\":1003},{\"rid\":1004},{\"rid\":1005}],\"triggerables\":[{\"rid\":1006},{\"rid\":1007},{\"rid\":1008}],\"discoSequences\":[{\"rid\":1009}],\"width\":8,\"height\":8,\"exit\":{\"cell\":{\"x\":7,\"y\":0},\"triggerKey\":\"exit\",\"direction\":1,\"startState\":true},\"heroData\":{\"cell\":{\"x\":3,\"y\":7},\"spawnDirection\":0},\"references\":{\"version\":2,\"RefIds\":[{\"rid\":1000,\"type\":{\"class\":\"TriggerObjectConfig\",\"ns\":\"Sarabande.Listeners\",\"asm\":\"Assembly-CSharp\"},\"data\":{\"cell\":{\"x\":4,\"y\":7},\"triggerKeys\":[\"door0\",\"piege\"],\"type\":2,\"attachedTo\":2,\"rearmType\":3,\"timeToRearm\":1.0}},{\"rid\":1001,\"type\":{\"class\":\"MessageConfig\",\"ns\":\"Sarabande.Listeners\",\"asm\":\"Assembly-CSharp\"},\"data\":{\"cell\":{\"x\":0,\"y\":6},\"triggerKeys\":[],\"text\":\"Cet
+    endroit respire... ou plut\xF4t soupire...\",\"displaySeconds\":4.0,\"voiceClip\":{\"fileID\":8300000,\"guid\":\"21124b32ac434bf4f91102c015b56fe3\",\"type\":3}}},{\"rid\":1002,\"type\":{\"class\":\"FakeWallData\",\"ns\":\"Sarabande.Listeners\",\"asm\":\"Assembly-CSharp\"},\"data\":{\"cell\":{\"x\":0,\"y\":5},\"triggerKeys\":[]}},{\"rid\":1003,\"type\":{\"class\":\"TriggerObjectConfig\",\"ns\":\"Sarabande.Listeners\",\"asm\":\"Assembly-CSharp\"},\"data\":{\"cell\":{\"x\":2,\"y\":4},\"triggerKeys\":[\"door1\",\"disco0\"],\"type\":1,\"attachedTo\":2,\"rearmType\":2,\"timeToRearm\":1.0}},{\"rid\":1004,\"type\":{\"class\":\"MessageConfig\",\"ns\":\"Sarabande.Listeners\",\"asm\":\"Assembly-CSharp\"},\"data\":{\"cell\":{\"x\":7,\"y\":2},\"triggerKeys\":[],\"text\":\"Tout
+    est affaire de sensation, suivre le rythme et les pulsions.\",\"displaySeconds\":6.0,\"voiceClip\":{\"fileID\":8300000,\"guid\":\"97edbf8a9daad764eadd66ad422e0648\",\"type\":3}}},{\"rid\":1005,\"type\":{\"class\":\"MessageConfig\",\"ns\":\"Sarabande.Listeners\",\"asm\":\"Assembly-CSharp\"},\"data\":{\"cell\":{\"x\":1,\"y\":1},\"triggerKeys\":[],\"text\":\"Allez
+    bouge moi ce boule, \xE7a vient du bas...\",\"displaySeconds\":4.0,\"voiceClip\":{\"fileID\":8300000,\"guid\":\"a1221e28227fa5c4598a321b5ee6dcb9\",\"type\":3}}},{\"rid\":1006,\"type\":{\"class\":\"ArrowTrapConfig\",\"ns\":\"Sarabande.Triggerables\",\"asm\":\"Assembly-CSharp\"},\"data\":{\"cell\":{\"x\":6,\"y\":4},\"triggerKey\":\"piege\",\"travelDir\":0,\"arrowSpeed\":1.0,\"canRearm\":false,\"rearmTimeDelay\":1.0}},{\"rid\":1007,\"type\":{\"class\":\"GateConfig\",\"ns\":\"Sarabande.Triggerables\",\"asm\":\"Assembly-CSharp\"},\"data\":{\"cell\":{\"x\":1,\"y\":4},\"triggerKey\":\"door0\",\"type\":2,\"direction\":3,\"timer\":0.0,\"startopen\":false}},{\"rid\":1008,\"type\":{\"class\":\"GateConfig\",\"ns\":\"Sarabande.Triggerables\",\"asm\":\"Assembly-CSharp\"},\"data\":{\"cell\":{\"x\":2,\"y\":2},\"triggerKey\":\"door1\",\"type\":1,\"direction\":3,\"timer\":0.0,\"startopen\":false}},{\"rid\":1009,\"type\":{\"class\":\"DiscoSequenceConfig\",\"ns\":\"Sarabande.Triggerables\",\"asm\":\"Assembly-CSharp\"},\"data\":{\"cell\":{\"x\":0,\"y\":0},\"triggerKey\":\"disco0\",\"successTriggerKeys\":[\"discoEnd\"],\"failTriggerKeys\":[\"discoEnd\"],\"discoDalleDatas\":[]}}]}}"
   placeObjectType: 2
   listenerDummies:
   - rid: 11956597114798415

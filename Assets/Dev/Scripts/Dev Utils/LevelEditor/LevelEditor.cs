@@ -1,19 +1,14 @@
+using Sarabande.Actors;
+using Sarabande.Core;
+using Sarabande.Levels;
+using Sarabande.Listeners;
+using Sarabande.Obstacles;
+using Sarabande.Triggerables;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using UnityEditor;
 using UnityEngine;
-
-using Sarabande.Core;
-using Sarabande.Levels;
-
-using Sarabande.Listeners;
-using Sarabande.Actors;
-using Sarabande.Triggerables;
-using Sarabande.Obstacles;
-
-
 public enum EditorToolType
 {
     Place,
@@ -216,7 +211,7 @@ public class LevelEditor : MonoBehaviour
             Updatebounds();
         }
         DrawBounds();
-        DrawDoor(dataCopy.hero.spawnCell, dataCopy.hero.spawnDirection, new Color(1f, 0.5f, 0f));
+        DrawDoor(dataCopy.hero.cell, dataCopy.hero.spawnDirection, new Color(1f, 0.5f, 0f));
         DrawDoor(dataCopy.exit.cell, dataCopy.exit.direction, Color.green);
 
         foreach (var space in lookupTable)
@@ -239,7 +234,7 @@ public class LevelEditor : MonoBehaviour
             }
         }
 
-        DrawSpriteIcon("Gizmo_Hero", dataCopy.hero.spawnCell, new Color(1f, 0.5f, 0f), false);
+        DrawSpriteIcon("Gizmo_Hero", dataCopy.hero.cell, new Color(1f, 0.5f, 0f), false);
 
 
         Gizmos.color = Color.white;
@@ -259,7 +254,13 @@ public class LevelEditor : MonoBehaviour
                     DrawTriggerable(dataCopy.triggerables[selectedObjectIndex], true);
                     break;
                 case SelectedObjectType.Hero:
-                    DrawSpriteIcon("Gizmo_Hero", dataCopy.hero.spawnCell, selectedColor, true);
+                    DrawSpriteIcon("Gizmo_Hero", dataCopy.hero.cell, selectedColor, true);
+                    break;
+                case SelectedObjectType.Exit:
+                    DrawDoor(dataCopy.exit.cell, dataCopy.exit.direction, Color.blue);
+                    Gizmos.color = Color.blue;
+                    Gizmos.DrawWireCube(GridUtils.CenterInCell(dataCopy.exit.cell), Vector3.one);
+                    Gizmos.color = Color.white;
                     break;
             }
             
@@ -612,10 +613,10 @@ public class LevelEditor : MonoBehaviour
     }
     private void AddActorToLookUpTable(ActorData item)
     {
-        if (!lookupTable.TryGetValue(item.spawnCell, out var list))
+        if (!lookupTable.TryGetValue(item.cell, out var list))
         {
             list = new List<object>();
-            lookupTable[item.spawnCell] = list;
+            lookupTable[item.cell] = list;
         }
         list.Add(item);
     }
@@ -648,6 +649,7 @@ public class LevelEditor : MonoBehaviour
             AddListenerToLookUpTable(item);
         }
 
+        AddTriggerableToLookUpTable(dataCopy.exit);
         AddActorToLookUpTable(dataCopy.hero);
 
         UpdateLinks();
@@ -864,7 +866,9 @@ public class LevelEditor : MonoBehaviour
             case SelectedObjectType.Obstacle:
                 selectedCell = dataCopy.obstacles[selectedObjectIndex].cell += dir; break;
             case SelectedObjectType.Hero:
-                selectedCell = dataCopy.hero.spawnCell += dir; break;
+                selectedCell = dataCopy.hero.cell += dir; break;
+            case SelectedObjectType.Exit:
+                selectedCell = dataCopy.exit.cell += dir; break;
         }
         UpdateLookUpList();
     }
@@ -880,7 +884,9 @@ public class LevelEditor : MonoBehaviour
             case SelectedObjectType.Obstacle:
                 selectedCell = dataCopy.obstacles[selectedObjectIndex].cell = _to; break;
             case SelectedObjectType.Hero:
-                selectedCell = dataCopy.hero.spawnCell = _to; break;
+                selectedCell = dataCopy.hero.cell = _to; break;
+            case SelectedObjectType.Exit:
+                selectedCell = dataCopy.exit.cell = _to; break;
         }
         UpdateLookUpList();
 
@@ -944,6 +950,30 @@ public class LevelEditor : MonoBehaviour
     public void SelectObject(object obj)
     {
         Undo.RecordObject(dataCopy, $"Inspect {obj}");
+
+        bool uniqueItem = false;
+        switch (obj)
+        {
+            case HeroData:
+                selectedObjectType = SelectedObjectType.Hero;
+                selectedObjectIndex = 0;
+                selectedCell = dataCopy.hero.cell;
+                uniqueItem = true;
+                break;
+            case ExitDoorData:
+                selectedObjectType = SelectedObjectType.Exit;
+                selectedObjectIndex = 0;
+                selectedCell = dataCopy.exit.cell;
+                uniqueItem = true;
+                break;
+        }
+        if (uniqueItem)
+        {
+            EditorUtility.SetDirty(dataCopy);
+            UpdateFlags();
+            return;
+        }
+
         switch (obj)
         {
             case null:
@@ -970,12 +1000,6 @@ public class LevelEditor : MonoBehaviour
                 selectedObjectIndex = dataCopy.triggerables.IndexOf((TriggerableData)obj);
                 selectedCell = dataCopy.triggerables[selectedObjectIndex].cell;
                 break;
-            case HeroData:
-                selectedObjectType = SelectedObjectType.Hero;
-                selectedObjectIndex = 0;
-                selectedCell = dataCopy.hero.spawnCell;
-                break;
-
             default:
                 selectedObjectType = SelectedObjectType.None;
                 selectedObjectIndex = -1;
@@ -1124,7 +1148,7 @@ public class LevelDataSnapshot
     [SerializeReference] public List<DiscoSequenceConfig> discoSequences;
     public int width;
     public int height;
-    public ExitConfig exit;
+    public ExitDoorData exit;
     public HeroData heroData;
 
     // ... seulement tes données de gameplay

@@ -16,28 +16,28 @@ public class NavigationManager
     public void SubscribeToEvents()
     {
         NavigationEvents.OnDynamicObstacleRegistry += RegisterDynamicObstacle;
-        NavigationEvents.OnDirtyDynamicObstacleUpdate += UpdateDirtyDynamicObstacle;
+        NavigationEvents.OnDirtyDynamicObstacleUpdate += UpdateDynamicObstacle;
 
 
         NavigationEvents.OnQueryCollision += CheckForCollision;
         NavigationEvents.OnQueryPortal += CheckForPortal;
 
         NavigationEvents.OnRegisterPortal += RegisterPortal;
-        NavigationEvents.OnModifyPortal += ModifyPortal;
+        NavigationEvents.OnUpdatePortal += UpdatePortal;
 
         NavigationEvents.OnRegisterStaticObstacle += RegisterStaticObstacle;
     }
     public void UnSubscribeToEvents()
     {
         NavigationEvents.OnDynamicObstacleRegistry -= RegisterDynamicObstacle;
-        NavigationEvents.OnDirtyDynamicObstacleUpdate -= UpdateDirtyDynamicObstacle;
+        NavigationEvents.OnDirtyDynamicObstacleUpdate -= UpdateDynamicObstacle;
 
 
         NavigationEvents.OnQueryCollision -= CheckForCollision;
         NavigationEvents.OnQueryPortal -= CheckForPortal;
 
         NavigationEvents.OnRegisterPortal -= RegisterPortal;
-        NavigationEvents.OnModifyPortal -= ModifyPortal;
+        NavigationEvents.OnUpdatePortal -= UpdatePortal;
 
         NavigationEvents.OnRegisterStaticObstacle -= RegisterStaticObstacle;
     }
@@ -91,28 +91,10 @@ public class NavigationManager
     {
         if(portals.TryGetValue(from, out Portal portal))
         {
-            if (!portal.activated)
-            {
-
-                return false;
-            }
-            if(_actorDir != portal.direction) return false;
-            if (DynamicObstacleCollision(from, to, _actorDir))
-            {
-                Debug.Log("Dynamic here");
-                return false;
-            }
-            else
-            {
-                Debug.Log("No dynamic in between");
-            }
-
-            Debug.Log("test");
-            return true;
-
+            if(portal.ValidExit(_actorDir) && !DynamicObstacleCollision(from, to, _actorDir)) 
+                return true;
         }
         return false;
-
     }
 
     
@@ -141,37 +123,28 @@ public class NavigationManager
 
         return fromhit || tohit;
     }
-    private void RegisterPortal(ExitConfig portalConfig)
+    private void RegisterPortal(Portal portal)
     {
-        LogGen.LogAs(this, $"Portal register at {portalConfig.cell} with direction {portalConfig.direction} and state {portalConfig.startState}");
-        portals[portalConfig.cell] = new Portal(portalConfig.direction, portalConfig.startState);
+        portals[portal.Cell] = portal;
+        LogGen.LogAs(portal, $"Registered {portal.log}");
     }
 
-    private void ModifyPortal(Vector2Int cell, bool newState)
+    private void UpdatePortal(Portal portal)
     {
-        if(portals.TryGetValue(cell, out var portal))
-        {
-            LogGen.ErrorAs(this, $"Portal at {cell} was changed to {newState}");
-            portal.activated = newState;
-        }
-        else
-        {
-            LogGen.ErrorAs(this, $"Couldn't find Portal at {cell}");
-        }
+        LogGen.LogAs(portal, $"Modified {portal}");
     }
+
 
     public void RegisterDynamicObstacle(DynamicObstacle obstacleData)
     {
-        
         dynamicObstacles[obstacleData.Cell] = obstacleData;
-        LogGen.LogAs(obstacleData, $"Registered at {obstacleData.Cell}, {obstacleData.Name}, with base state : {obstacleData.IsActivated}");
+        LogGen.LogAs(obstacleData, $"Registered {obstacleData.log}");
 
     }
 
-    private void UpdateDirtyDynamicObstacle(DynamicObstacle obstacleData)
+    private void UpdateDynamicObstacle(DynamicObstacle obstacleData)
     {
-        LogGen.LogAs(obstacleData, $"Modified at {obstacleData.Cell}, {obstacleData.Name}, with base state : {obstacleData.IsActivated}");
-
+        LogGen.LogAs(obstacleData, $"Modified {obstacleData.log}");
         if (!obstacleData.IsDirty) return;
 
         var item = dynamicObstacles.First(kvp => kvp.Value == obstacleData);
@@ -186,15 +159,5 @@ public class NavigationManager
     }
 
 }
-public class Portal
-{
-    public CardinalDirection direction;
-    public bool activated;
 
-    public Portal(CardinalDirection direction, bool activated)
-    {
-        this.direction = direction;
-        this.activated = activated;
-    }
-}
 

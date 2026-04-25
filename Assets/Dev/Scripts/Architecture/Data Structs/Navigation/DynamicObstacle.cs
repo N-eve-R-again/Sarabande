@@ -10,12 +10,11 @@ namespace Sarabande.Obstacles
         [SerializeField] private bool thin;
         [SerializeField] private CardinalDirection direction;
         [SerializeField] private bool activated;
-        private string name => thin ? $"{direction} oriented Thin Wall" : $"Wall";
-        private bool dirty = false;
-
         public Vector2Int Cell => cell;
-        public bool IsActivated => activated;
-        public string Name => name;
+        public string log => $"at {this.cell}, {this.name}, with base state : {this.activated}";
+        private string name => thin ? $"{direction} oriented Thin Wall" : $"Wall";
+
+        private bool dirty = false;
         public bool IsDirty => dirty;
         public void ResetDirtyFlag() => dirty = false;
         private void SetDirty() => dirty = true;

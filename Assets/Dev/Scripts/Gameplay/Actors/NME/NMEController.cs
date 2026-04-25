@@ -164,7 +164,7 @@ namespace Sarabande.NME
             else
             {
                 // migration vers 0/1/N spawns
-                spawnCell = levelData.actors[0].spawnCell;
+                spawnCell = levelData.actors[0].cell;
             }
 
             _gridPos = spawnCell;
@@ -693,7 +693,7 @@ namespace Sarabande.NME
             }
             else
             {
-                spawnCell = levelData.actors[0].spawnCell;
+                spawnCell = levelData.actors[0].cell;
             }
 
             _gridPos = spawnCell;

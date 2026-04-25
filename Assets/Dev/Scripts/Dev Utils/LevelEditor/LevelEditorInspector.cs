@@ -247,13 +247,6 @@ public partial class LevelEditorInspector : Editor
         EditorGUILayout.EndVertical();
         CustomStylesGUI.DrawSeparator(false, false);
 
-        EditorGUILayout.BeginVertical(boxStyle);
-        exit.isExpanded = true;
-        EditorGUILayout.PropertyField(exit);
-
-        EditorGUILayout.EndVertical();
-
-
         CustomStylesGUI.DrawSeparator(false, false);
 
         EditorGUILayout.BeginVertical(boxStyle);
@@ -411,11 +404,11 @@ public partial class LevelEditorInspector : Editor
 
                     if (itemProp != null)
                     {
-                        EditorGUILayout.PropertyField(itemProp, GUIContent.none, true);
+                        InspectHero(itemProp);
 
                         Undo.RecordObject(editor.dataCopy, "Inspect Obj");
                         dataCopySO.ApplyModifiedProperties();
-
+                        editor.Refresh();
                         editor.UpdateLinks();
                         editor.UpdateFlags();
                     }
@@ -423,6 +416,29 @@ public partial class LevelEditorInspector : Editor
                 return;
             }
 
+            if (editor.selectedObjectType == SelectedObjectType.Exit)
+            {
+                SerializedProperty dataCopyProp = serializedObject.FindProperty("dataCopy");
+                if (dataCopyProp != null && dataCopyProp.objectReferenceValue != null)
+                {
+                    SerializedObject dataCopySO = new SerializedObject(dataCopyProp.objectReferenceValue);
+
+                    SerializedProperty itemProp = dataCopySO.FindProperty("exit");
+
+
+                    if (itemProp != null)
+                    {
+                        InspectExit(itemProp);
+                        Undo.RecordObject(editor.dataCopy, "Inspect Obj");
+
+                        dataCopySO.ApplyModifiedProperties();
+                        editor.Refresh();
+                        editor.UpdateLinks();
+                        editor.UpdateFlags();
+                    }
+                }
+                return;
+            }
             // Récupère via SerializedProperty
             string basePath = editor.selectedObjectType switch
             {
@@ -456,6 +472,7 @@ public partial class LevelEditorInspector : Editor
                                 InspectListener(itemProp); break;
                             case SelectedObjectType.Triggerable: 
                                 InspectTriggerable(itemProp); break;
+
                         }
 
                         //EditorGUILayout.EndVertical();
@@ -557,6 +574,25 @@ public partial class LevelEditorInspector : Editor
 
         CustomFieldsGUI.DrawCellField(item,editor);
 
+    }
+
+    private void InspectHero(SerializedProperty item, bool title = true)
+    {
+        if (title) CustomStylesGUI.DrawTitle($"Player Spawn");
+
+        SerializedProperty dir = item.FindPropertyRelative("spawnDirection");
+
+        CustomFieldsGUI.DrawCellField(item, editor);
+        CustomButtonsGUI.DrawCardinalDirection(dir, "Enter Direction:");
+    }
+    private void InspectExit(SerializedProperty item, bool title = true)
+    {
+        if (title) CustomStylesGUI.DrawTitle($"Level Exit");
+
+        SerializedProperty dir = item.FindPropertyRelative("direction");
+
+        CustomFieldsGUI.DrawCellField (item,editor);
+        CustomButtonsGUI.DrawCardinalDirection(dir, "Exit Direction:");
     }
 
     private void InspectTriggerObject(SerializedProperty item, bool title = true)

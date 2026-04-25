@@ -62,10 +62,7 @@ public static class CustomButtonsGUI
     public static void DrawDisabledButton(string _buttonLabel)
     {
         GUI.enabled = false;
-        if (GUILayout.Button(_buttonLabel))
-        {
-            //Nothing
-        }
+        GUILayout.Button(_buttonLabel);
         GUI.enabled = true;
     }
 

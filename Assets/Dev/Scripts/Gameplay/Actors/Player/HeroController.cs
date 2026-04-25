@@ -119,7 +119,7 @@ namespace Sarabande.Player
             _nmes = FindObjectsByType<NMEController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
             // Coord grille du spawn (ex. D8)
-            _gridPos = spawn.spawnCell;
+            _gridPos = spawn.cell;
 
             // Centre monde de la case de spawn
             Vector3 spawnCenterWorld = CenterXZ(_gridPos);
@@ -508,7 +508,7 @@ namespace Sarabande.Player
             _readyAtTime = 0f;
 
             // 3) (la GridGateSystem & TimedDoorSystem vont réinjecter leurs verrous juste après leur propre Reset)
-            _gridPos = spawn.spawnCell;
+            _gridPos = spawn.cell;
             var outside = GridUtils.CenterXZ(_gridPos) + EntryOffset(spawn.spawnDirection);
             transform.position = outside;
 

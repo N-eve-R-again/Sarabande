@@ -7,7 +7,7 @@ namespace Sarabande.Actors
     [System.Serializable]
     public abstract class ActorData
     {
-        public Vector2Int spawnCell;
+        public Vector2Int cell;
         public ActorData() { }
     }
 

@@ -56,7 +56,6 @@ public class GateEntity : MonoBehaviour, ITriggerable, IInitializable
         down = false;
 
         dynamicObstacle.SetActivated(true);
-        dynamicObstacle.ChangeCell(dynamicObstacle.Cell + GridUtils.DirToVec2(CardinalDirection.East));
     }
 
     public void Trigger()
